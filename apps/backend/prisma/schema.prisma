@@ -1,0 +1,293 @@
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/lib/generated"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  TEMPORARY
+  INTERN
+  FREELANCE
+}
+
+enum WorkMode {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEW
+  OFFER
+  REJECTED
+  HIRED
+  ARCHIVED
+}
+
+enum DocumentType {
+  RESUME
+  COVER_LETTER
+  NOTE
+  OTHER
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum JobSource {
+  MANUAL
+  IMPORT
+  EXTERNAL_API
+  PARTNER
+}
+
+enum InterviewMode {
+  VIRTUAL
+  ONSITE
+  HYBRID
+}
+
+enum InterviewStatus {
+  PLANNING
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum ReminderType {
+  FOLLOW_UP
+  INTERVIEW_PREP
+  DEADLINE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(BUYER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile           Profile[]
+  applications      Application[]
+  fitScores         FitScore[]
+  documents         Document[]
+  interviewSessions InterviewSession[]
+  reminders         Reminder[]
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  headline        String?
+  summary         String?
+  location        String?
+  yearsExperience Int?
+  targetRoles     String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id])
+  experiences Experience[]
+  educations  Education[]
+  skills      ProfileSkill[]
+}
+
+model Experience {
+  id         String    @id @default(cuid())
+  profileId  String
+  title      String
+  company    String
+  startDate  DateTime
+  endDate    DateTime?
+  current    Boolean   @default(false)
+  summary    String?
+  highlights String[]
+  location   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  profileId   String
+  school      String
+  degree      String?
+  field       String?
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  profiles ProfileSkill[]
+  jobs     JobSkill[]
+}
+
+model ProfileSkill {
+  profileId String
+  skillId   String
+  level     SkillLevel?
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  skill   Skill   @relation(fields: [skillId], references: [id])
+
+  @@id([profileId, skillId])
+}
+
+model Job {
+  id             String         @id @default(cuid())
+  title          String
+  companyName    String
+  location       String?
+  employmentType EmploymentType @default(FULL_TIME)
+  workMode       WorkMode       @default(HYBRID)
+  description    String?
+  source         JobSource      @default(MANUAL)
+  externalUrl    String?
+  postedAt       DateTime?
+  expiresAt      DateTime?
+  rawData        Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  applications Application[]
+  fitScores    FitScore[]
+  jobSkills    JobSkill[]
+  documents    Document[]
+  interviews   InterviewSession[]
+  reminders    Reminder[]
+}
+
+model JobSkill {
+  jobId   String
+  skillId String
+
+  job   Job   @relation(fields: [jobId], references: [id])
+  skill Skill @relation(fields: [skillId], references: [id])
+
+  @@id([jobId, skillId])
+}
+
+model Application {
+  id               String            @id @default(cuid())
+  userId           String
+  jobId            String
+  status           ApplicationStatus @default(SAVED)
+  appliedAt        DateTime?
+  notes            String?
+  resumeDocumentId String?
+  coverLetterId    String?
+  followUpAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  user           User       @relation(fields: [userId], references: [id])
+  job            Job        @relation(fields: [jobId], references: [id])
+  resumeDocument Document?  @relation("ApplicationResume", fields: [resumeDocumentId], references: [id])
+  coverLetter    Document?  @relation("ApplicationCoverLetter", fields: [coverLetterId], references: [id])
+  reminders      Reminder[]
+
+  @@unique([userId, jobId])
+  @@index([status])
+}
+
+model Document {
+  id        String       @id @default(cuid())
+  userId    String
+  jobId     String?
+  type      DocumentType
+  label     String
+  content   String
+  version   Int          @default(1)
+  summary   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job? @relation(fields: [jobId], references: [id])
+
+  applicationResume      Application[] @relation("ApplicationResume")
+  applicationCoverLetter Application[] @relation("ApplicationCoverLetter")
+}
+
+model FitScore {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  score     Int
+  rationale Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job  @relation(fields: [jobId], references: [id])
+
+  @@unique([userId, jobId])
+  @@index([score])
+}
+
+model InterviewSession {
+  id              String          @id @default(cuid())
+  userId          String
+  jobId           String
+  mode            InterviewMode   @default(VIRTUAL)
+  status          InterviewStatus @default(PLANNING)
+  scheduledFor    DateTime?
+  durationMinutes Int?
+  notes           String?
+  aiFeedback      Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job  @relation(fields: [jobId], references: [id])
+}
+
+model Reminder {
+  id            String       @id @default(cuid())
+  userId        String
+  jobId         String?
+  applicationId String?
+  type          ReminderType
+  dueAt         DateTime
+  sentAt        DateTime?
+  completedAt   DateTime?
+  message       String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id])
+  job         Job?         @relation(fields: [jobId], references: [id])
+  application Application? @relation(fields: [applicationId], references: [id])
+
+  @@index([dueAt])
+}

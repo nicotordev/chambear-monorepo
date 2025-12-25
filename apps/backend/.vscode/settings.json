@@ -1,0 +1,15 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "sqltools.connections": [
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "Default",
+      "group": "default",
+      "database": "postgres",
+      "connectString": "postgres://postgres:postgres@localhost:5432?dbName=postgres"
+    }
+  ]
+}
