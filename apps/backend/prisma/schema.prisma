@@ -14,6 +14,32 @@ enum Role {
   ADMIN
 }
 
+/**
+ * =========================================================
+ * Types (keep your app types outside; this client is general)
+ * =========================================================
+ */
+
+enum UrlKind {
+  JOB_LISTING
+  JOBS_INDEX
+  CAREERS
+  LOGIN_OR_GATE
+  BLOG_OR_NEWS
+  COMPANY_ABOUT
+  IRRELEVANT
+}
+
+enum Seniority {
+  JUNIOR
+  MID
+  SENIOR
+  STAFF
+  LEAD
+  PRINCIPAL
+  UNKNOWN
+}
+
 enum EmploymentType {
   FULL_TIME
   PART_TIME
@@ -21,12 +47,14 @@ enum EmploymentType {
   TEMPORARY
   INTERN
   FREELANCE
+  UNKNOWN
 }
 
 enum WorkMode {
   ONSITE
   HYBRID
   REMOTE
+  UNKNOWN
 }
 
 enum ApplicationStatus {
@@ -169,11 +197,13 @@ model Job {
   title          String
   companyName    String
   location       String?
-  employmentType EmploymentType @default(FULL_TIME)
-  workMode       WorkMode       @default(HYBRID)
+  seniority      Seniority      @default(UNKNOWN)
+  employmentType EmploymentType @default(UNKNOWN)
+  workMode       WorkMode       @default(UNKNOWN)
   description    String?
   source         JobSource      @default(MANUAL)
-  externalUrl    String?
+  urlKind        UrlKind        @default(IRRELEVANT)
+  externalUrl    String?        @unique
   postedAt       DateTime?
   expiresAt      DateTime?
   rawData        Json?
@@ -244,6 +274,7 @@ model FitScore {
   id        String   @id @default(cuid())
   userId    String
   jobId     String
+  /// 0..100 AI fitness score
   score     Int
   rationale Json?
   createdAt DateTime @default(now())

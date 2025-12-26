@@ -9,6 +9,7 @@ export function requireEnv(name: string): string {
 export const env = {
   brightDataApiKey: process.env.BRIGHTDATA_API_KEY ?? "",
   brightDataZone: process.env.BRIGHTDATA_ZONE ?? "",
+  brightDataSerpZone: process.env.BRIGHTDATA_SERP_ZONE ?? "serp",
   brightDataCustomer: process.env.BRIGHTDATA_CUSTOMER ?? "",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
   searchApiKey: process.env.SEARCH_API_KEY ?? "",

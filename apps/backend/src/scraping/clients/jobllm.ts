@@ -22,6 +22,19 @@ import {
   RankJobsResponseSchema,
   GenerateSearchDorksResponseSchema,
 } from "../../schemas/scraping";
+import { UrlKind } from "../../lib/generated";
+import {
+  URL_KIND_MAP,
+  WORK_MODE_MAP,
+  EMPLOYMENT_TYPE_MAP,
+  SENIORITY_MAP,
+} from "../../constants/maps";
+import {
+  assertNonEmpty,
+  mapLimit,
+  normalizeUrl,
+} from "../../lib/utils/misc-utils";
+
 /* =========================
  * Client class (LLM)
  * ========================= */
@@ -33,12 +46,14 @@ export class JobLlmClient {
   private readonly retry: RetryOptions;
 
   public constructor(opts: JobLlmClientOptions = {}) {
-    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const apiKey = assertNonEmpty(process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
+    this.openai = new OpenAI({ apiKey });
+
     this.model = opts.model ?? "gpt-4.1-mini";
     this.temperature = opts.temperature ?? 0.2;
     this.retry = {
-      maxRetries: opts.maxRetries ?? 3,
-      retryBaseDelayMs: opts.retryBaseDelayMs ?? 400,
+      maxRetries: 3,
+      retryBaseDelayMs: 400,
     };
   }
 
@@ -46,15 +61,27 @@ export class JobLlmClient {
     const raw = text.trim();
     let parsed: unknown;
 
+    const tryParse = (s: string): unknown => JSON.parse(s);
+
     try {
-      parsed = JSON.parse(raw);
+      parsed = tryParse(raw);
     } catch {
-      const start = raw.indexOf("{");
-      const end = raw.lastIndexOf("}");
-      if (start < 0 || end < 0 || end <= start) {
-        throw new Error("Model did not return valid JSON");
+      // Try to salvage: prefer object, then array
+      const objStart = raw.indexOf("{");
+      const objEnd = raw.lastIndexOf("}");
+      if (objStart >= 0 && objEnd > objStart) {
+        parsed = tryParse(raw.slice(objStart, objEnd + 1));
+        return schema.parse(parsed);
       }
-      parsed = JSON.parse(raw.slice(start, end + 1));
+
+      const arrStart = raw.indexOf("[");
+      const arrEnd = raw.lastIndexOf("]");
+      if (arrStart >= 0 && arrEnd > arrStart) {
+        parsed = tryParse(raw.slice(arrStart, arrEnd + 1));
+        return schema.parse(parsed);
+      }
+
+      throw new Error("Model did not return valid JSON");
     }
 
     return schema.parse(parsed);
@@ -123,17 +150,24 @@ ${userContext.trim()}
 
   public async scoreUrls(input: ScoreUrlsInput): Promise<ScoreUrlsOutput> {
     const batchSize = input.batchSize ?? 25;
-    const urls = input.urls.map((u) => u.trim()).filter((u) => u.length > 0);
 
-    const deduped = Array.from(new Set(urls));
-    if (deduped.length === 0) return { items: [] };
+    // Keep original order (and duplicates) for output contract
+    const original = input.urls.map(normalizeUrl).filter((u) => u.length > 0);
+    if (original.length === 0) return { items: [] };
+
+    // Unique list only for efficiency; we'll map back later
+    const unique: string[] = [];
+    const seen = new Set<string>();
+    for (const u of original) {
+      if (!seen.has(u)) {
+        seen.add(u);
+        unique.push(u);
+      }
+    }
 
     const system = this.buildUrlScoringSystemPrompt(input.userContext);
-    const batches = chunk(deduped, batchSize);
+    const batches = chunk(unique, batchSize);
 
-    const all: ScoredUrl[] = [];
-
-    // Process batches in parallel
     const results = await Promise.all(
       batches.map(async (b) => {
         try {
@@ -149,24 +183,45 @@ ${userContext.trim()}
             );
           }
 
-          return resp.items.map((it) => ({
+          const normalized: ScoredUrl[] = resp.items.map((it) => ({
             url: it.url,
             score: clamp(it.score, 0, 100),
-            kind: it.kind,
+            kind: URL_KIND_MAP[it.kind] ?? UrlKind.IRRELEVANT,
             reason: it.reason,
           }));
+
+          return normalized;
         } catch (error) {
           console.error("[AI Client] Batch scoring failed", error);
-          return [];
+          return [] as ScoredUrl[];
         }
       })
     );
 
-    for (const batchResult of results) {
-      all.push(...batchResult);
+    const byUrl = new Map<string, ScoredUrl>();
+    for (const batch of results) {
+      for (const it of batch) {
+        const key = normalizeUrl(it.url);
+        // preserve first answer for that URL (stable)
+        if (!byUrl.has(key)) byUrl.set(key, it);
+      }
     }
 
-    return { items: all };
+    // Rebuild outputs exactly aligned to original list (including duplicates)
+    const items: ScoredUrl[] = original.map((u) => {
+      const hit = byUrl.get(u);
+      if (hit) return hit;
+
+      // fallback if model omitted something
+      return {
+        url: u,
+        score: 0,
+        kind: UrlKind.IRRELEVANT,
+        reason: "Missing model output for this URL; defaulting to irrelevant.",
+      };
+    });
+
+    return { items };
   }
 
   private buildExtractJobsSystemPrompt(
@@ -239,12 +294,17 @@ ${userContext.trim()}
     // hard guarantee: every job must point to the same source url we provided
     const jobs = resp.jobs.map((j) => ({
       ...j,
+      remote: j.remote ? WORK_MODE_MAP[j.remote] : undefined,
+      employmentType: j.employmentType
+        ? EMPLOYMENT_TYPE_MAP[j.employmentType]
+        : undefined,
+      seniority: j.seniority ? SENIORITY_MAP[j.seniority] : undefined,
       sourceUrl: input.url,
     }));
 
     return {
       pageIsJobRelated: resp.pageIsJobRelated,
-      pageKind: resp.pageKind,
+      pageKind: URL_KIND_MAP[resp.pageKind] ?? UrlKind.IRRELEVANT,
       pageReason: resp.pageReason,
       jobs,
     };
@@ -279,10 +339,18 @@ Rules:
 
     const resp = await this.callJson(system, user, RankJobsResponseSchema);
 
-    // normalize + enforce topK
     const items = resp.items
       .map((it) => ({
-        job: it.job,
+        job: {
+          ...it.job,
+          remote: it.job.remote ? WORK_MODE_MAP[it.job.remote] : undefined,
+          employmentType: it.job.employmentType
+            ? EMPLOYMENT_TYPE_MAP[it.job.employmentType]
+            : undefined,
+          seniority: it.job.seniority
+            ? SENIORITY_MAP[it.job.seniority]
+            : undefined,
+        },
         fitScore: clamp(it.fitScore, 0, 100),
         rationale: it.rationale,
       }))
@@ -302,6 +370,7 @@ Based on the user's profile, generate advanced search queries to find relevant j
 
 Use operators like: site:, intitle:, inurl:, "exact phrase", AND, OR.
 Focus on finding FRESH content (e.g. using date filters is handled by the caller, but you can suggest structure).
+IMPORTANT: If the user targets a specific country, try to include "site:<countryTLD>" (e.g. site:.cl for Chile) to refine results.
 
 Return JSON ONLY:
 {
@@ -362,10 +431,10 @@ Return JSON ONLY:
   }
 
   /**
-   * End-to-end helper (optional):
-   * - you pass candidates urls
+   * End-to-end helper:
+   * - you pass candidate urls
    * - it scores
-   * - you provide fetchMarkdown (BrightData client wrapper)
+   * - you provide fetchMarkdown
    * - it extracts jobs from top URLs
    */
   public async scoreThenFetchThenExtractJobs(
@@ -378,6 +447,7 @@ Return JSON ONLY:
       minScoreToScrape?: number; // default 60
       keepCareers?: boolean; // default true
       exhaustiveExtraction?: boolean; // default true
+      concurrency?: number; // default 3
     }>
   ): Promise<
     Readonly<{
@@ -394,6 +464,7 @@ Return JSON ONLY:
     const maxToScrape = params.maxToScrape ?? 10;
     const minScoreToScrape = params.minScoreToScrape ?? 60;
     const keepCareers = params.keepCareers ?? true;
+    const concurrency = params.concurrency ?? 3;
 
     const scoredResp = await this.scoreUrls({
       urls: params.urls,
@@ -401,31 +472,31 @@ Return JSON ONLY:
       batchSize: params.batchSize,
     });
 
-    const filtered = scoredResp.items
+    // Deduplicate pages by URL for scraping (scoreUrls may contain duplicates)
+    const bestByUrl = new Map<string, ScoredUrl>();
+    for (const it of scoredResp.items) {
+      const key = normalizeUrl(it.url);
+      const prev = bestByUrl.get(key);
+      if (!prev || it.score > prev.score) bestByUrl.set(key, it);
+    }
+
+    const candidates = Array.from(bestByUrl.values());
+
+    const filtered = candidates
       .filter((it) => {
-        if (it.kind === "job_listing")
+        if (it.kind === UrlKind.JOB_LISTING)
           return it.score >= Math.max(55, minScoreToScrape);
-        if (it.kind === "jobs_index")
+        if (it.kind === UrlKind.JOBS_INDEX)
           return it.score >= Math.max(60, minScoreToScrape);
-        if (it.kind === "careers")
+        if (it.kind === UrlKind.CAREERS)
           return keepCareers && it.score >= Math.max(65, minScoreToScrape);
         return false;
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, maxToScrape);
 
-    const pages: Array<{
-      url: string;
-      scored: ScoredUrl;
-      markdown: string;
-      extraction: ExtractJobsOutput;
-    }> = [];
-
-    const allJobs: JobPosting[] = [];
-
-    for (const it of filtered) {
+    const pages = await mapLimit(filtered, concurrency, async (it) => {
       const md = await params.fetchMarkdown(it.url);
-
       const extraction = await this.extractJobsFromMarkdown({
         url: it.url,
         markdown: md,
@@ -433,15 +504,22 @@ Return JSON ONLY:
         exhaustive: params.exhaustiveExtraction ?? true,
       });
 
-      pages.push({ url: it.url, scored: it, markdown: md, extraction });
-      allJobs.push(...extraction.jobs);
-    }
+      return {
+        url: it.url,
+        scored: it,
+        markdown: md,
+        extraction,
+      };
+    });
+
+    const allJobs: JobPosting[] = [];
+    for (const p of pages) allJobs.push(...p.extraction.jobs);
 
     return { scored: scoredResp.items, pages, jobs: allJobs };
   }
 
   /**
-   * NEW: Pinecone retrieve + LLM rerank end-to-end
+   * Pinecone retrieve + LLM rerank end-to-end
    */
   public async indexAndRankJobs(
     params: Readonly<{

@@ -1,20 +1,19 @@
+import { EmploymentType, WorkMode, Seniority, UrlKind } from "../lib/generated";
+
+/* =========================================================
+ * Retry / Client options
+ * ========================================================= */
+
 export type RetryOptions = Readonly<{
   maxRetries: number;
   retryBaseDelayMs: number;
 }>;
 
-/* =========================================================
- * Types (keep your app types outside; this client is general)
- * ========================================================= */
-
-export type UrlKind =
-  | "job_listing"
-  | "jobs_index"
-  | "careers"
-  | "login_or_gate"
-  | "blog_or_news"
-  | "company_about"
-  | "irrelevant";
+export type JobLlmClientOptions = Readonly<{
+  model?: string; // default gpt-5.2
+  temperature?: number; // default 0.2
+  retry?: Partial<RetryOptions>; // default { maxRetries: 3, retryBaseDelayMs: 400 }
+}>;
 
 export type ScoredUrl = Readonly<{
   url: string;
@@ -33,6 +32,14 @@ export type ScoreUrlsOutput = Readonly<{
   items: readonly ScoredUrl[];
 }>;
 
+/* =========================================================
+ * Fetch / Extract
+ * ========================================================= */
+
+/**
+ * Keep as-is if you want a simple fetcher.
+ * If you later need richer info, introduce another type and widen here.
+ */
 export type FetchMarkdown = (url: string) => Promise<string>;
 
 export type ExtractJobsInput = Readonly<{
@@ -45,27 +52,22 @@ export type ExtractJobsInput = Readonly<{
    */
   exhaustive?: boolean;
 }>;
-
+/**
+ * “Raw” job postings from extraction may omit some fields.
+ * Note: You currently allow both undefined and "unknown" for some.
+ * Keeping that for compatibility, but see NormalizedJobPosting below.
+ */
 export type JobPosting = Readonly<{
   title: string;
   company?: string;
   location?: string;
-  remote?: "remote" | "hybrid" | "on_site" | "unknown";
-  employmentType?:
-    | "full_time"
-    | "part_time"
-    | "contract"
-    | "internship"
-    | "temporary"
-    | "unknown";
-  seniority?:
-    | "junior"
-    | "mid"
-    | "senior"
-    | "staff"
-    | "lead"
-    | "principal"
-    | "unknown";
+
+  // Compatibility: allow undefined or explicit "unknown"
+  remote?: WorkMode;
+
+  employmentType?: EmploymentType;
+  seniority?: Seniority;
+
   team?: string;
   descriptionMarkdown?: string;
   responsibilities?: readonly string[];
@@ -73,6 +75,7 @@ export type JobPosting = Readonly<{
   niceToHave?: readonly string[];
   compensation?: string;
   applyUrl?: string;
+
   sourceUrl: string;
 }>;
 
@@ -82,6 +85,10 @@ export type ExtractJobsOutput = Readonly<{
   pageReason: string;
   jobs: readonly JobPosting[];
 }>;
+
+/* =========================================================
+ * Ranking
+ * ========================================================= */
 
 export type RankJobsInput = Readonly<{
   jobs: readonly JobPosting[];
@@ -99,18 +106,11 @@ export type RankJobsOutput = Readonly<{
   items: readonly RankedJob[];
 }>;
 
-export type JobLlmClientOptions = Readonly<{
-  model?: string; // default gpt-5.2
-  temperature?: number; // default 0.2
-  maxRetries?: number; // default 3
-  retryBaseDelayMs?: number; // default 400
-}>;
-
-/* =========================
+/* =========================================================
  * Pinecone retrieval types
- * ========================= */
+ * ========================================================= */
 
-export type EmbedFn = (text: string) => Promise<number[]>;
+export type EmbedFn = (text: string) => Promise<readonly number[]>;
 
 export type PineconeJobsClientOptions = Readonly<{
   indexName?: string;
@@ -121,9 +121,9 @@ export type PineconeJobMetadata = Readonly<{
   title: string;
   company?: string;
   location?: string;
-  remote: NonNullable<JobPosting["remote"]>;
-  employmentType: NonNullable<JobPosting["employmentType"]>;
-  seniority: NonNullable<JobPosting["seniority"]>;
+  remote: WorkMode; // non-null, normalized
+  employmentType: EmploymentType; // non-null, normalized
+  seniority: Seniority; // non-null, normalized
   sourceUrl: string;
   applyUrl?: string;
 }>;
@@ -144,3 +144,15 @@ export type RetrievedJob = Readonly<{
   job: JobPosting;
   retrievalScore: number;
 }>;
+
+/* =========================================================
+ * Normalization helpers (strongly recommended)
+ * ========================================================= */
+
+export type NormalizedJobPosting = Readonly<
+  Omit<JobPosting, "remote" | "employmentType" | "seniority"> & {
+    remote: WorkMode;
+    employmentType: EmploymentType;
+    seniority: Seniority;
+  }
+>;

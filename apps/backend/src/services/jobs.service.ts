@@ -1,6 +1,10 @@
 import { JobSchema, type JobInput } from "@/schemas/job";
 import { Job } from "../lib/generated";
 import { prisma } from "../lib/prisma";
+import { pineconeJobsClient } from "@/scraping/clients";
+import recommendationService from "./recommendation.service";
+import { generateEmbedding } from "../lib/utils/ai";
+import { JobPosting } from "@/types/ai";
 
 const jobsService = {
   /**
@@ -9,6 +13,7 @@ const jobsService = {
    * 1. If externalUrl provided, try to find by that.
    * 2. If not, try to find by title + companyName.
    * 3. Update if found, Create if not.
+   * 4. Index to Pinecone.
    */
   async upsertJob(data: JobInput) {
     const validated = JobSchema.parse(data);
@@ -32,7 +37,7 @@ const jobsService = {
       });
     }
 
-    return prisma.$transaction(async (tx) => {
+    const savedJob = await prisma.$transaction(async (tx) => {
       let job: Job;
 
       if (existingJob) {
@@ -60,7 +65,6 @@ const jobsService = {
         }
 
         // Sync JobSkills (delete and recreate for simplicity, or just ignore duplicates)
-        // To be safe and clean:
         await tx.jobSkill.deleteMany({ where: { jobId: job.id } });
         await tx.jobSkill.createMany({
           data: skillIds.map((sid) => ({
@@ -77,6 +81,32 @@ const jobsService = {
         },
       });
     });
+
+    // Index to Pinecone (Fire & Forget or Await?)
+    // Await to ensure consistency for this call
+    try {
+        const jobPosting: JobPosting = {
+            title: savedJob.title,
+            company: savedJob.companyName,
+            location: savedJob.location || undefined,
+            remote: savedJob.workMode,
+            employmentType: savedJob.employmentType,
+            sourceUrl: savedJob.externalUrl || `local:${savedJob.id}`,
+            descriptionMarkdown: savedJob.description || "",
+            // Add other fields if you have them in the DB
+        };
+        
+        await pineconeJobsClient.indexJobsToPinecone({
+            jobs: [jobPosting],
+            embed: generateEmbedding
+        });
+    } catch (error) {
+        console.error("Failed to index job to Pinecone", error);
+        // Don't fail the request? Or do?
+        // Usually we don't want to block user action if search index fails, but for a backend job it might be important.
+    }
+
+    return savedJob;
   },
 
   async getJob(id: string) {
@@ -87,6 +117,10 @@ const jobsService = {
         fitScores: true,
       },
     });
+  },
+
+  async getRecommendedJobs(userId: string) {
+    return recommendationService.getRecommendedJobs(userId);
   },
 
   async getPublicJobs() {
