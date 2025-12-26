@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts":{
-    "backend": "bun run --filter="
+    "backend": "bun run --filter=chambear-backend start",
+    "frontend": "bun run --filter=chambear-frontend start"
   },
   "devDependencies": {
     "@types/bun": "latest"
