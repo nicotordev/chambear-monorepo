@@ -1,4 +1,4 @@
-import type { Context, Env } from "hono";
+import type { Context } from "hono";
 import { getAuth } from "@hono/clerk-auth";
 import jobsService from "@/services/jobs.service";
 import response from "@/lib/utils/response";
@@ -33,7 +33,7 @@ const jobsController = {
   async getJobRecommendations(c: Context) {
     const auth = getAuth(c);
     const userId = auth?.userId;
-    
+
     if (!userId) {
       return c.json(response.unauthorized(), 401);
     }

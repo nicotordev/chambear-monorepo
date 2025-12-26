@@ -1,9 +1,15 @@
-import { demoJobs } from "@/data/demo";
+import { backend } from "@/lib/backend";
+import { response } from "@/lib/response";
+
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const _params = await params;
-  const job = demoJobs.find((job) => job.id === _params.id);
-  return Response.json(job, { status: 200 });
+  try {
+    const _params = await params;
+    const job = await backend.jobs.getJobsById(_params.id);
+    return response.success(job);
+  } catch (error) {
+    return response.internalError("Failed to fetch job", error);
+  }
 }

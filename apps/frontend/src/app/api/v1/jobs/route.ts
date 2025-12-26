@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
-import { demoJobs } from "@/data/demo";
+import { response } from "@/lib/response";
+import { backend } from "@/lib/backend";
 
 export async function GET() {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  return NextResponse.json(demoJobs, {
-    status: 200,
-  });
+  try {
+    const jobs = await backend.jobs.getJobs();
+    return response.success(jobs);
+  } catch (error) {
+    return response.internalError("Failed to fetch jobs", error);
+  }
 }

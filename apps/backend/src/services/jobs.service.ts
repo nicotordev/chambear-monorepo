@@ -85,25 +85,25 @@ const jobsService = {
     // Index to Pinecone (Fire & Forget or Await?)
     // Await to ensure consistency for this call
     try {
-        const jobPosting: JobPosting = {
-            title: savedJob.title,
-            company: savedJob.companyName,
-            location: savedJob.location || undefined,
-            remote: savedJob.workMode,
-            employmentType: savedJob.employmentType,
-            sourceUrl: savedJob.externalUrl || `local:${savedJob.id}`,
-            descriptionMarkdown: savedJob.description || "",
-            // Add other fields if you have them in the DB
-        };
-        
-        await pineconeJobsClient.indexJobsToPinecone({
-            jobs: [jobPosting],
-            embed: generateEmbedding
-        });
+      const jobPosting: JobPosting = {
+        title: savedJob.title,
+        company: savedJob.companyName,
+        location: savedJob.location || undefined,
+        remote: savedJob.workMode,
+        employmentType: savedJob.employmentType,
+        sourceUrl: savedJob.externalUrl || `local:${savedJob.id}`,
+        descriptionMarkdown: savedJob.description || "",
+        // Add other fields if you have them in the DB
+      };
+
+      await pineconeJobsClient.indexJobsToPinecone({
+        jobs: [jobPosting],
+        embed: generateEmbedding,
+      });
     } catch (error) {
-        console.error("Failed to index job to Pinecone", error);
-        // Don't fail the request? Or do?
-        // Usually we don't want to block user action if search index fails, but for a backend job it might be important.
+      console.error("Failed to index job to Pinecone", error);
+      // Don't fail the request? Or do?
+      // Usually we don't want to block user action if search index fails, but for a backend job it might be important.
     }
 
     return savedJob;
