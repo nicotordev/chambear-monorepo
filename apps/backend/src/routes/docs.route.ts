@@ -1,11 +1,8 @@
-import type { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import docsController from "@/controllers/docs.controller";
 
-const registerDocsRoutes = (app: OpenAPIHono) => {
-  docsController.registerDocs(app);
-  app.get("/docs", docsController.swaggerUiHandler);
-};
+const app = new OpenAPIHono();
 
-const docsRoutes = { registerDocsRoutes };
+app.get("/docs", docsController.swaggerUiHandler);
 
-export default docsRoutes;
+export default app;

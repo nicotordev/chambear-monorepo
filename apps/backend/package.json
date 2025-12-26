@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@brightdata/sdk": "^0.2.0",
-    "@clerk/express": "^1.7.57",
+    "@clerk/backend": "^2.29.0",
+    "@hono/clerk-auth": "^3.0.3",
     "@hono/node-server": "^1.19.6",
     "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-openapi": "^1.2.0",

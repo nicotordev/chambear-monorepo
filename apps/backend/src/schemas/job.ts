@@ -24,4 +24,20 @@ export const JobSchema = z.object({
   ),
 });
 
+export const JobPostingSchema = z.object({
+  title: z.string(),
+  company: z.string().optional(),
+  location: z.string().optional(),
+  remote: z.enum(WorkMode).optional(),
+  employmentType: z.enum(EmploymentType).optional(),
+  sourceUrl: z.string(),
+  descriptionMarkdown: z.string().optional(),
+});
+
+export const RankedJobSchema = z.object({
+  job: JobPostingSchema,
+  fitScore: z.number(),
+  rationale: z.string(),
+});
+
 export type JobInput = z.infer<typeof JobSchema>;

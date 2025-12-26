@@ -23,13 +23,13 @@ class Api {
   }
 
   public async getJobs(): Promise<Job[]> {
-    const response = await this.instance.get("/jobs");
-    return response.data;
+    const res = await this.instance.get("/jobs");
+    return res.data.data;
   }
 
   public async getJobById(id: string): Promise<Job> {
-    const response = await this.instance.get(`/jobs/${id}`);
-    return response.data;
+    const res = await this.instance.get(`/jobs/${id}`);
+    return res.data.data;
   }
 }
 

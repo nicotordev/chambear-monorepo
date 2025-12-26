@@ -1,7 +1,8 @@
 import { createRoute } from "@hono/zod-openapi";
-import type { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import healthController from "@/controllers/health.controller";
 import { HealthResponseSchema } from "@/schemas/health";
+import { createSuccessResponseSchema } from "@/schemas/response";
 
 const HealthRoute = createRoute({
   method: "get",
@@ -11,17 +12,15 @@ const HealthRoute = createRoute({
       description: "Health check",
       content: {
         "application/json": {
-          schema: HealthResponseSchema,
+          schema: createSuccessResponseSchema(HealthResponseSchema),
         },
       },
     },
   },
 });
 
-const registerHealthRoutes = (app: OpenAPIHono) => {
-  app.openapi(HealthRoute, (c) => healthController.getHealth(c));
-};
+const app = new OpenAPIHono();
 
-const healthRoutes = { registerHealthRoutes };
+app.openapi(HealthRoute, (c) => healthController.getHealth(c));
 
-export default healthRoutes;
+export default app;
