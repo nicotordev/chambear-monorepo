@@ -15,20 +15,26 @@ const api: AxiosInstance = axios.create({
 
 // Logging Interceptors
 api.interceptors.request.use((config) => {
-  console.log(`[Backend Request] ${config.method?.toUpperCase()} ${config.url}`);
+  console.log(
+    `[Backend Request] ${config.method?.toUpperCase()} ${config.url}`
+  );
   return config;
 });
 
 api.interceptors.response.use(
   (response) => {
     console.log(
-      `[Backend Response] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`
+      `[Backend Response] ${response.config.method?.toUpperCase()} ${
+        response.config.url
+      } - Status: ${response.status}`
     );
     return response;
   },
   (error) => {
     console.error(
-      `[Backend Error] ${error.config?.method?.toUpperCase()} ${error.config?.url} -`,
+      `[Backend Error] ${error.config?.method?.toUpperCase()} ${
+        error.config?.url
+      } -`,
       error.response?.data || error.message
     );
     return Promise.reject(error);
@@ -53,7 +59,9 @@ const fetcher = {
       ...config,
       headers: { ...authHeaders, ...config?.headers },
     });
-    return data;
+    return data && typeof data === "object" && "data" in data
+      ? (data.data as T)
+      : (data as T);
   },
 
   post: async <T>(url: string, body: any, config?: AxiosRequestConfig) => {
@@ -90,7 +98,7 @@ export const backend = {
     getMe: (): Promise<User> => fetcher.get<User>("/user/me"),
 
     upsertProfile: (data: CreateProfileInput): Promise<User> =>
-      fetcher.post<User>("/user/profile", data),
+      fetcher.post<User>("/user/me", data),
 
     uploadAvatar: async (file: File): Promise<string> => {
       const formData = new FormData();
