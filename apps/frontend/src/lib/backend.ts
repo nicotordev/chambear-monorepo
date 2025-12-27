@@ -70,7 +70,9 @@ const fetcher = {
       ...config,
       headers: { ...authHeaders, ...config?.headers },
     });
-    return data;
+    return data && typeof data === "object" && "data" in data
+      ? (data.data as T)
+      : (data as T);
   },
 
   put: async <T>(url: string, body: any, config?: AxiosRequestConfig) => {
@@ -79,7 +81,9 @@ const fetcher = {
       ...config,
       headers: { ...authHeaders, ...config?.headers },
     });
-    return data;
+    return data && typeof data === "object" && "data" in data
+      ? (data.data as T)
+      : (data as T);
   },
 };
 

@@ -5,13 +5,17 @@ import { DashboardNextInterview } from "@/components/dashboard/dashboard-next-in
 import { DashboardRecommendedJobs } from "@/components/dashboard/dashboard-recommended-jobs";
 import { DashboardReminders } from "@/components/dashboard/dashboard-reminders";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
-import api from "@/lib/api";
+import backend from "@/lib/backend";
+
+export const runtime = "nodejs";
+
+export const dynamic = "force-dynamic";
 
 async function getDashboardData() {
   try {
     const [user, jobs] = await Promise.all([
-      api.getUser(),
-      api.getJobs()
+      backend.user.getMe(),
+      backend.jobs.list(),
     ]);
     return { user, jobs };
   } catch (error) {
@@ -24,8 +28,12 @@ export default async function DashboardPage() {
   const { user, jobs } = await getDashboardData();
 
   if (!user) {
-     // Handle case where user fetch fails or is not authenticated properly handled by middleware usually
-     return <div className="p-8 text-center text-muted-foreground">Error loading dashboard. Please try refreshing.</div>;
+    // Handle case where user fetch fails or is not authenticated properly handled by middleware usually
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        Error loading dashboard. Please try refreshing.
+      </div>
+    );
   }
 
   const currentProfile = user.profile?.[0]; // Assuming user has at least one profile or using the first one
@@ -36,11 +44,14 @@ export default async function DashboardPage() {
   // Calculate profile completion (simplified logic based on available fields)
   let profileCompletion = 0;
   if (currentProfile) {
-      if (currentProfile.headline) profileCompletion += 20;
-      if (currentProfile.summary) profileCompletion += 20;
-      if (currentProfile.skills && currentProfile.skills.length > 0) profileCompletion += 20;
-      if (currentProfile.experiences && currentProfile.experiences.length > 0) profileCompletion += 20;
-      if (currentProfile.educations && currentProfile.educations.length > 0) profileCompletion += 20;
+    if (currentProfile.headline) profileCompletion += 20;
+    if (currentProfile.summary) profileCompletion += 20;
+    if (currentProfile.skills && currentProfile.skills.length > 0)
+      profileCompletion += 20;
+    if (currentProfile.experiences && currentProfile.experiences.length > 0)
+      profileCompletion += 20;
+    if (currentProfile.educations && currentProfile.educations.length > 0)
+      profileCompletion += 20;
   }
 
   return (
@@ -75,10 +86,7 @@ export default async function DashboardPage() {
 
             {/* Sidebar Widgets Column */}
             <div className="lg:col-span-4 bg-background flex flex-col divide-y divide-border">
-              <DashboardNextInterview
-                interviews={myInterviews}
-                jobs={jobs}
-              />
+              <DashboardNextInterview interviews={myInterviews} jobs={jobs} />
               <DashboardReminders reminders={myReminders} />
               <DashboardDocuments />
             </div>
