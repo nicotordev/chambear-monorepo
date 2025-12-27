@@ -6,6 +6,7 @@ export async function GET() {
     const jobs = await backend.jobs.getJobs();
     return response.success(jobs);
   } catch (error) {
-    return response.internalError("Failed to fetch jobs", error);
+    console.log(`Error getting jobs: ${error}`);
+    return response.handleAxios(error);
   }
 }

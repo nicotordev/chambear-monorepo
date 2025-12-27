@@ -10,6 +10,7 @@ export async function GET(
     const job = await backend.jobs.getJobsById(_params.id);
     return response.success(job);
   } catch (error) {
-    return response.internalError("Failed to fetch job", error);
+    console.log(`Error getting job: ${error}`);
+    return response.handleAxios(error);
   }
 }
