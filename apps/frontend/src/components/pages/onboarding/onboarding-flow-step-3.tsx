@@ -11,15 +11,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateForInput } from "@/lib/utils";
-import { CreateProfileSchemaInput } from "@/schemas/user";
+import { CreateProfileInput } from "@/schemas/user";
 import { Briefcase, Plus, Trash2 } from "lucide-react";
 import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 
 export interface OnboardingFlowStep3Props {
-  form: UseFormReturn<CreateProfileSchemaInput>;
-  appendExp: (exp: CreateProfileSchemaInput["experiences"][number]) => void;
+  form: UseFormReturn<CreateProfileInput>;
+  appendExp: (exp: CreateProfileInput["experiences"][number]) => void;
   removeExp: (index: number) => void;
-  expFields: FieldArrayWithId<CreateProfileSchemaInput, "experiences", "id">[];
+  expFields: FieldArrayWithId<CreateProfileInput, "experiences", "id">[];
 }
 
 export default function OnboardingFlowStep3({

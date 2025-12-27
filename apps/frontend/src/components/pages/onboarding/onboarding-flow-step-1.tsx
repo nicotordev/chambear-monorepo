@@ -8,12 +8,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateProfileSchemaInput } from "@/schemas/user";
+import { CreateProfileInput } from "@/schemas/user";
 import { Upload } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
 export interface OnboardingFlowStep1Props {
-  form: UseFormReturn<CreateProfileSchemaInput>;
+  form: UseFormReturn<CreateProfileInput>;
   profilePic: string | null;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;

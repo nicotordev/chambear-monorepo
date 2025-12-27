@@ -2,11 +2,8 @@
 
 import Logo from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -32,7 +29,6 @@ import OnboardingFlowStep2 from "./onboarding-flow-step-2";
 import OnboardingFlowStep3 from "./onboarding-flow-step-3";
 import OnboardingFlowStep4 from "./onboarding-flow-step-4";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const STEPS = [
   { id: 1, label: "Profile", icon: User, description: "Basic Info" },

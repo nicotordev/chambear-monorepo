@@ -11,16 +11,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CreateProfileSchemaInput } from "@/schemas/user";
+import { CreateProfileInput } from "@/schemas/user";
 import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 import { GraduationCap, Plus, Trash2 } from "lucide-react";
 import { formatDateForInput } from "@/lib/utils";
 
 export interface OnboardingFlowStep4Props {
-  form: UseFormReturn<CreateProfileSchemaInput>;
-  appendEdu: (edu: CreateProfileSchemaInput["educations"][number]) => void;
+  form: UseFormReturn<CreateProfileInput>;
+  appendEdu: (edu: CreateProfileInput["educations"][number]) => void;
   removeEdu: (index: number) => void;
-  eduFields: FieldArrayWithId<CreateProfileSchemaInput, "educations", "id">[];
+  eduFields: FieldArrayWithId<CreateProfileInput, "educations", "id">[];
 }
 
 export default function OnboardingFlowStep4({
@@ -42,8 +42,8 @@ export default function OnboardingFlowStep4({
               school: "",
               degree: "",
               field: "",
-              startDate: undefined,
-              endDate: undefined,
+              startDate: new Date(),
+              endDate: new Date(),
               description: "",
             })
           }

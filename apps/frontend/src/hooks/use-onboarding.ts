@@ -1,18 +1,14 @@
 "use client";
 
 import api from "@/lib/api";
-import {
-  CreateProfileInput,
-  CreateProfileSchema,
-  CreateProfileSchemaInput,
-  SkillLevel,
-} from "@/schemas/user";
+import { CreateProfileInput, CreateProfileSchema } from "@/schemas/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { SkillLevel } from "@/types";
 
 export const useOnboarding = () => {
   const router = useRouter();
@@ -26,13 +22,12 @@ export const useOnboarding = () => {
   const userDetails = useQuery({
     queryKey: ["user"],
     queryFn: () => api.getUser(),
-    // Data is fresh for 5 minutes, kept in cache for 24 hours
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const form = useForm<CreateProfileSchemaInput, any, CreateProfileInput>({
-    resolver: zodResolver(CreateProfileSchema),
+  const form = useForm<CreateProfileInput>({
+    resolver: zodResolver(CreateProfileSchema) as Resolver<CreateProfileInput>,
     defaultValues: {
       headline: "",
       avatar: "",
@@ -46,18 +41,15 @@ export const useOnboarding = () => {
     },
   });
 
-  // Determine initial state once data is loaded
   useEffect(() => {
     if (userDetails.isSuccess && userDetails.data) {
       const p = userDetails.data.profile || [];
-      // If no profiles, default to creating new
       if (p.length === 0 && selectedProfileId !== "new") {
         setSelectedProfileId("new");
       }
     }
   }, [userDetails.isSuccess, userDetails.data]);
 
-  // Sync form with selected profile
   useEffect(() => {
     if (!userDetails.data) return;
 

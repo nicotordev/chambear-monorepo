@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type CreateProfileSchemaInput } from "@/schemas/user";
+import { type CreateProfileInput } from "@/schemas/user";
 import { SkillLevel } from "@/types";
 import { Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
@@ -37,10 +37,10 @@ const SUGGESTED_SKILLS = [
 ];
 
 export interface OnboardingFlowStep2Props {
-  form: UseFormReturn<CreateProfileSchemaInput>;
+  form: UseFormReturn<CreateProfileInput>;
   appendSkill: (skill: { skillName: string; level: SkillLevel }) => void;
   removeSkill: (index: number) => void;
-  skillFields: FieldArrayWithId<CreateProfileSchemaInput, "skills", "id">[];
+  skillFields: FieldArrayWithId<CreateProfileInput, "skills", "id">[];
 }
 
 export default function OnboardingFlowStep2({
