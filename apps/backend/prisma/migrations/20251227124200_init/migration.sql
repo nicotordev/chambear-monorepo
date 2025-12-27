@@ -1,11 +1,17 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
+CREATE TYPE "Role" AS ENUM ('BUYER', 'SELLER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "EmploymentType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMPORARY', 'INTERN', 'FREELANCE');
+CREATE TYPE "UrlKind" AS ENUM ('JOB_LISTING', 'JOBS_INDEX', 'CAREERS', 'LOGIN_OR_GATE', 'BLOG_OR_NEWS', 'COMPANY_ABOUT', 'IRRELEVANT');
 
 -- CreateEnum
-CREATE TYPE "WorkMode" AS ENUM ('ONSITE', 'HYBRID', 'REMOTE');
+CREATE TYPE "Seniority" AS ENUM ('JUNIOR', 'MID', 'SENIOR', 'STAFF', 'LEAD', 'PRINCIPAL', 'UNKNOWN');
+
+-- CreateEnum
+CREATE TYPE "EmploymentType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMPORARY', 'INTERN', 'FREELANCE', 'UNKNOWN');
+
+-- CreateEnum
+CREATE TYPE "WorkMode" AS ENUM ('ONSITE', 'HYBRID', 'REMOTE', 'UNKNOWN');
 
 -- CreateEnum
 CREATE TYPE "ApplicationStatus" AS ENUM ('SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'HIRED', 'ARCHIVED');
@@ -33,7 +39,7 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
-    "role" "Role" NOT NULL DEFAULT 'USER',
+    "role" "Role" NOT NULL DEFAULT 'BUYER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -43,6 +49,7 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
+    "avatar" TEXT,
     "userId" TEXT NOT NULL,
     "headline" TEXT,
     "summary" TEXT,
@@ -113,18 +120,34 @@ CREATE TABLE "Job" (
     "title" TEXT NOT NULL,
     "companyName" TEXT NOT NULL,
     "location" TEXT,
-    "employmentType" "EmploymentType" NOT NULL DEFAULT 'FULL_TIME',
-    "workMode" "WorkMode" NOT NULL DEFAULT 'HYBRID',
+    "seniority" "Seniority" NOT NULL DEFAULT 'UNKNOWN',
+    "employmentType" "EmploymentType" NOT NULL DEFAULT 'UNKNOWN',
+    "workMode" "WorkMode" NOT NULL DEFAULT 'UNKNOWN',
     "description" TEXT,
     "source" "JobSource" NOT NULL DEFAULT 'MANUAL',
+    "urlKind" "UrlKind" NOT NULL DEFAULT 'IRRELEVANT',
     "externalUrl" TEXT,
+    "salary" TEXT,
+    "tags" TEXT[],
     "postedAt" TIMESTAMP(3),
     "expiresAt" TIMESTAMP(3),
     "rawData" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "companyId" TEXT,
 
     CONSTRAINT "Job_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Company" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "logo" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Company_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -224,6 +247,12 @@ CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 CREATE UNIQUE INDEX "Skill_name_key" ON "Skill"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Job_externalUrl_key" ON "Job"("externalUrl");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
+
+-- CreateIndex
 CREATE INDEX "Application_status_idx" ON "Application"("status");
 
 -- CreateIndex
@@ -252,6 +281,9 @@ ALTER TABLE "ProfileSkill" ADD CONSTRAINT "ProfileSkill_profileId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "ProfileSkill" ADD CONSTRAINT "ProfileSkill_skillId_fkey" FOREIGN KEY ("skillId") REFERENCES "Skill"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Job" ADD CONSTRAINT "Job_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "JobSkill" ADD CONSTRAINT "JobSkill_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
