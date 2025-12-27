@@ -37,7 +37,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
 
   if (!selectedJob) return null;
 
-  const isReadyToApply = selectedJob.fit >= 75;
+  const isReadyToApply = (selectedJob?.fit || 0) >= 75;
 
   return (
     <div className="p-8 space-y-8 max-w-3xl animate-in fade-in duration-300">
@@ -47,7 +47,8 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
           {selectedJob.title}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {selectedJob.company.name} · {selectedJob.location ?? "Remoto"}
+          {selectedJob.company?.name ?? "Empresa Confidencial"} ·{" "}
+          {selectedJob.location ?? "Remoto"}
         </p>
       </div>
 
@@ -65,16 +66,14 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
             <span>Fit estimado</span>
-            <span className="font-medium">{selectedJob.fit}%</span>
+            <span className="font-medium">{selectedJob?.fit ?? 0}%</span>
           </div>
-          <Progress value={selectedJob.fit} />
+          <Progress value={selectedJob?.fit ?? 0} />
         </div>
 
         {/* SINGLE PRIMARY ACTION */}
         <Button asChild size="lg" className="w-full">
-          <Link href={`/dashboard/jobs/${selectedJob.id}`}>
-            Ver oferta
-          </Link>
+          <Link href={`/dashboard/jobs/${selectedJob.id}`}>Ver oferta</Link>
         </Button>
       </div>
 

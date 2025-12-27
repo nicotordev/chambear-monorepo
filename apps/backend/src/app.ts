@@ -1,8 +1,8 @@
+import jobsRoute from "@/routes/jobs.route";
+import userRoute from "@/routes/user.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
-import jobsRoute from "@/routes/jobs.route";
-import userRoute from "@/routes/user.route";
 
 const app = new OpenAPIHono();
 
@@ -27,8 +27,12 @@ app.use(
   })
 );
 
-app.use("*", clerkMiddleware());
+app.use("*", async (c, next) => {
+  console.log(`🚀 [API Request] ${c.req.method?.toUpperCase()} ${c.req.url}`);
+  return await next();
+});
 
+app.use("*", clerkMiddleware());
 
 app.route("/api/v1", jobsRoute);
 app.route("/api/v1", userRoute);

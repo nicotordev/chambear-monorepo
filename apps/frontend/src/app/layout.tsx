@@ -11,6 +11,7 @@ import { ThemeModeScript } from "flowbite-react";
 
 import "./globals.css";
 import Providers from "./providers";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -53,11 +54,11 @@ export const metadata: Metadata = {
   description: "AI-powered work, done right",
 };
 
-export default function RootLayout({
-  children,
-}: {
+export interface RootLayoutProps {
   children: React.ReactNode;
-}) {
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -77,6 +78,7 @@ export default function RootLayout({
           "w-dvw h-dvh",
         ].join(" ")}
       >
+        <Toaster />
         <Providers>{children}</Providers>
       </body>
     </html>

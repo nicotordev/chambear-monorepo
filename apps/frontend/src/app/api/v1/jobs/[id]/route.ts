@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const _params = await params;
-    const job = await backend.jobs.getJobsById(_params.id);
+    const job = await backend.jobs.getById(_params.id);
     return response.success(job);
   } catch (error) {
     console.log(`Error getting job: ${error}`);

@@ -31,6 +31,7 @@ export interface User {
 export interface Profile {
   id: string;
   userId: string;
+  avatar: string | null;
   headline: string | null;
   summary: string | null;
   location: string | null;
@@ -104,9 +105,12 @@ export interface Job {
   externalUrl: string | null;
   postedAt: Date | null;
   expiresAt: Date | null;
-  rawData: any | null;
+  rawData: JSONValue | null;
   createdAt: Date;
   updatedAt: Date;
+  salary: string | null;
+  tags: string[];
+  companyId: string | null;
   applications?: Application[];
   fitScores?: FitScore[];
   jobSkills?: JobSkill[];
@@ -114,6 +118,26 @@ export interface Job {
   interviews?: InterviewSession[];
   reminders?: Reminder[];
   company?: Company;
+  fit?: number;
+}
+
+export type JSONValue =
+  | string
+  | number
+  | boolean
+  | { [x: string]: JSONValue | undefined }
+  | JSONValue[]
+  | null;
+
+export interface FitScore {
+  id: string;
+  userId: string;
+  jobId: string;
+  score: number;
+  rationale: JSONValue | null;
+  createdAt: Date;
+  user?: User;
+  job?: Job;
 }
 
 export interface Company {
@@ -173,7 +197,7 @@ export interface FitScore {
   userId: string;
   jobId: string;
   score: number;
-  rationale: any | null;
+  rationale: JSONValue | null;
   createdAt: Date;
   user?: User;
   job?: Job;
@@ -188,7 +212,7 @@ export interface InterviewSession {
   scheduledFor: Date | null;
   durationMinutes: number | null;
   notes: string | null;
-  aiFeedback: any | null;
+  aiFeedback: JSONValue | null;
   createdAt: Date;
   updatedAt: Date;
   user?: User;

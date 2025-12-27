@@ -30,7 +30,7 @@ export function DashboardActiveApplications({
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="size-12 rounded-lg bg-background border flex items-center justify-center font-bold text-lg shadow-sm text-primary">
-                  {job?.company.name.charAt(0)}
+                  {job?.company?.name?.charAt(0)}
                 </div>
                 <Badge
                   variant="outline"
@@ -48,7 +48,7 @@ export function DashboardActiveApplications({
                 {job?.title}
               </h4>
               <p className="text-xs text-muted-foreground mb-4 truncate">
-                {job?.company.name} • {job?.location}
+                {job?.company?.name} • {job?.location}
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-1.5">

@@ -9,7 +9,11 @@ import {
   EmbedFn,
   RetrievedJob,
 } from "../../types/ai";
-import { EmploymentType, WorkMode, Seniority } from "../../lib/generated";
+import {
+  EmploymentType,
+  WorkMode,
+  Seniority,
+} from "../../lib/generated";
 
 type PineconeFilter = Readonly<Record<string, unknown>>;
 

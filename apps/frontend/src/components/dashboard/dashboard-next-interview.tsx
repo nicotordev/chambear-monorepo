@@ -38,7 +38,7 @@ export function DashboardNextInterview({
               {jobs.find((j) => j.id === nextInterview.jobId)?.title}
             </p>
             <p className="text-muted-foreground text-lg">
-              {jobs.find((j) => j.id === nextInterview.jobId)?.company.name}
+              {jobs.find((j) => j.id === nextInterview.jobId)?.company?.name}
             </p>
           </div>
           <Button className="w-full bg-chart-2 hover:bg-chart-2/90 text-white font-bold h-12 text-base rounded-xl shadow-lg shadow-chart-2/20">

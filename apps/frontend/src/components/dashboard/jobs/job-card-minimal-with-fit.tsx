@@ -27,7 +27,7 @@ export default function JobCardMinimalWithFit({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm leading-tight">{job.title}</CardTitle>
         <p className="text-xs text-muted-foreground">
-          {job.company.name} · {job.location ?? "Remoto"}
+          {job?.company?.name} · {job.location ?? "Remoto"}
         </p>
       </CardHeader>
 

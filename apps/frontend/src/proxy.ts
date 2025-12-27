@@ -7,11 +7,10 @@ import {
 import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isApiRoute = createRouteMatcher(["/api(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (req.nextUrl.pathname === "/") {
-    return NextResponse.next();
-  }
+  if (isApiRoute(req)) return NextResponse.next();
   if (isProtectedRoute(req)) await auth.protect();
   const _auth = await auth();
   const _clerkClient = await clerkClient();

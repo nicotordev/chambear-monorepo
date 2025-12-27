@@ -37,15 +37,36 @@ const userController = {
 
     try {
       // Need to implement getProfile in userService or assuming getProfile(userId) works.
-      // userService.getProfile(userId) exists in the file I read.
-      const profile = await userService.getProfile(userId);
-      if (!profile) {
-        return c.json(response.notFound("User not found"), 404); // Or return empty?
-      }
-      return c.json(response.success(profile), 200);
+      const user = await userService.getMe(userId);
+      return c.json(response.success(user), 200);
     } catch (error) {
       console.error(error);
       return c.json(response.error("Failed to get profile"), 500);
+    }
+  },
+
+  async uploadAvatar(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    const data = await c.req.parseBody();
+
+    const file = data.file;
+
+    if (!file || !(file instanceof File)) {
+      return c.json(response.badRequest("No file provided"), 400);
+    }
+
+    try {
+      const finalURL = await userService.uploadAvatar(file, userId);
+      return c.json(response.success(finalURL), 200);
+    } catch (error) {
+      console.error(error);
+      return c.json(response.error("Failed to upload avatar"), 500);
     }
   },
 };

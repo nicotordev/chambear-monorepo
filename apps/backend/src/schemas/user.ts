@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { SkillLevel } from "@/lib/generated";
+import { z } from "zod";
 
 export const ExperienceSchema = z.object({
   title: z.string().min(1),
@@ -27,7 +27,9 @@ export const ProfileSkillSchema = z.object({
 });
 
 export const CreateProfileSchema = z.object({
+  id: z.string().optional(),
   headline: z.string().optional(),
+  avatar: z.string().optional(),
   summary: z.string().optional(),
   location: z.string().optional(),
   yearsExperience: z.number().int().min(0).optional(),

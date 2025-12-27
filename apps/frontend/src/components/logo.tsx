@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils"; // Standard in shadcn/ui projects
 interface LogoProps {
   variant?: "icon" | "full";
   size?: "sm" | "md" | "lg" | "xl";
+  alignment?: "left" | "center" | "right";
   className?: string;
 }
 
 export default function Logo({
   variant = "icon",
   size = "md",
+  alignment = "center",
   className,
 }: LogoProps) {
   // Define size configurations
@@ -23,7 +25,17 @@ export default function Logo({
   const { width, height, textSize } = sizeMap[size];
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-2",
+        alignment === "left"
+          ? "justify-start"
+          : alignment === "center"
+          ? "justify-center"
+          : "justify-end",
+        className
+      )}
+    >
       <Image
         src="/assets/img/logo/only-logo/only-logo.png"
         alt="Chambear AI Logo"

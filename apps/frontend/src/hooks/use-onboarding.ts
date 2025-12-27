@@ -8,23 +8,26 @@ import {
   SkillLevel,
 } from "@/schemas/user";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useOnboarding = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
+    null
+  );
   const totalSteps = 4;
 
   const userDetails = useQuery({
     queryKey: ["user"],
     queryFn: () => api.getUser(),
     // Data is fresh for 5 minutes, kept in cache for 24 hours
-    staleTime: 1000 * 60 * 5, 
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 60 * 24,
   });
 
@@ -32,6 +35,7 @@ export const useOnboarding = () => {
     resolver: zodResolver(CreateProfileSchema),
     defaultValues: {
       headline: "",
+      avatar: "",
       summary: "",
       location: "",
       yearsExperience: 0,
@@ -42,50 +46,93 @@ export const useOnboarding = () => {
     },
   });
 
-  // Sync form with fetched data
+  // Determine initial state once data is loaded
   useEffect(() => {
     if (userDetails.isSuccess && userDetails.data) {
-      const currentProfile = userDetails.data.profile?.[0]; // Assuming user has a profile array
-
-      if (currentProfile) {
-        form.reset({
-          headline: currentProfile.headline ?? "",
-          summary: currentProfile.summary ?? "",
-          location: currentProfile.location ?? "",
-          yearsExperience: currentProfile.yearsExperience ?? 0,
-          targetRoles: currentProfile.targetRoles ?? [],
-          skills:
-            currentProfile.skills?.map((skill: any) => ({
-              skillName: skill.skill?.name ?? skill.skillName ?? "",
-              level: (skill.level as any) ?? SkillLevel.BEGINNER,
-            })) ?? [],
-          educations:
-            currentProfile.educations?.map((education: any) => ({
-              school: education.school ?? "",
-              degree: education.degree ?? "",
-              field: education.field ?? "",
-              startDate: education.startDate ? new Date(education.startDate) : undefined,
-              endDate: education.endDate ? new Date(education.endDate) : undefined,
-              description: education.description ?? "",
-            })) ?? [],
-          experiences:
-            currentProfile.experiences?.map((experience: any) => ({
-              title: experience.title ?? "",
-              company: experience.company ?? "",
-              startDate: experience.startDate ? new Date(experience.startDate) : undefined,
-              endDate: experience.endDate ? new Date(experience.endDate) : undefined,
-              current: experience.current ?? false,
-              summary: experience.summary ?? "",
-              highlights: experience.highlights ?? [],
-              location: experience.location ?? "",
-            })) ?? [],
-        });
+      const p = userDetails.data.profile || [];
+      // If no profiles, default to creating new
+      if (p.length === 0 && selectedProfileId !== "new") {
+        setSelectedProfileId("new");
       }
     }
-  }, [userDetails.isSuccess, userDetails.data, form]);
+  }, [userDetails.isSuccess, userDetails.data]);
+
+  // Sync form with selected profile
+  useEffect(() => {
+    if (!userDetails.data) return;
+
+    if (selectedProfileId === "new") {
+      form.reset({
+        headline: "",
+        avatar: "",
+        summary: "",
+        location: "",
+        yearsExperience: 0,
+        targetRoles: [],
+        skills: [],
+        educations: [],
+        experiences: [],
+      });
+      return;
+    }
+
+    const currentProfile = userDetails.data.profile?.find(
+      (p) => p.id === selectedProfileId
+    );
+
+    if (currentProfile) {
+      form.reset({
+        headline: currentProfile.headline ?? "",
+        avatar: currentProfile.avatar ?? "",
+        summary: currentProfile.summary ?? "",
+        location: currentProfile.location ?? "",
+        yearsExperience: currentProfile.yearsExperience ?? 0,
+        targetRoles: currentProfile.targetRoles ?? [],
+        skills:
+          currentProfile.skills?.map((skill: any) => ({
+            skillName: skill.skill?.name ?? skill.skillName ?? "",
+            level: (skill.level as any) ?? SkillLevel.BEGINNER,
+          })) ?? [],
+        educations:
+          currentProfile.educations?.map((education: any) => ({
+            school: education.school ?? "",
+            degree: education.degree ?? "",
+            field: education.field ?? "",
+            startDate: education.startDate
+              ? new Date(education.startDate)
+              : undefined,
+            endDate: education.endDate
+              ? new Date(education.endDate)
+              : undefined,
+            description: education.description ?? "",
+          })) ?? [],
+        experiences:
+          currentProfile.experiences?.map((experience: any) => ({
+            title: experience.title ?? "",
+            company: experience.company ?? "",
+            startDate: experience.startDate
+              ? new Date(experience.startDate)
+              : undefined,
+            endDate: experience.endDate
+              ? new Date(experience.endDate)
+              : undefined,
+            current: experience.current ?? false,
+            summary: experience.summary ?? "",
+            highlights: experience.highlights ?? [],
+            location: experience.location ?? "",
+          })) ?? [],
+      });
+    }
+  }, [selectedProfileId, userDetails.data, form]);
 
   const mutation = useMutation({
-    mutationFn: (data: CreateProfileInput) => api.upsertUser(data),
+    mutationFn: (data: CreateProfileInput) => {
+      const payload =
+        selectedProfileId && selectedProfileId !== "new"
+          ? { ...data, id: selectedProfileId }
+          : data;
+      return api.upsertUser(payload);
+    },
     onSuccess: () => {
       toast.success("Profile updated successfully");
       queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -114,5 +161,9 @@ export const useOnboarding = () => {
     currentStep,
     handleStep,
     totalSteps,
+    profiles: userDetails.data?.profile || [],
+    selectedProfileId,
+    selectProfile: setSelectedProfileId,
+    isLoading: userDetails.isLoading,
   };
 };

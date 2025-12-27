@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { demoFitScores, demoJobs } from "@/data/demo";
 import api from "@/lib/api";
 import type { Job } from "@/types";
 
@@ -25,17 +24,9 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-type JobId = string;
-
-type JobCardModel = {
-  id: string;
-  title: string;
-  companyName: string;
-  companyLogo?: string | null;
-  location: string | null;
-  salary?: string | null;
-  tags: string[];
-  description: string | null;
+type Rationale = {
+  match?: string[];
+  missing?: string[];
 };
 
 type FitModel = {
@@ -55,47 +46,27 @@ function clampScore(n: number): number {
   return Math.max(0, Math.min(100, v));
 }
 
-function mapJobFromDemo(id: JobId): JobCardModel | null {
-  const j = demoJobs.find((x) => x.id === id);
-  if (!j) return null;
-
-  return {
-    id: j.id,
-    title: j.title,
-    companyName: j.company.name,
-    companyLogo: j.company.logo ?? null,
-    location: j.location,
-    salary: j.salary ?? null,
-    tags: j.tags,
-    description: j.description,
-  };
-}
-
-function mapFitFromDemo(id: JobId): FitModel | null {
-  const f = demoFitScores.find((x) => x.jobId === id);
-  if (!f) return null;
-
-  const rationale = (f.rationale ?? {}) as unknown;
-  const r = rationale as { match?: unknown; missing?: unknown };
-
-  const match = Array.isArray(r.match)
+function parseRationale(rationale: unknown): Rationale {
+  if (typeof rationale !== "object" || rationale === null) {
+    return { match: [], missing: [] };
+  }
+  
+  const r = rationale as Record<string, unknown>;
+  
+  const match = Array.isArray(r.match) 
     ? r.match.filter((x): x is string => typeof x === "string")
     : [];
+    
   const missing = Array.isArray(r.missing)
     ? r.missing.filter((x): x is string => typeof x === "string")
     : [];
 
-  return {
-    score: clampScore(typeof f.score === "number" ? f.score : 0),
-    match,
-    missing,
-  };
+  return { match, missing };
 }
 
-async function getJobById(jobId: JobId): Promise<Job | null> {
+async function getJobById(jobId: string): Promise<Job | null> {
   try {
     const job = await api.getJobById(jobId);
-
     return job;
   } catch {
     return null;
@@ -158,9 +129,19 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
   const job = await getJobById(jobId);
   if (!job) notFound();
 
-  const fit = mapFitFromDemo(jobId) ?? { score: 0, match: [], missing: [] };
-  const decision = pickDecision(fit.score);
+  // Extract fit score from the job relationship if available
+  // Assuming the API returns a job with fitScores included
+  const fitScore = job.fitScores?.[0]; // Taking the first score as current logic implies 1:1 or most recent
+  
+  const parsedRationale = parseRationale(fitScore?.rationale);
 
+  const fit: FitModel = {
+    score: clampScore(fitScore?.score ?? job.fit ?? 0),
+    match: parsedRationale.match ?? [],
+    missing: parsedRationale.missing ?? [],
+  };
+
+  const decision = pickDecision(fit.score);
   const quickWins = buildQuickWins(job.tags, fit.missing);
   const atsRisks = buildAtsRisks(fit.score, fit.missing);
 
@@ -179,7 +160,7 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
             <p className="text-muted-foreground text-lg max-w-2xl text-pretty leading-relaxed">
               {job.title} en{" "}
               <span className="text-foreground font-semibold">
-                {job.company.name}
+                {job.company?.name ?? job.companyName}
               </span>
               {job.location ? ` · ${job.location}` : ""}
             </p>

@@ -15,7 +15,7 @@ const getUserHandler = async () => {
 const postUserHandler = async (request: Request) => {
   try {
     const body = await request.json();
-    const user = await backend.user.upsert(body);
+    const user = await backend.user.upsertProfile(body);
     return response.success(user);
   } catch (error) {
     console.log(`Error updating user: ${error}`);
@@ -23,4 +23,5 @@ const postUserHandler = async (request: Request) => {
   }
 };
 
-export { getUserHandler as GET, postUserHandler as POST };
+export const GET = getUserHandler;
+export const POST = postUserHandler;

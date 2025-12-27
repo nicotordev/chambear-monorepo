@@ -87,9 +87,60 @@ const getMe = createRoute({
   },
 });
 
+const avatarUpload = createRoute({
+  method: "post",
+  path: "/user/avatar",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateProfileSchema,
+        },
+      },
+      description: "Profile data to upsert",
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "User avatar uploaded successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(z.string()),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 const app = new OpenAPIHono();
 
 app.openapi(upsertProfile, userController.upsertProfile);
 app.openapi(getMe, userController.getMe);
+app.openapi(avatarUpload, userController.uploadAvatar);
 
 export default app;

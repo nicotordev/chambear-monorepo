@@ -103,11 +103,12 @@ const recommendationService = {
     /* ────────────────────────────────
      * 1) User context
      * ──────────────────────────────── */
-    const profile = await userService.getProfile(userId);
+    const user = await userService.getMe(userId);
+    const profile = user.profile[0];
     if (!profile) throw new Error("User profile not found");
 
     const userContext = `
-User: ${profile.user.name} (${profile.user.email})
+User: ${user.name} (${user.email})
 Role: ${profile.targetRoles.join(", ")}
 Experience: ${profile.yearsExperience ?? 0} years
 Location: ${profile.location ?? "Unknown"}

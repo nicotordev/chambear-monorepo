@@ -27,7 +27,7 @@ export default function JobCard({ job }: JobCardProps) {
             </CardTitle>
             <CardDescription className="flex items-center gap-1">
               <Building2 className="size-3" />
-              {job.company.name}
+              {job?.company?.name || "N/A"}
             </CardDescription>
           </div>
           {job.postedAt && (

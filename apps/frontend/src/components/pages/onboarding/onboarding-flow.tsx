@@ -1,262 +1,104 @@
 "use client";
 
-import { useOnboarding } from "@/hooks/use-onboarding";
+import Logo from "@/components/logo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useOnboarding } from "@/hooks/use-onboarding";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
 import {
+  Briefcase,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Cpu,
+  GraduationCap,
+  Loader2,
   Plus,
   Save,
-  Trash2,
-  Briefcase,
-  GraduationCap,
   User,
-  Cpu,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
-import { SkillLevel } from "@/schemas/user";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import OnboardingFlowStep1 from "./onboarding-flow-step-1";
+import OnboardingFlowStep2 from "./onboarding-flow-step-2";
+import OnboardingFlowStep3 from "./onboarding-flow-step-3";
+import OnboardingFlowStep4 from "./onboarding-flow-step-4";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+const STEPS = [
+  { id: 1, label: "Profile", icon: User, description: "Basic Info" },
+  { id: 2, label: "Skills", icon: Cpu, description: "Roles & Tech" },
+  { id: 3, label: "Experience", icon: Briefcase, description: "History" },
+  { id: 4, label: "Education", icon: GraduationCap, description: "Studies" },
+];
 
 export default function OnboardingFlow() {
-  const { form, currentStep, handleStep, totalSteps, onSubmit, isPending } =
-    useOnboarding();
-
-  const progress = (currentStep / totalSteps) * 100;
-
-  const nextStep = async () => {
-    const fieldsToValidate: any[] = [];
-    
-    if (currentStep === 1) {
-      fieldsToValidate.push("headline", "summary", "location", "yearsExperience");
-    } else if (currentStep === 2) {
-      fieldsToValidate.push("targetRoles", "skills");
-    } else if (currentStep === 3) {
-      fieldsToValidate.push("experiences");
-    } else if (currentStep === 4) {
-      fieldsToValidate.push("educations");
-    }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      if (currentStep < totalSteps) {
-        handleStep(currentStep + 1);
-        window.scrollTo(0, 0);
-      } else {
-        onSubmit();
-      }
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      handleStep(currentStep - 1);
-      window.scrollTo(0, 0);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-muted/30 py-8 px-4 flex justify-center items-start">
-      <div className="w-full max-w-3xl space-y-6">
-        {/* Header / Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
-            <span>
-              Step {currentStep} of {totalSteps}
-            </span>
-            <span>{Math.round(progress)}% Completed</span>
-          </div>
-          <Progress value={progress} className="h-2 w-full" />
-        </div>
-
-        {/* Main Form Card */}
-        <Card className="border-border shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              {currentStep === 1 && <User className="h-6 w-6 text-primary" />}
-              {currentStep === 2 && <Cpu className="h-6 w-6 text-primary" />}
-              {currentStep === 3 && (
-                <Briefcase className="h-6 w-6 text-primary" />
-              )}
-              {currentStep === 4 && (
-                <GraduationCap className="h-6 w-6 text-primary" />
-              )}
-              {currentStep === 1 && "Basic Information"}
-              {currentStep === 2 && "Roles & Skills"}
-              {currentStep === 3 && "Work Experience"}
-              {currentStep === 4 && "Education"}
-            </CardTitle>
-            <CardDescription>
-              {currentStep === 1 &&
-                "Tell us a bit about yourself to get started."}
-              {currentStep === 2 &&
-                "What kind of roles are you looking for and what are your skills?"}
-              {currentStep === 3 && "Add your professional background."}
-              {currentStep === 4 && "Add your educational background."}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <Form {...form}>
-              <form className="space-y-6">
-                {currentStep === 1 && <StepOne form={form} />}
-                {currentStep === 2 && <StepTwo form={form} />}
-                {currentStep === 3 && <StepThree form={form} />}
-                {currentStep === 4 && <StepFour form={form} />}
-              </form>
-            </Form>
-          </CardContent>
-
-          <Separator />
-
-          <CardFooter className="flex justify-between pt-6">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1 || isPending}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button onClick={nextStep} disabled={isPending} className="min-w-[120px]">
-              {currentStep === totalSteps ? (
-                isPending ? (
-                  "Saving..."
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Complete
-                  </>
-                )
-              ) : (
-                <>
-                  Next
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-// --- Step Components ---
-
-function StepOne({ form }: { form: any }) {
-  return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-      <FormField
-        control={form.control}
-        name="headline"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Professional Headline</FormLabel>
-            <FormControl>
-              <Input placeholder="e.g. Senior Full Stack Developer" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Santiago, Chile" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="yearsExperience"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Years of Experience</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <FormField
-        control={form.control}
-        name="summary"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Professional Summary</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Briefly describe your professional background and goals..."
-                className="h-32 resize-none"
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  );
-}
-
-function StepTwo({ form }: { form: any }) {
-  // Target Roles Helper
+  const [profilePic, setProfilePic] = useState<string | null>(null);
   const {
-    fields: roleFields,
-    append: appendRole,
-    remove: removeRole,
+    form,
+    currentStep,
+    handleStep,
+    totalSteps,
+    onSubmit,
+    isPending,
+    profiles,
+    selectedProfileId,
+    selectProfile,
+    isLoading,
+  } = useOnboarding();
+
+  // Ref to handle scroll on step change
+  const topRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    async function uploadAvatar() {
+      if (!file) throw new Error("No file selected");
+      const data = await api.uploadAvatar(file);
+      return data.url;
+    }
+
+    toast.promise(uploadAvatar(), {
+      loading: "Uploading avatar...",
+      success: (data) => {
+        form.setValue("avatar", data);
+        setProfilePic(data);
+        return "Avatar uploaded!";
+      },
+      error: "Failed to upload avatar",
+    });
+  };
+
+  const {
+    fields: expFields,
+    append: appendExp,
+    remove: removeExp,
   } = useFieldArray({
     control: form.control,
-    name: "targetRoles",
+    name: "experiences",
   });
 
-  // Skills Helper
+  const {
+    fields: eduFields,
+    append: appendEdu,
+    remove: removeEdu,
+  } = useFieldArray({
+    control: form.control,
+    name: "educations",
+  });
+
   const {
     fields: skillFields,
     append: appendSkill,
@@ -266,450 +108,281 @@ function StepTwo({ form }: { form: any }) {
     name: "skills",
   });
 
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-      {/* Target Roles */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-base font-semibold">Target Roles</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => appendRole("New Role")}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Role
-          </Button>
-        </div>
-        {roleFields.length === 0 && (
-          <div className="text-sm text-muted-foreground italic border border-dashed rounded-md p-4 text-center">
-            No roles added yet.
-          </div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {roleFields.map((field, index) => (
-            <div key={field.id} className="flex gap-2">
-              <FormField
-                control={form.control}
-                name={`targetRoles.${index}`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Frontend Engineer" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:bg-destructive/10"
-                onClick={() => removeRole(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+  const progress = (currentStep / totalSteps) * 100;
+
+  const scrollToTop = () => {
+    // Small timeout to ensure DOM has updated
+    setTimeout(() => {
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
+  const nextStep = async () => {
+    const fieldsToValidate: any[] = [];
+    if (currentStep === 1)
+      fieldsToValidate.push(
+        "headline",
+        "summary",
+        "location",
+        "yearsExperience",
+        "avatar"
+      );
+    else if (currentStep === 2) fieldsToValidate.push("targetRoles", "skills");
+    else if (currentStep === 3) fieldsToValidate.push("experiences");
+    else if (currentStep === 4) fieldsToValidate.push("educations");
+
+    const isValid = await form.trigger(fieldsToValidate);
+
+    if (isValid) {
+      if (currentStep < totalSteps) {
+        handleStep(currentStep + 1);
+        scrollToTop();
+      } else {
+        onSubmit();
+      }
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      handleStep(currentStep - 1);
+      scrollToTop();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
 
-      <Separator />
-
-      {/* Skills */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-base font-semibold">Skills</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              appendSkill({ skillName: "", level: SkillLevel.INTERMEDIATE })
-            }
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Skill
-          </Button>
-        </div>
-         {skillFields.length === 0 && (
-          <div className="text-sm text-muted-foreground italic border border-dashed rounded-md p-4 text-center">
-            No skills added yet.
-          </div>
-        )}
-        <div className="space-y-3">
-          {skillFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col md:flex-row gap-3 items-end md:items-start border p-3 rounded-md bg-background"
+  if (!selectedProfileId && profiles.length > 0) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <Logo size="lg" className="mb-8" />
+        <Card className="w-full max-w-2xl border-muted/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl">
+              Select Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {profiles.map((p) => (
+              <Button
+                key={p.id}
+                variant="outline"
+                className="flex h-auto flex-col items-center gap-2 py-6 transition-all hover:scale-[1.02] hover:bg-muted/50"
+                onClick={() => selectProfile(p.id)}
+              >
+                <Avatar className="h-16 w-16 md:h-20 md:w-20">
+                  <AvatarImage
+                    src={p.avatar || undefined}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-xl">
+                    {p.headline?.[0] || "P"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="font-semibold">
+                    {p.headline || "Untitled Profile"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {p.targetRoles[0] || "General"}
+                  </span>
+                </div>
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              className="group flex h-auto flex-col items-center gap-2 border-dashed py-6 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              onClick={() => selectProfile("new")}
             >
-              <FormField
-                control={form.control}
-                name={`skills.${index}.skillName`}
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel className="text-xs">Skill Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. React" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`skills.${index}.level`}
-                render={({ field }) => (
-                  <FormItem className="w-full md:w-[180px]">
-                     <FormLabel className="text-xs">Level</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(SkillLevel).map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/20 md:h-20 md:w-20">
+                <Plus className="h-8 w-8 opacity-50 transition-opacity group-hover:opacity-100" />
+              </div>
+              <span className="font-semibold">Create New Profile</span>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen flex w-full bg-background">
+      {/* SIDEBAR */}
+      <aside className="w-1/3 hidden md:flex flex-col justify-between p-8 bg-muted/30 border-r relative">
+        <div className="space-y-8">
+          <div className="flex flex-col gap-4">
+            <Logo alignment="left" />
+            {profiles.length > 0 && (
               <Button
-                type="button"
                 variant="ghost"
-                size="icon"
-                className="text-destructive hover:bg-destructive/10 mb-0.5"
-                onClick={() => removeSkill(index)}
+                size="sm"
+                className="-ml-2 w-fit gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => selectProfile(null)}
               >
-                <Trash2 className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
+                Switch Profile
               </Button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepThree({ form }: { form: any }) {
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "experiences",
-  });
-
-  return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            append({
-              title: "",
-              company: "",
-              startDate: new Date(),
-              current: false,
-              highlights: [],
-            })
-          }
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Experience
-        </Button>
-      </div>
-
-       {fields.length === 0 && (
-          <div className="text-sm text-muted-foreground italic border border-dashed rounded-md p-8 text-center flex flex-col items-center gap-2">
-            <Briefcase className="h-8 w-8 text-muted-foreground/50" />
-            <p>No work experience added yet.</p>
+            )}
           </div>
-        )}
 
-      <ScrollArea className="h-[500px] pr-4">
-        <div className="space-y-6">
-          {fields.map((field, index) => (
-            <Card key={field.id} className="relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-2">
-                   <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-               </div>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`experiences.${index}.title`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Job Title</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Software Engineer" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`experiences.${index}.company`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Acme Corp" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
+              {currentStep === 1 && "Let's get to know you."}
+              {currentStep === 2 && "Your superpowers."}
+              {currentStep === 3 && "Your journey."}
+              {currentStep === 4 && "Your education."}
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Step {currentStep} of {totalSteps}
+            </p>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`experiences.${index}.startDate`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            value={
-                              field.value instanceof Date
-                                ? field.value.toISOString().split("T")[0]
-                                : field.value
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name={`experiences.${index}.endDate`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date</FormLabel>
-                        <FormControl>
-                           <Input
-                            type="date"
-                             {...field}
-                             value={
-                              field.value instanceof Date
-                                ? field.value.toISOString().split("T")[0]
-                                : field.value || ""
-                            }
-                            disabled={form.watch(`experiences.${index}.current`)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                 <FormField
-                    control={form.control}
-                    name={`experiences.${index}.current`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            I currently work here
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+          <div className="space-y-6 mt-10">
+            {STEPS.map((step) => {
+              const Icon = step.icon;
+              const isActive = step.id === currentStep;
+              const isCompleted = step.id < currentStep;
 
-                <FormField
-                  control={form.control}
-                  name={`experiences.${index}.summary`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="What did you achieve in this role?"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+              return (
+                <div
+                  key={step.id}
+                  className={cn(
+                    "flex items-center gap-4 transition-all duration-300",
+                    isActive ? "opacity-100 translate-x-2" : "opacity-50"
                   )}
-                />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
-    </div>
-  );
-}
-
-function StepFour({ form }: { form: any }) {
-    const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "educations",
-  });
-
-  return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            append({
-              school: "",
-              degree: "",
-              field: "",
-              startDate: new Date(),
-            })
-          }
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Education
-        </Button>
-      </div>
-
-       {fields.length === 0 && (
-          <div className="text-sm text-muted-foreground italic border border-dashed rounded-md p-8 text-center flex flex-col items-center gap-2">
-            <GraduationCap className="h-8 w-8 text-muted-foreground/50" />
-            <p>No education added yet.</p>
-          </div>
-        )}
-
-      <div className="space-y-4">
-          {fields.map((field, index) => (
-             <Card key={field.id} className="relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-2">
-                   <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => remove(index)}
+                >
+                  <div
+                    className={cn(
+                      "h-10 w-10 rounded-full flex items-center justify-center border-2",
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : isCompleted
+                        ? "border-primary text-primary"
+                        : "border-muted-foreground"
+                    )}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-               </div>
-               <CardContent className="pt-6 space-y-4">
-                 <FormField
-                    control={form.control}
-                    name={`educations.${index}.school`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>School / University</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Stanford University" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
                     )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <FormField
-                    control={form.control}
-                    name={`educations.${index}.degree`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Degree</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Bachelor's" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name={`educations.${index}.field`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Field of Study</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Computer Science" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`educations.${index}.startDate`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                             value={
-                              field.value instanceof Date
-                                ? field.value.toISOString().split("T")[0]
-                                : field.value
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name={`educations.${index}.endDate`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date (or Expected)</FormLabel>
-                        <FormControl>
-                           <Input
-                            type="date"
-                             {...field}
-                              value={
-                              field.value instanceof Date
-                                ? field.value.toISOString().split("T")[0]
-                                : field.value || ""
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div>
+                    <p
+                      className={cn(
+                        "font-semibold",
+                        isActive && "text-primary"
+                      )}
+                    >
+                      {step.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
-               </CardContent>
-             </Card>
-          ))}
-      </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+      </aside>
+
+      {/* FORMULARIO */}
+      <main className="flex-1 flex flex-col relative bg-card h-screen">
+        <ScrollArea className="flex-0 max-h-full relative pb-24 min-h-full">
+          {/* Invisible element to anchor scroll top */}
+          <div ref={topRef} />
+
+          <div className="p-8 md:p-12 max-w-3xl mx-auto">
+            <Form {...form}>
+              <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                {/* --- STEP 1: BASIC PROFILE --- */}
+                {currentStep === 1 && (
+                  <OnboardingFlowStep1
+                    form={form}
+                    profilePic={profilePic}
+                    handleFileUpload={handleFileUpload}
+                    fileInputRef={fileInputRef}
+                  />
+                )}
+
+                {/* --- STEP 2: SKILLS AND ROLES --- */}
+                {currentStep === 2 && (
+                  <OnboardingFlowStep2
+                    form={form}
+                    appendSkill={appendSkill}
+                    removeSkill={removeSkill}
+                    skillFields={skillFields}
+                  />
+                )}
+
+                {/* --- STEP 3: EXPERIENCE --- */}
+                {currentStep === 3 && (
+                  <OnboardingFlowStep3
+                    form={form}
+                    appendExp={appendExp}
+                    removeExp={removeExp}
+                    expFields={expFields}
+                  />
+                )}
+
+                {/* --- STEP 4: EDUCATION --- */}
+                {currentStep === 4 && (
+                  <OnboardingFlowStep4
+                    form={form}
+                    appendEdu={appendEdu}
+                    removeEdu={removeEdu}
+                    eduFields={eduFields}
+                  />
+                )}
+              </form>
+            </Form>
+          </div>
+          {/* Footer Navigation */}
+          <div className="absolute right-0 bottom-0 p-6 border-t bg-background/95 backdrop-blur flex justify-between items-center z-20 w-full">
+            <Button
+              variant="ghost"
+              onClick={prevStep}
+              disabled={currentStep === 1 || isPending}
+              className="pl-0 hover:pl-2 transition-all"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" /> Back
+            </Button>
+
+            <Button
+              onClick={nextStep}
+              disabled={isPending}
+              className="min-w-36"
+            >
+              {isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : currentStep === totalSteps ? (
+                <>
+                  Finish <Save className="w-4 h-4 ml-2" />
+                </>
+              ) : (
+                <>
+                  Next <ChevronRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        </ScrollArea>
+      </main>
     </div>
   );
 }

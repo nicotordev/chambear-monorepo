@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import api from "@/lib/api";
-import { demoJobs, demoFitScores } from "@/data/demo";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,20 +16,10 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 import { ExternalLink, Sparkles, ArrowLeft } from "lucide-react";
+import { Job } from "@/types";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-};
-
-type JobModel = {
-  id: string;
-  title: string;
-  company: { name: string };
-  location: string | null;
-  description: string | null;
-  tags: string[];
-  source?: string | null;
-  fit?: number; // 0..100
 };
 
 function assertNonEmpty(value: string, name: string): string {
@@ -44,19 +33,6 @@ function clampScore(n: number): number {
   return Math.max(0, Math.min(100, v));
 }
 
-function safeString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
-function safeStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  const out: string[] = [];
-  for (const item of value) {
-    if (typeof item === "string") out.push(item);
-  }
-  return out;
-}
-
 function pickDecision(score: number): { badge: string; cta: string } {
   if (score >= 75)
     return { badge: "Listo para aplicar", cta: "Optimizar y aplicar" };
@@ -66,62 +42,12 @@ function pickDecision(score: number): { badge: string; cta: string } {
   };
 }
 
-function findDemoJob(id: string): JobModel | null {
-  const j = demoJobs.find((x) => x.id === id);
-  if (!j) return null;
-
-  const fit = demoFitScores.find((f) => f.jobId === id)?.score ?? 0;
-
-  return {
-    id: j.id,
-    title: j.title,
-    company: { name: j.company.name },
-    location: j.location,
-    description: j.description,
-    tags: j.tags,
-    source:
-      "source" in j && typeof (j as { source?: unknown }).source === "string"
-        ? (j as { source: string }).source
-        : null,
-    fit: clampScore(fit),
-  };
-}
-
-async function getJob(id: string): Promise<JobModel | null> {
-  // 1) intenta API real
+async function getJob(id: string): Promise<Job | null> {
   try {
-    const raw = (await api.getJobById(id)) as unknown;
-    const obj = raw as Record<string, unknown>;
-
-    const title = safeString(obj.title) ?? "";
-    const companyObj = (obj.company ?? {}) as Record<string, unknown>;
-    const companyName = safeString(companyObj.name) ?? "";
-
-    if (title.trim().length === 0 || companyName.trim().length === 0) {
-      return findDemoJob(id);
-    }
-
-    const location = safeString(obj.location);
-    const description = safeString(obj.description);
-    const tags = safeStringArray(obj.tags);
-    const source = safeString(obj.source);
-
-    const fitFromApi = typeof obj.fit === "number" ? obj.fit : null;
-    const fitFromDemo = demoFitScores.find((f) => f.jobId === id)?.score ?? 0;
-
-    return {
-      id,
-      title,
-      company: { name: companyName },
-      location,
-      description,
-      tags,
-      source,
-      fit: clampScore(fitFromApi ?? fitFromDemo),
-    };
+    const job = await api.getJobById(id);
+    return job;
   } catch {
-    // 2) fallback demo
-    return findDemoJob(id);
+    return null;
   }
 }
 
@@ -132,7 +58,11 @@ export default async function JobPage({ params }: PageProps) {
   const job = await getJob(jobId);
   if (!job) notFound();
 
-  const fit = clampScore(job.fit ?? 0);
+  // Assuming the API returns 'fit' directly or via fitScores relation
+  // If not available, default to 0
+  const fitScore = job.fitScores?.[0]?.score ?? job.fit ?? 0;
+  const fit = clampScore(fitScore);
+  
   const decision = pickDecision(fit);
 
   return (
@@ -146,9 +76,9 @@ export default async function JobPage({ params }: PageProps) {
           </Link>
         </Button>
 
-        {job.source ? (
+        {job.externalUrl ? (
           <Button asChild variant="secondary">
-            <Link href={job.source} target="_blank" rel="noreferrer">
+            <Link href={job.externalUrl} target="_blank" rel="noreferrer">
               Ver oferta original
               <ExternalLink className="ml-2 h-4 w-4" />
             </Link>
@@ -160,7 +90,7 @@ export default async function JobPage({ params }: PageProps) {
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">{job.title}</h1>
         <p className="text-sm text-muted-foreground">
-          {job.company.name}
+          {job.company?.name ?? job.companyName}
           {job.location ? ` · ${job.location}` : ""}
         </p>
       </div>
