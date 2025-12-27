@@ -108,13 +108,12 @@ enum ReminderType {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(BUYER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String?
+  role              Role               @default(BUYER)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   profile           Profile[]
   applications      Application[]
   fitScores         FitScore[]
@@ -204,6 +203,7 @@ model Job {
   source         JobSource      @default(MANUAL)
   urlKind        UrlKind        @default(IRRELEVANT)
   externalUrl    String?        @unique
+  salary         String?
   postedAt       DateTime?
   expiresAt      DateTime?
   rawData        Json?
@@ -216,6 +216,17 @@ model Job {
   documents    Document[]
   interviews   InterviewSession[]
   reminders    Reminder[]
+  company      Company?           @relation(fields: [companyId], references: [id])
+  companyId    String?
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs      Job[]
 }
 
 model JobSkill {

@@ -1,6 +1,8 @@
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
-import { clerkMiddleware } from "@hono/clerk-auth";
+import jobsRoute from "@/routes/jobs.route";
+import userRoute from "@/routes/user.route";
 
 const app = new OpenAPIHono();
 
@@ -26,5 +28,9 @@ app.use(
 );
 
 app.use("*", clerkMiddleware());
+
+
+app.route("/api/v1", jobsRoute);
+app.route("/api/v1", userRoute);
 
 export default app;
