@@ -108,19 +108,20 @@ enum ReminderType {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
-  clerkId           String             @unique
-  name              String?
-  role              Role               @default(EMPLOYEE)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  profile           Profile[]
-  applications      Application[]
-  fitScores         FitScore[]
-  documents         Document[]
-  interviewSessions InterviewSession[]
-  reminders         Reminder[]
+  id                  String             @id @default(cuid())
+  email               String             @unique
+  clerkId             String             @unique
+  name                String?
+  role                Role               @default(EMPLOYEE)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  onboardingCompleted Boolean            @default(false)
+  profile             Profile[]
+  applications        Application[]
+  fitScores           FitScore[]
+  documents           Document[]
+  interviewSessions   InterviewSession[]
+  reminders           Reminder[]
 }
 
 model Profile {

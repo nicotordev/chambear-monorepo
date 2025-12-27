@@ -7,8 +7,8 @@ import { CreateProfileSchema } from "@/schemas/user";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 const upsertProfile = createRoute({
-  method: "post",
-  path: "/user/profile",
+  method: "put",
+  path: "/user/me",
   request: {
     body: {
       content: {

@@ -147,6 +147,8 @@ export default function OnboardingFlow() {
       } catch (error) {
         console.error(error);
       }
+    } else {
+      toast.error("Please fill in all required fields");
     }
   };
 

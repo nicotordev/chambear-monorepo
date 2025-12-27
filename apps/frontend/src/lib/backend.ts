@@ -98,7 +98,7 @@ export const backend = {
     getMe: (): Promise<User> => fetcher.get<User>("/user/me"),
 
     upsertProfile: (data: CreateProfileInput): Promise<User> =>
-      fetcher.post<User>("/user/me", data),
+      fetcher.put<User>("/user/me", data),
 
     uploadAvatar: async (file: File): Promise<string> => {
       const formData = new FormData();

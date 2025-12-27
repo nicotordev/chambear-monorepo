@@ -6,7 +6,7 @@
   "scripts": {
     "start:backend": "bun run --filter=chambear-backend start",
     "start:frontend": "bun run --filter=chambear-frontend start",
-    "dev": "bun run start:backend & bun run start:frontend",
+    "dev": "bun run dev:backend & bun run dev:frontend",
     "dev:backend": "bun run --filter=chambear-backend dev",
     "dev:frontend": "bun run --filter=chambear-frontend dev"
   },

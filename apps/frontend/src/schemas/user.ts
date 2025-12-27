@@ -7,36 +7,24 @@ export const SkillLevel = {
   EXPERT: "EXPERT",
 } as const;
 
-export const ExperienceSchema = z
-  .object({
-    title: z.string().min(2, "Title must be at least 2 characters"),
-    company: z.string().min(2, "Company name must be at least 2 characters"),
-    startDate: z.coerce.date("Start date is required"),
-    endDate: z.coerce.date().nullable().optional(),
-    current: z.boolean().default(false),
-    summary: z.string().min(10, "Summary must be at least 10 characters"),
-    highlights: z.array(z.string().min(5)).default([]),
-    location: z.string().min(2, "Location is required"),
-  })
-  .refine(
-    (data) => {
-      if (!data.current && !data.endDate) return false;
-      if (data.endDate && data.startDate > data.endDate) return false;
-      return true;
-    },
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    }
-  );
+export const ExperienceSchema = z.object({
+  title: z.string().min(1),
+  company: z.string().min(1),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().nullable().optional(),
+  current: z.boolean().default(false),
+  summary: z.string().optional(),
+  highlights: z.array(z.string()).default([]),
+  location: z.string().optional(),
+});
 
 export const EducationSchema = z.object({
-  school: z.string().min(2, "School name is required"),
-  degree: z.string().min(2, "Degree is required"),
-  field: z.string().min(2, "Field of study is required"),
-  startDate: z.coerce.date("Start date is required"),
-  endDate: z.coerce.date("End date is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  school: z.string().min(1),
+  degree: z.string().optional(),
+  field: z.string().optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  description: z.string().optional(),
 });
 
 export const ProfileSkillSchema = z.object({

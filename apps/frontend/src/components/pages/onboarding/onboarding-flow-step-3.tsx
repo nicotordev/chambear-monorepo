@@ -131,7 +131,6 @@ export default function OnboardingFlowStep3({
                         value={formatDateForInput(
                           field.value as Date | undefined
                         )}
-                        disabled={form.watch(`experiences.${index}.current`)}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                       />
                     </FormControl>

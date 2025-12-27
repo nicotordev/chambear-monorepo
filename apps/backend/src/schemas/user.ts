@@ -23,7 +23,7 @@ export const EducationSchema = z.object({
 
 export const ProfileSkillSchema = z.object({
   skillName: z.string().min(1),
-  level: z.nativeEnum(SkillLevel).optional(),
+  level: z.enum(SkillLevel).optional(),
 });
 
 export const CreateProfileSchema = z.object({

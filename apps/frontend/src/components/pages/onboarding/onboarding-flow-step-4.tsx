@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -11,10 +10,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CreateProfileInput } from "@/schemas/user";
-import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
-import { GraduationCap, Plus, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDateForInput } from "@/lib/utils";
+import { CreateProfileInput } from "@/schemas/user";
+import { GraduationCap, Plus, Trash2 } from "lucide-react";
+import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 
 export interface OnboardingFlowStep4Props {
   form: UseFormReturn<CreateProfileInput>;
@@ -151,6 +151,19 @@ export default function OnboardingFlowStep4({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name={`educations.${index}.description`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-20" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
       ))}

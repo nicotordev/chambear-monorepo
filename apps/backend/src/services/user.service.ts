@@ -103,6 +103,25 @@ const userService = {
         });
       }
 
+      // Mark onboarding as completed
+      if (!user.onboardingCompleted) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { onboardingCompleted: true },
+        });
+
+        const clerkClient = createClerkClient({
+          secretKey: process.env.CLERK_SECRET_KEY,
+          publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+        });
+
+        await clerkClient.users.updateUserMetadata(clerkId, {
+          privateMetadata: {
+            onboardingCompleted: true,
+          },
+        });
+      }
+
       // Handle nested relations (Experience, Education, Skills)
       // Note: This logic replaces all relations for the profile.
       // If we want partial updates, we need more complex logic.
@@ -181,7 +200,6 @@ const userService = {
 
       const fileExtension = file.name.split(".").pop();
 
-      const buffer = await file.arrayBuffer();
       const url = await uploadFileToR2(
         new Uint8Array(buffer),
         clerkId,
@@ -200,8 +218,6 @@ const userService = {
   async transformResume(file: File) {
     try {
       const buffer = await file.arrayBuffer();
-      
-
     } catch (error) {
       console.error("Resume transformation error:", error);
       throw error;

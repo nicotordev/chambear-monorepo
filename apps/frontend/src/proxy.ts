@@ -1,9 +1,4 @@
-import {
-  clerkMiddleware,
-  createRouteMatcher,
-  getAuth,
-  clerkClient,
-} from "@clerk/nextjs/server";
+import { clerkClient, clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
@@ -20,7 +15,7 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   const { privateMetadata } = await _clerkClient.users.getUser(_auth.userId);
-  const isOnBoarded = privateMetadata?.onboarded;
+  const isOnBoarded = privateMetadata?.onboardingCompleted;
 
   const dashboardURL = req.nextUrl.clone();
   dashboardURL.pathname = "/dashboard";
