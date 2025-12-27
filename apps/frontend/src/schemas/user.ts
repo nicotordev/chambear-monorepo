@@ -23,7 +23,8 @@ export const EducationSchema = z.object({
   degree: z.string().optional(),
   field: z.string().optional(),
   startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().nullable().optional(),
+  current: z.boolean().default(false),
   description: z.string().optional(),
 });
 

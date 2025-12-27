@@ -10,15 +10,18 @@ export const ExperienceSchema = z.object({
   summary: z.string().optional(),
   highlights: z.array(z.string()).default([]),
   location: z.string().optional(),
+  id: z.string().optional(),
 });
 
 export const EducationSchema = z.object({
   school: z.string().min(1),
   degree: z.string().optional(),
-  field: z.string().optional(),
+  fieldOfStudy: z.string().optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+  current: z.boolean().default(false),
   description: z.string().optional(),
+  id: z.string().optional(),
 });
 
 export const ProfileSkillSchema = z.object({

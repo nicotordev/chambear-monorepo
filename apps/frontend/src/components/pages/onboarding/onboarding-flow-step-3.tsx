@@ -28,6 +28,8 @@ export default function OnboardingFlowStep3({
   removeExp,
   expFields,
 }: OnboardingFlowStep3Props) {
+  const experiences = form.watch("experiences");
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
       <div className="flex items-center justify-between mb-4">
@@ -53,7 +55,10 @@ export default function OnboardingFlowStep3({
       </div>
 
       {expFields.map((field, index) => (
-        <Card key={field.id} className="relative group overflow-y-scroll h-full max-h-full">
+        <Card
+          key={field.id}
+          className="relative group overflow-y-scroll h-full max-h-full"
+        >
           <Button
             type="button"
             variant="ghost"
@@ -128,6 +133,7 @@ export default function OnboardingFlowStep3({
                     <FormControl>
                       <Input
                         type="date"
+                        disabled={experiences?.[index]?.current}
                         value={formatDateForInput(
                           field.value as Date | undefined
                         )}
@@ -148,7 +154,14 @@ export default function OnboardingFlowStep3({
                   <FormControl>
                     <Checkbox
                       checked={field.value}
-                      onCheckedChange={field.onChange}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (checked) {
+                          form.setValue(`experiences.${index}.endDate`, null, {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">

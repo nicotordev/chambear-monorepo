@@ -1,8 +1,12 @@
-import { clerkClient, clerkMiddleware } from "@clerk/nextjs/server";
+import {
+  clerkClient,
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
-const isApiRoute = createRouteMatcher(["/api(.*)"]);
+const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isApiRoute(req)) return NextResponse.next();

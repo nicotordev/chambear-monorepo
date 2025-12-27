@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   FormControl,
   FormField,
@@ -29,6 +30,8 @@ export default function OnboardingFlowStep4({
   removeEdu,
   eduFields,
 }: OnboardingFlowStep4Props) {
+  const educations = form.watch("educations");
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-4">
@@ -44,6 +47,7 @@ export default function OnboardingFlowStep4({
               field: "",
               startDate: new Date(),
               endDate: new Date(),
+              current: false,
               description: "",
             })
           }
@@ -140,6 +144,7 @@ export default function OnboardingFlowStep4({
                     <FormControl>
                       <Input
                         type="date"
+                        disabled={!!educations?.[index]?.current}
                         value={formatDateForInput(
                           field.value as Date | undefined
                         )}
@@ -151,6 +156,31 @@ export default function OnboardingFlowStep4({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name={`educations.${index}.current`}
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (checked === true) {
+                          form.setValue(`educations.${index}.endDate`, null, {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>I currently study here</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name={`educations.${index}.description`}

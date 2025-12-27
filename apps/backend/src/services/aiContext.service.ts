@@ -1,5 +1,5 @@
-import { prisma } from "../lib/prisma";
 import { DocumentType } from "../lib/generated";
+import { prisma } from "../lib/prisma";
 
 const aiContextService = {
   /**
@@ -70,7 +70,7 @@ const aiContextService = {
       parts.push("\nEDUCATION:");
       for (const edu of profile.educations) {
         parts.push(
-          `- ${edu.degree ?? "Degree"} in ${edu.field ?? "Field"} at ${
+          `- ${edu.degree ?? "Degree"} in ${edu.fieldOfStudy ?? "Field"} at ${
             edu.school
           }`
         );
