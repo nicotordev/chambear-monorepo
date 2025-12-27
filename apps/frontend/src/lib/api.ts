@@ -1,4 +1,5 @@
-import type { Job } from "@/types";
+import { CreateProfileInput } from "@/schemas/user";
+import type { Job, User } from "@/types";
 import axios, { AxiosInstance } from "axios";
 
 class Api {
@@ -29,6 +30,16 @@ class Api {
 
   public async getJobById(id: string): Promise<Job> {
     const res = await this.instance.get(`/jobs/${id}`);
+    return res.data.data;
+  }
+
+  public async getUser(): Promise<User> {
+    const res = await this.instance.get("/user");
+    return res.data.data;
+  }
+
+  public async upsertUser(data: CreateProfileInput): Promise<User> {
+    const res = await this.instance.post("/user", data);
     return res.data.data;
   }
 }

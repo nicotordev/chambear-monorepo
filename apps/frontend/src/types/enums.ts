@@ -10,6 +10,28 @@ export const Role = {
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
 
+export const UrlKind = {
+  JOB_LISTING: "JOB_LISTING",
+  JOBS_INDEX: "JOBS_INDEX",
+  CAREERS: "CAREERS",
+  LOGIN_OR_GATE: "LOGIN_OR_GATE",
+  BLOG_OR_NEWS: "BLOG_OR_NEWS",
+  COMPANY_ABOUT: "COMPANY_ABOUT",
+  IRRELEVANT: "IRRELEVANT",
+} as const;
+export type UrlKind = (typeof UrlKind)[keyof typeof UrlKind];
+
+export const Seniority = {
+  JUNIOR: "JUNIOR",
+  MID: "MID",
+  SENIOR: "SENIOR",
+  STAFF: "STAFF",
+  LEAD: "LEAD",
+  PRINCIPAL: "PRINCIPAL",
+  UNKNOWN: "UNKNOWN",
+} as const;
+export type Seniority = (typeof Seniority)[keyof typeof Seniority];
+
 export const EmploymentType = {
   FULL_TIME: "FULL_TIME",
   PART_TIME: "PART_TIME",
@@ -17,6 +39,7 @@ export const EmploymentType = {
   TEMPORARY: "TEMPORARY",
   INTERN: "INTERN",
   FREELANCE: "FREELANCE",
+  UNKNOWN: "UNKNOWN",
 } as const;
 export type EmploymentType =
   (typeof EmploymentType)[keyof typeof EmploymentType];
@@ -25,6 +48,7 @@ export const WorkMode = {
   ONSITE: "ONSITE",
   HYBRID: "HYBRID",
   REMOTE: "REMOTE",
+  UNKNOWN: "UNKNOWN",
 } as const;
 export type WorkMode = (typeof WorkMode)[keyof typeof WorkMode];
 
