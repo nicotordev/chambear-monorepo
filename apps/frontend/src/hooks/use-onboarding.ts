@@ -44,11 +44,23 @@ export const useOnboarding = () => {
   useEffect(() => {
     if (userDetails.isSuccess && userDetails.data) {
       const p = userDetails.data.profile || [];
+      
+      // If no profiles, set to new
       if (p.length === 0 && selectedProfileId !== "new") {
         setSelectedProfileId("new");
+        return;
+      }
+
+      // If profiles exist and none selected, select the most recent one
+      if (p.length > 0 && !selectedProfileId) {
+        // Sort by createdAt desc
+        const sorted = [...p].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setSelectedProfileId(sorted[0].id);
       }
     }
-  }, [userDetails.isSuccess, userDetails.data]);
+  }, [userDetails.isSuccess, userDetails.data, selectedProfileId]);
 
   useEffect(() => {
     if (!userDetails.data) return;
@@ -115,7 +127,8 @@ export const useOnboarding = () => {
           })) ?? [],
       });
     }
-  }, [selectedProfileId, userDetails.data, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProfileId, userDetails.data]);
 
   const mutation = useMutation({
     mutationFn: (data: CreateProfileInput) => {

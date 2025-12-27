@@ -69,7 +69,7 @@ class Api {
   }
 
   public async upsertUser(data: CreateProfileInput): Promise<User> {
-    const res = await this.instance.post("/user/profile", data);
+    const res = await this.instance.post("/user/me", data);
     return res.data.data;
   }
 

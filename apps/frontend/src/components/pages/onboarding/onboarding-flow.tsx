@@ -130,11 +130,22 @@ export default function OnboardingFlow() {
     const isValid = await form.trigger(fieldsToValidate);
 
     if (isValid) {
-      if (currentStep < totalSteps) {
-        handleStep(currentStep + 1);
-        scrollToTop();
-      } else {
-        onSubmit();
+      try {
+        const upsertUserPromise = api.upsertUser(form.getValues());
+        toast.promise(upsertUserPromise, {
+          loading: "Saving profile...",
+          success: "Profile saved!",
+          error: "Failed to save profile",
+        });
+        await upsertUserPromise;
+        if (currentStep < totalSteps) {
+          handleStep(currentStep + 1);
+          scrollToTop();
+        } else {
+          onSubmit();
+        }
+      } catch (error) {
+        console.error(error);
       }
     }
   };
