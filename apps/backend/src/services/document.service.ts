@@ -8,34 +8,50 @@ const documentService = {
   /**
    * Create a document for a user.
    */
-  async createDocument(userId: string, data: CreateDocumentInput) {
+  async createDocument(profileId: string, data: CreateDocumentInput) {
     const validated = CreateDocumentSchema.parse(data);
 
     return prisma.document.create({
       data: {
-        userId,
+        profileId,
         ...validated,
       },
     });
   },
 
-  async getUserDocuments(userId: string) {
+  async getUserDocuments(profileId: string) {
     return prisma.document.findMany({
-      where: { userId },
+      where: { profileId },
       orderBy: { createdAt: "desc" },
     });
   },
-  
-  async deleteDocument(userId: string, documentId: string) {
+
+  async deleteDocument(profileId: string, documentId: string) {
     // Ensure ownership
     const doc = await prisma.document.findUnique({ where: { id: documentId } });
-    if (!doc || doc.userId !== userId) {
-        throw new Error("Document not found or access denied");
+    if (!doc || doc.profileId !== profileId) {
+      throw new Error("Document not found or access denied");
     }
     return prisma.document.delete({
-        where: { id: documentId }
+      where: { id: documentId },
     });
-  }
+  },
+
+  async updateDocument(
+    profileId: string,
+    documentId: string,
+    data: CreateDocumentInput
+  ) {
+    // Ensure ownership
+    const doc = await prisma.document.findUnique({ where: { id: documentId } });
+    if (!doc || doc.profileId !== profileId) {
+      throw new Error("Document not found or access denied");
+    }
+    return prisma.document.update({
+      where: { id: documentId },
+      data: CreateDocumentSchema.parse(data),
+    });
+  },
 };
 
 export default documentService;

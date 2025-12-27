@@ -201,7 +201,7 @@ const userService = {
       const fileExtension = file.name.split(".").pop();
 
       const url = await uploadFileToR2(
-        new Uint8Array(buffer),
+        new Uint8Array(await file.arrayBuffer()),
         clerkId,
         `avatar.${fileExtension}`,
         file.type

@@ -6,9 +6,9 @@ const aiContextService = {
    * Builds a text context for the LLM based on the user's profile in the DB.
    * Includes: Profile, Experience, Education, Skills, and Resume summary (if avail).
    */
-  async buildUserContextFromDb(userId: string): Promise<string> {
+  async buildUserContextFromDb(profileId: string): Promise<string> {
     const profile = await prisma.profile.findUnique({
-      where: { userId },
+      where: { id: profileId },
       include: {
         experiences: { orderBy: { startDate: "desc" } },
         educations: { orderBy: { startDate: "desc" } },
@@ -18,7 +18,7 @@ const aiContextService = {
 
     // Also try to fetch the most recent resume text
     const resume = await prisma.document.findFirst({
-      where: { userId, type: DocumentType.RESUME },
+      where: { profile: { id: profileId }, type: DocumentType.RESUME },
       orderBy: { createdAt: "desc" },
       select: { content: true, summary: true },
     });
@@ -55,7 +55,9 @@ const aiContextService = {
           ? "Present"
           : exp.endDate?.toISOString().split("T")[0] ?? "N/A";
         parts.push(
-          `- ${exp.title} at ${exp.company} (${start} to ${end})\n  ${exp.summary ?? ""}`
+          `- ${exp.title} at ${exp.company} (${start} to ${end})\n  ${
+            exp.summary ?? ""
+          }`
         );
         if (exp.highlights.length > 0) {
           parts.push(`  Highlights: ${exp.highlights.join("; ")}`);
@@ -68,7 +70,9 @@ const aiContextService = {
       parts.push("\nEDUCATION:");
       for (const edu of profile.educations) {
         parts.push(
-          `- ${edu.degree ?? "Degree"} in ${edu.field ?? "Field"} at ${edu.school}`
+          `- ${edu.degree ?? "Degree"} in ${edu.field ?? "Field"} at ${
+            edu.school
+          }`
         );
       }
     }
