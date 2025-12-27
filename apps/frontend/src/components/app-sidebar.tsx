@@ -27,12 +27,9 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import Typography from "@/components/ui/typography";
-import { demoUsers } from "@/data/demo";
 import Image from "next/image";
 import Link from "next/link";
-
-// Get user from demo data to stay in sync
-const user = demoUsers[0];
+import { useUser } from "@clerk/nextjs";
 
 // Main Navigation - aligned with Dashboard Page Elements
 const navMain = [
@@ -97,6 +94,7 @@ const navSecondary = [
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useUser();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="p-4">
@@ -189,7 +187,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Sesión iniciada
             </Typography>
             <Typography variant="span" className="text-sm font-medium truncate">
-              {user.name}
+              {user?.fullName}
             </Typography>
           </div>
         </div>

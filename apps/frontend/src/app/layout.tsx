@@ -7,7 +7,10 @@ import {
   Sora,
   Space_Grotesk,
 } from "next/font/google";
+import { ThemeModeScript } from "flowbite-react";
+
 import "./globals.css";
+import Providers from "./providers";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -57,6 +60,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeModeScript />
+      </head>
       <body
         className={[
           geistSans.variable,
@@ -71,7 +77,7 @@ export default function RootLayout({
           "w-dvw h-dvh",
         ].join(" ")}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

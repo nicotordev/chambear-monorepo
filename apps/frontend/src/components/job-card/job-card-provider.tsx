@@ -45,8 +45,8 @@ export default function JobCardProvider({ children }: JobCardProviderProps) {
                 <div className="flex items-start space-x-4">
                   <Avatar className="w-16 h-16 rounded-lg border">
                     <AvatarImage
-                      src={selectedJobDetail.company.logo}
-                      alt={selectedJobDetail.company.name}
+                      src={selectedJobDetail?.company?.logo || ""}
+                      alt={selectedJobDetail?.company?.name}
                     />
                     <AvatarFallback className="rounded-lg bg-background">
                       <IconBuilding className="w-8 h-8 text-muted-foreground" />
@@ -57,20 +57,20 @@ export default function JobCardProvider({ children }: JobCardProviderProps) {
                       {selectedJobDetail.title}
                     </SheetTitle>
                     <SheetDescription className="text-lg">
-                      {selectedJobDetail.company.name}
+                      {selectedJobDetail?.company?.name || "N/A"}
                     </SheetDescription>
                     <div className="flex flex-wrap gap-2 pt-2">
                       <Badge variant="secondary" className="flex items-center">
                         <IconMapPin className="w-4 h-4 mr-1.5" />
-                        {selectedJobDetail.location}
+                        {selectedJobDetail?.location || "N/A"}
                       </Badge>
                       <Badge variant="secondary" className="flex items-center">
                         <IconCoin className="w-4 h-4 mr-1.5" />
-                        {selectedJobDetail.salary}
+                        {selectedJobDetail?.salary || "N/A"}
                       </Badge>
                       <Badge variant="secondary" className="flex items-center">
                         <IconClock className="w-4 h-4 mr-1.5" />
-                        {selectedJobDetail.employmentType.replace("_", " ")}
+                        {selectedJobDetail?.employmentType.replace("_", " ")}
                       </Badge>
                     </div>
                   </div>
