@@ -1,7 +1,7 @@
 import "client-only";
 
 import { CreateProfileInput } from "@/schemas/user";
-import type { Job, User } from "@/types";
+import type { Job, User, Document } from "@/types";
 import axios, { AxiosInstance } from "axios";
 import type {
   CreateDocumentInput,
@@ -88,9 +88,11 @@ class Api {
     return { url: res.data.data };
   }
 
-  public async getDocuments(): Promise<Document[]> {
+  public async getDocuments(profileId: string): Promise<Document[]> {
     try {
-      const res = await this.instance.get("/documents");
+      const res = await this.instance.get("/documents", {
+        params: { profileId },
+      });
       return res.data.data;
     } catch (error) {
       console.error(error);
@@ -98,26 +100,50 @@ class Api {
     }
   }
 
-  public async getDocumentById(id: string): Promise<Document> {
-    const res = await this.instance.get(`/documents/${id}`);
+  public async getDocumentById(id: string, profileId: string): Promise<Document> {
+    const res = await this.instance.get(`/documents/${id}`, {
+      params: { profileId },
+    });
     return res.data.data;
   }
 
-  public async createDocument(data: CreateDocumentInput): Promise<Document> {
-    const res = await this.instance.post("/documents", data);
+  public async createDocument(
+    data: CreateDocumentInput,
+    profileId: string
+  ): Promise<Document> {
+    const res = await this.instance.post("/documents", data, {
+      params: { profileId },
+    });
     return res.data.data;
   }
 
   public async updateDocument(
     id: string,
-    data: UpdateDocumentInput
+    data: UpdateDocumentInput,
+    profileId: string
   ): Promise<Document> {
-    const res = await this.instance.put(`/documents/${id}`, data);
+    const res = await this.instance.put(`/documents/${id}`, data, {
+      params: { profileId },
+    });
     return res.data.data;
   }
 
-  public async deleteDocument(id: string): Promise<Document> {
-    const res = await this.instance.delete(`/documents/${id}`);
+  public async deleteDocument(id: string, profileId: string): Promise<Document> {
+    const res = await this.instance.delete(`/documents/${id}`, {
+      params: { profileId },
+    });
+    return res.data.data;
+  }
+
+  public async uploadFile(file: File, profileId: string): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await this.instance.post("/documents/upload", formData, {
+      params: { profileId },
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return res.data.data;
   }
 }

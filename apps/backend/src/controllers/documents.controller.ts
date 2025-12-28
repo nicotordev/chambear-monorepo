@@ -1,3 +1,4 @@
+import response from "@/lib/utils/response";
 import { CreateDocumentSchema } from "@/schemas/document";
 import documentService from "@/services/documents.service";
 import { getAuth } from "@hono/clerk-auth";
@@ -262,6 +263,42 @@ const documentsController = {
         },
         404 as const
       );
+    }
+  },
+  uploadDocument: async (
+    c: Context<
+      Env,
+      "/api/v1/documents/upload",
+      { in: { query: { profileId: string } } }
+    >
+  ) => {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    const data = await c.req.parseBody();
+
+    const file = data.file;
+
+    const profileId = c.req.query("profileId");
+
+    if (!file || !(file instanceof File)) {
+      return c.json(response.badRequest("No file provided"), 400);
+    }
+
+    if (!profileId) {
+      return c.json(response.badRequest("No profileId provided"), 400);
+    }
+
+    try {
+      const finalURL = await documentService.uploadDocument(profileId, file);
+      return c.json(response.success(finalURL), 200);
+    } catch (error) {
+      console.error(error);
+      return c.json(response.error("Failed to upload document"), 500);
     }
   },
 };

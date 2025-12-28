@@ -5,33 +5,56 @@ import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
+import { useUser } from "@/contexts/user-context";
 
 export default function useDocuments() {
   const queryClient = useQueryClient();
+  const { currentProfile } = useUser();
+  const profileId = currentProfile?.id;
 
   const { data: documents, isLoading: isLoadingDocuments } = useQuery({
-    queryKey: ["documents"],
-    queryFn: () => api.getDocuments(),
+    queryKey: ["documents", profileId],
+    queryFn: () => {
+      if (!profileId) return Promise.resolve([]);
+      return api.getDocuments(profileId);
+    },
+    enabled: !!profileId,
   });
 
-  const { mutateAsync: uploadDocument, isPending: isPendingUploadDocument } =
+  const { mutateAsync: uploadFile, isPending: isPendingUploadFile } =
     useMutation({
-      mutationFn: (document: CreateDocumentInput) =>
-        api.uploadDocument(document),
+      mutationFn: (file: File) => {
+        if (!profileId) throw new Error("No profile selected");
+        return api.uploadFile(file, profileId);
+      },
+      onError: (error) => {
+        toast.error("Failed to upload file");
+        console.error(error);
+      },
+    });
+
+  const { mutateAsync: createDocument, isPending: isPendingCreateDocument } =
+    useMutation({
+      mutationFn: (document: CreateDocumentInput) => {
+        if (!profileId) throw new Error("No profile selected");
+        return api.createDocument(document, profileId);
+      },
       onSuccess: () => {
-        toast.success("Document uploaded successfully");
+        toast.success("Document created successfully");
         queryClient.invalidateQueries({ queryKey: ["documents"] });
       },
       onError: (error) => {
-        toast.error("Failed to upload document");
+        toast.error("Failed to create document");
         console.error(error);
       },
     });
 
   const { mutateAsync: updateDocument, isPending: isPendingUpdateDocument } =
     useMutation({
-      mutationFn: (document: UpdateDocumentInput) =>
-        api.updateDocument(document.id, document),
+      mutationFn: (document: UpdateDocumentInput) => {
+        if (!profileId) throw new Error("No profile selected");
+        return api.updateDocument(document.id, document, profileId);
+      },
       onSuccess: () => {
         toast.success("Document updated successfully");
         queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -44,7 +67,10 @@ export default function useDocuments() {
 
   const { mutateAsync: deleteDocument, isPending: isPendingDeleteDocument } =
     useMutation({
-      mutationFn: (documentId: string) => api.deleteDocument(documentId),
+      mutationFn: (documentId: string) => {
+        if (!profileId) throw new Error("No profile selected");
+        return api.deleteDocument(documentId, profileId);
+      },
       onSuccess: () => {
         toast.success("Document deleted successfully");
         queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -57,13 +83,15 @@ export default function useDocuments() {
 
   const isLoading =
     isLoadingDocuments ||
-    isPendingUploadDocument ||
+    isPendingUploadFile ||
+    isPendingCreateDocument ||
     isPendingUpdateDocument ||
     isPendingDeleteDocument;
 
   return {
     documents,
-    uploadDocument,
+    uploadFile,
+    createDocument,
     updateDocument,
     deleteDocument,
     isLoading,

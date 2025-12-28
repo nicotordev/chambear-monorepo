@@ -1,8 +1,8 @@
 import { response } from "@/lib/response";
 import backend from "@/lib/backend";
-import type { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export const GET = async (_req: NextResponse) => {
+export const GET = async (_req: NextRequest) => {
   try {
     const documents = await backend.documents.list();
     return response.success(documents);
@@ -11,7 +11,7 @@ export const GET = async (_req: NextResponse) => {
   }
 };
 
-export const POST = async (req: NextResponse) => {
+export const POST = async (req: NextRequest) => {
   try {
     const file = (await req.formData()).get("file") as File;
     const documents = await backend.documents.create(file);

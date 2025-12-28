@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import api from "@/lib/api";
+import backend from "@/lib/backend";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ function pickDecision(score: number): { badge: string; cta: string } {
 
 async function getJob(id: string): Promise<Job | null> {
   try {
-    const job = await api.getJobById(id);
+    const job = await backend.jobs.getById(id);
     return job;
   } catch {
     return null;

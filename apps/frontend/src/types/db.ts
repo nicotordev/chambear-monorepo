@@ -178,6 +178,7 @@ export interface Application {
 export interface Document {
   id: string;
   userId: string;
+  url: string;
   jobId: string | null;
   type: DocumentType;
   label: string;
@@ -205,6 +206,7 @@ export interface FitScore {
 
 export interface InterviewSession {
   id: string;
+  meetLink: string;
   userId: string;
   jobId: string;
   mode: InterviewMode;

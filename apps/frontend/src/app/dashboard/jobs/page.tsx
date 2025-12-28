@@ -1,9 +1,12 @@
 import JobCardMinimalWithFit from "@/components/dashboard/jobs/job-card-minimal-with-fit";
-import api from "@/lib/api";
+import backend from "@/lib/backend";
 import SelectedJob from "@/components/dashboard/jobs/selected-job";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-  const jobs = await api.getJobs();
+  const jobs = await backend.jobs.list();
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
       {/* Header */}
@@ -27,7 +30,9 @@ export default async function JobsPage() {
 
         {/* RIGHT: Job detail */}
         <div className="flex-1 overflow-y-auto">
-          <SelectedJob ssrJobs={jobs} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <SelectedJob ssrJobs={jobs} />
+          </Suspense>
         </div>
       </div>
     </div>

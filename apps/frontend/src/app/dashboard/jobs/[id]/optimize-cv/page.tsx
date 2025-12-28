@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/lib/api";
+import backend from "@/lib/backend";
 import type { Job } from "@/types";
 
 type PageProps = {
@@ -66,7 +66,7 @@ function parseRationale(rationale: unknown): Rationale {
 
 async function getJobById(jobId: string): Promise<Job | null> {
   try {
-    const job = await api.getJobById(jobId);
+    const job = await backend.jobs.getById(jobId);
     return job;
   } catch {
     return null;

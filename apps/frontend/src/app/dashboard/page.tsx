@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-0 animate-in fade-in duration-700">
+    <div className="flex flex-col space-y-0 animate-in fade-in duration-700 h-full">
       <DashboardHeader
         currentUser={user}
         currentProfile={currentProfile}
@@ -63,9 +63,9 @@ export default async function DashboardPage() {
       />
 
       {/* Main Immersive Grid */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden h-full">
+        <div className="w-full h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border h-full">
             <DashboardStats
               applicationsCount={myApplications.length}
               interviewsCount={myInterviews.length}

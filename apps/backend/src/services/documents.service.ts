@@ -5,6 +5,7 @@ import {
   type UpdateDocumentInput,
 } from "@/schemas/document";
 import { prisma } from "../lib/prisma";
+import { uploadFileToR2 } from "@/lib/storage";
 
 const documentService = {
   /**
@@ -73,6 +74,21 @@ const documentService = {
       where: { id: documentId, profile: { id: profileId, userId } },
       data: UpdateDocumentSchema.parse(data),
     });
+  },
+
+  async uploadDocument(profileId: string, file: File) {
+    const extension = file.name.split(".").pop();
+    const fileName = `${profileId}-${Date.now()}.${extension}`;
+    const contentType = file.type;
+
+    const uploadedFileR2 = await uploadFileToR2(
+      Buffer.from(await file.arrayBuffer()),
+      `documents/${profileId}`,
+      fileName,
+      contentType
+    );
+
+    return uploadedFileR2;
   },
 };
 

@@ -7,6 +7,8 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { useState, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { UserProvider } from "@/contexts/user-context";
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -60,7 +62,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               persister: createAsyncStoragePersister({ storage: undefined }),
             }} // No-op persister for SSR
           >
-            {children}
+            <UserProvider>{children}</UserProvider>
           </PersistQueryClientProvider>
         </ClerkProvider>
       </TooltipProvider>
@@ -73,7 +75,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         client={queryClient}
         persistOptions={{ persister }}
       >
-        {children}
+        <TooltipProvider>
+          <UserProvider>{children}</UserProvider>
+        </TooltipProvider>
       </PersistQueryClientProvider>
     </ClerkProvider>
   );

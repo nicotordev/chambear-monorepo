@@ -8,9 +8,9 @@ import {
 import { cn } from "@/lib/utils";
 
 interface DashboardCardProps {
-  title: string;
-  description?: string;
-  cardContentClassName?: string;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  cardContentClassName?: React.ReactNode;
   children?: React.ReactNode;
   action?: React.ReactNode;
 }

@@ -310,6 +310,7 @@ model InterviewSession {
   mode            InterviewMode   @default(VIRTUAL)
   status          InterviewStatus @default(PLANNING)
   scheduledFor    DateTime?
+  meetLink        String?
   durationMinutes Int?
   notes           String?
   aiFeedback      Json?

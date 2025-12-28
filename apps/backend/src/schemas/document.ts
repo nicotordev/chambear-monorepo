@@ -7,6 +7,7 @@ export const CreateDocumentSchema = z.object({
   content: z.string().min(1),
   summary: z.string().nullable().optional(),
   jobId: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
 export type CreateDocumentInput = z.infer<typeof CreateDocumentSchema>;

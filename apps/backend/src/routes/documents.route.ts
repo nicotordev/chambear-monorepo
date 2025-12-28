@@ -90,6 +90,61 @@ const getDocumentById = createRoute({
   },
 });
 
+const uploadDocument = createRoute({
+  method: "post",
+  path: "/documents/upload",
+  request: {
+    query: z.object({
+      profileId: z.string(),
+    }),
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: z.object({
+            file: z
+              .instanceof(File)
+              .openapi({ type: "string", format: "binary" }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Upload document",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(z.string()),
+        },
+      },
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 const createDocument = createRoute({
   method: "post",
   path: "/documents",
@@ -215,9 +270,10 @@ const deleteDocument = createRoute({
 const app = new OpenAPIHono();
 
 app.openapi(getPublicDocuments, documentsController.getPublicDocuments);
-app.openapi(getDocumentById, documentsController.getDocumentById);
 app.openapi(createDocument, documentsController.createDocument);
 app.openapi(updateDocument, documentsController.updateDocument);
 app.openapi(deleteDocument, documentsController.deleteDocument);
+app.openapi(getDocumentById, documentsController.getDocumentById);
+app.openapi(uploadDocument, documentsController.uploadDocument);
 
 export default app;

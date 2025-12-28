@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
 
         <SidebarInset className="flex w-[calc(100dvw-var(--sidebar-width))] h-dvh overflow-hidden">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 h-full">
             <header className="h-16 border-b border-border bg-background px-4 flex items-center gap-3 w-full max-w-full">
               <SidebarTrigger />
               <div className="h-6 w-px bg-border" />
@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <AppSidebarJobSearcher />
             </header>
 
-            <div className="w-full">{children}</div>
+            <div className="w-full h-full">{children}</div>
           </div>
         </SidebarInset>
         <LoadJobStore />

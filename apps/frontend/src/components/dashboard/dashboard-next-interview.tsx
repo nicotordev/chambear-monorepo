@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { InterviewSession, Job } from "@/types";
-import { Calendar, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar, Clock, MapPin, Video } from "lucide-react";
 
 interface DashboardNextInterviewProps {
   interviews: InterviewSession[];
@@ -12,44 +13,128 @@ export function DashboardNextInterview({
   interviews,
   jobs,
 }: DashboardNextInterviewProps) {
-  const nextInterview = interviews[0];
+  // Aseguramos obtener la entrevista más próxima real (ordenar por fecha si es necesario)
+  const nextInterview =
+    interviews && interviews.length > 0 ? interviews[0] : null;
+
+  // Helpers para formateo de fechas
+  const getInterviewDateDetails = (dateString?: string | Date) => {
+    if (!dateString) return { day: "--", month: "---", time: "--:--" };
+    const date = new Date(dateString);
+
+    return {
+      day: date.getDate(),
+      month: date.toLocaleDateString("es-CL", { month: "short" }).toUpperCase(), // ENE, FEB...
+      time: date.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isToday: new Date().toDateString() === date.toDateString(),
+    };
+  };
+
+  const job = nextInterview
+    ? jobs.find((j) => j.id === nextInterview.jobId)
+    : null;
+  const { day, month, time, isToday } = getInterviewDateDetails(
+    nextInterview?.scheduledFor ?? undefined
+  );
 
   return (
-    <div className="p-8 bg-chart-2/3">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="font-bold text-xs uppercase tracking-widest text-chart-2 flex items-center gap-2">
-          <Clock className="size-4" /> Próxima Entrevista
+    <div
+      className={cn(
+        "flex flex-col justify-between overflow-hidden p-6 transition-all",
+        // Si hay entrevista, usamos un fondo destacado (Primary suave), si no, un fondo neutro
+        nextInterview
+          ? "bg-primary/5 border-primary/20"
+          : "bg-card border-border"
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h3
+          className={cn(
+            "flex items-center gap-2 text-xs font-bold uppercase tracking-widest",
+            nextInterview ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          <Clock className="size-4" />
+          {nextInterview ? "Próxima Entrevista" : "Agenda"}
         </h3>
-        <Badge variant="outline">En vivo pronto</Badge>
+        {nextInterview && (
+          <Badge
+            variant={isToday ? "destructive" : "secondary"}
+            className="animate-pulse"
+          >
+            {isToday ? "Es hoy" : "Programada"}
+          </Badge>
+        )}
       </div>
 
-      {interviews.length > 0 ? (
+      {nextInterview && job ? (
         <div className="space-y-6">
-          <div className="flex items-baseline gap-2">
-            <span className="text-7xl font-bold tracking-tighter leading-none">
-              {nextInterview.scheduledFor?.getDate()}
-            </span>
-            <span className="text-xl font-bold text-muted-foreground uppercase">
-              DIC
-            </span>
+          {/* Date & Time Display */}
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center rounded-lg bg-background p-3 border shadow-sm min-w-20">
+              <span className="text-4xl font-bold tracking-tighter leading-none text-foreground">
+                {day}
+              </span>
+              <span className="text-sm font-bold text-muted-foreground uppercase">
+                {month}
+              </span>
+            </div>
+
+            <div className="space-y-1 py-1">
+              <h4 className="font-bold text-xl tracking-tight line-clamp-2 leading-tight">
+                {job.title}
+              </h4>
+              <p className="text-muted-foreground font-medium flex items-center gap-2">
+                {job.company?.name || "Empresa Confidencial"}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                <Clock className="size-3" /> {time} hrs
+              </div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold tracking-tight">
-              {jobs.find((j) => j.id === nextInterview.jobId)?.title}
-            </p>
-            <p className="text-muted-foreground text-lg">
-              {jobs.find((j) => j.id === nextInterview.jobId)?.company?.name}
+
+          {/* Action Button */}
+          <div className="pt-2">
+            {nextInterview.meetLink ? (
+              <Button
+                className="w-full gap-2 font-semibold shadow-md"
+                size="lg"
+                asChild
+              >
+                <a
+                  href={nextInterview.meetLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Video className="size-4" />
+                  Unirse a la llamada
+                </a>
+              </Button>
+            ) : (
+              <Button className="w-full" variant="outline" disabled>
+                Enlace pendiente
+              </Button>
+            )}
+            <p className="text-[10px] text-center text-muted-foreground mt-2 opacity-70">
+              Asegúrate de estar en un lugar silencioso 5 min antes.
             </p>
           </div>
-          <Button className="w-full bg-chart-2 hover:bg-chart-2/90 text-white font-bold h-12 text-base rounded-xl shadow-lg shadow-chart-2/20">
-            Unirse a la llamada
-          </Button>
         </div>
       ) : (
-        <div className="py-10 text-center">
-          <Calendar className="size-10 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground font-medium">
-            No hay entrevistas agendadas
+        // Empty State
+        <div className="flex flex-col items-center justify-center py-8 text-center h-full">
+          <div className="mb-4 rounded-full bg-muted p-4">
+            <Calendar className="size-8 text-muted-foreground/50" />
+          </div>
+          <p className="text-sm font-medium text-foreground">
+            No tienes entrevistas agendadas
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-50">
+            Sigue postulando para conseguir tu próxima oportunidad.
           </p>
         </div>
       )}

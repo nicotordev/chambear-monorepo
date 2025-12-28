@@ -7,11 +7,14 @@ export const CreateDocumentSchema = z.object({
   content: z.string().min(1),
   summary: z.string().nullable().optional(),
   jobId: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
 export type CreateDocumentInput = z.infer<typeof CreateDocumentSchema>;
 
-export const UpdateDocumentSchema = CreateDocumentSchema.partial();
+export const UpdateDocumentSchema = CreateDocumentSchema.partial().extend({
+  id: z.string(),
+});
 export type UpdateDocumentInput = z.infer<typeof UpdateDocumentSchema>;
 
 export const DocumentSchema = CreateDocumentSchema.extend({
