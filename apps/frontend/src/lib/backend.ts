@@ -3,7 +3,10 @@ import { CreateProfileInput } from "@/schemas/user";
 import type { Job, User } from "@/types";
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
+import type { InterviewSession } from "@/types";
+
 import "server-only";
+import type { CreateInterviewSessionInput } from "@/schemas/interview";
 
 // 1. Instancia base
 const api: AxiosInstance = axios.create({
@@ -124,6 +127,13 @@ export const backend = {
     list: (): Promise<Document[]> => fetcher.get<Document[]>("/documents"),
     create: (file: File): Promise<Document> =>
       fetcher.post<Document>("/documents", file),
+  },
+
+  interviews: {
+    list: (): Promise<InterviewSession[]> =>
+      fetcher.get<InterviewSession[]>("/interviews"),
+    create: (data: CreateInterviewSessionInput): Promise<InterviewSession> =>
+      fetcher.post<InterviewSession>("/interviews", data),
   },
 };
 

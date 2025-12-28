@@ -50,13 +50,13 @@ function parseRationale(rationale: unknown): Rationale {
   if (typeof rationale !== "object" || rationale === null) {
     return { match: [], missing: [] };
   }
-  
+
   const r = rationale as Record<string, unknown>;
-  
-  const match = Array.isArray(r.match) 
+
+  const match = Array.isArray(r.match)
     ? r.match.filter((x): x is string => typeof x === "string")
     : [];
-    
+
   const missing = Array.isArray(r.missing)
     ? r.missing.filter((x): x is string => typeof x === "string")
     : [];
@@ -132,7 +132,7 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
   // Extract fit score from the job relationship if available
   // Assuming the API returns a job with fitScores included
   const fitScore = job.fitScores?.[0]; // Taking the first score as current logic implies 1:1 or most recent
-  
+
   const parsedRationale = parseRationale(fitScore?.rationale);
 
   const fit: FitModel = {
@@ -146,7 +146,7 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
   const atsRisks = buildAtsRisks(fit.score, fit.missing);
 
   return (
-    <div className="h-full flex flex-col space-y-0 animate-in fade-in duration-700">
+    <div className="h-full flex flex-col space-y-0 bg-background animate-in fade-in duration-500">
       {/* Header */}
       <div className="px-8 py-10 border-b border-border bg-card/30 backdrop-blur-sm shrink-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

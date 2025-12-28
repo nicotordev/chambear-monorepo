@@ -6,9 +6,9 @@ import {
   TrendingUp,
   User,
   Users,
-  type LucideProps,
 } from "lucide-react";
-import type { ForwardRefExoticComponent, RefAttributes } from "react";
+import DashboardStatCard from "./dashboard-stat-card";
+import Link from "next/link";
 
 interface DashboardStatsProps {
   applicationsCount: number;
@@ -26,32 +26,35 @@ export function DashboardStats({
   return (
     <div className="lg:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-px bg-border">
       {/* 1. Postulaciones */}
-      <StatCard
+      <DashboardStatCard
         title="Postulaciones"
         value={applicationsCount}
         icon={Briefcase}
         description="En procesos activos"
         color="blue"
+        href="/dashboard/applications"
       />
 
       {/* 2. Entrevistas */}
-      <StatCard
+      <DashboardStatCard
         title="Entrevistas"
         value={interviewsCount}
         icon={Users}
         description={interviewsCount > 0 ? "¡Prepárate bien!" : "Sin agendar"}
         color="purple"
         highlight={interviewsCount > 0}
+        href="/dashboard/interviews"
       />
 
       {/* 3. Recordatorios */}
-      <StatCard
+      <DashboardStatCard
         title="Recordatorios"
         value={remindersCount}
         icon={Bell}
         description="Tareas pendientes"
         color="amber"
         highlight={remindersCount > 0}
+        href="/dashboard/reminders"
       />
 
       {/* 4. Perfil (Tarjeta Custom con Gráfico Circular) */}
@@ -106,67 +109,15 @@ export function DashboardStats({
               ¡Estelar!
             </span>
           ) : (
-            <span className="flex items-center group-hover:text-primary transition-colors cursor-pointer">
+            <Link
+              href="/onboarding"
+              className="flex items-center group-hover:text-primary transition-colors cursor-pointer"
+            >
               Completar datos <ChevronRight className="ml-1 size-3" />
-            </span>
+            </Link>
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// --- Subcomponente para tarjetas estándar ---
-
-interface StatCardProps {
-  title: string;
-  value: number;
-  icon: ForwardRefExoticComponent<
-    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-  >;
-  description: string;
-  color: "blue" | "purple" | "amber" | "green";
-  highlight?: boolean;
-}
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-  color,
-  highlight = false,
-}: StatCardProps) {
-  const colorStyles = {
-    blue: "text-blue-600 bg-blue-500/10",
-    purple: "text-purple-600 bg-purple-500/10",
-    amber: "text-amber-600 bg-amber-500/10",
-    green: "text-green-600 bg-green-500/10",
-  };
-
-  return (
-    <div className="group relative flex flex-col justify-between bg-background p-6 transition-colors hover:bg-secondary/20">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {title}
-          </p>
-          <h3 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            {value}
-          </h3>
-        </div>
-        <div
-          className={cn(
-            "rounded-lg p-2 transition-all group-hover:scale-110",
-            highlight ? colorStyles[color] : "bg-muted text-muted-foreground"
-          )}
-        >
-          <Icon className="size-5" />
-        </div>
-      </div>
-      <p className="mt-4 text-xs font-medium text-muted-foreground group-hover:text-foreground/80 transition-colors">
-        {description}
-      </p>
     </div>
   );
 }

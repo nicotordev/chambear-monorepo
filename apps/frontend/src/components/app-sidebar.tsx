@@ -1,5 +1,11 @@
 "use client";
 
+import * as React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   Briefcase,
@@ -9,8 +15,15 @@ import {
   LifeBuoy,
   Send,
   User,
+  UserIcon,
+  UserPlus,
+  ChevronsUpDown,
+  LogOut,
+  Settings,
+  Loader2,
+  UploadCloud,
+  FilePlus,
 } from "lucide-react";
-import * as React from "react";
 
 import {
   Sidebar,
@@ -25,14 +38,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import api from "@/lib/api";
-import { useUser } from "@clerk/nextjs";
-import { useUser as useAppUser } from "@/contexts/user-context";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,21 +46,30 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Documents - aligned with "Mis Documentos"
-const navDocuments = [
-  {
-    name: "CV_FullStack_2025.pdf",
-    url: "#",
-    icon: User,
-  },
-  {
-    name: "Portfolio_Design.pdf",
-    url: "#",
-    icon: FileText,
-  },
-];
+import api from "@/lib/api";
+import { useUser as useAppUser } from "@/contexts/user-context";
+import useDocuments from "@/hooks/use-documents"; // Asegúrate de importar tu hook aquí
+import { DocumentType } from "@/types/enums"; // Asumiendo que tienes este enum
+import CreateDocumentForm from "./create-document-form";
 
 // Secondary Navigation
 const navSecondary = [
@@ -71,17 +85,23 @@ const navSecondary = [
   },
 ];
 
+
+
+// --- Componente Principal ---
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
-  const { currentProfile } = useAppUser();
+  const { user, isLoaded } = useUser();
+  const { currentProfile, user: databaseUser } = useAppUser();
   const pathname = usePathname();
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  const profiles = databaseUser?.profile || [];
   const profileId = currentProfile?.id;
-  
+
   const { data: documents } = useQuery({
     queryKey: ["documents", profileId],
     queryFn: () => {
-        if (!profileId) return Promise.resolve([]);
-        return api.getDocuments(profileId);
+      if (!profileId) return Promise.resolve([]);
+      return api.getDocuments(profileId);
     },
     enabled: !!profileId,
   });
@@ -165,24 +185,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Mis Documentos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {(documents || []).length > 0 ? (documents || []).map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <FileText className="size-4" />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )) : (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="#">
-                      <FileText className="size-4" />
-                      <span className="truncate text-xs">No hay documentos</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {(documents || []).length > 0 ? (
+                <>
+                  {(documents || []).map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton asChild>
+                        <Link href={item.url} target="_blank">
+                          <FileText className="size-4" />
+                          <span className="truncate">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  {/* Botón extra para agregar más documentos si ya hay lista */}
+                  <SidebarMenuItem className="mt-2">
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <SidebarMenuButton className="text-muted-foreground border border-dashed border-border hover:bg-muted/50">
+                          <UserPlus className="size-4" />
+                          <span>Nuevo documento</span>
+                        </SidebarMenuButton>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Agregar Documento</DialogTitle>
+                        </DialogHeader>
+                        <CreateDocumentForm
+                          onSuccess={() => setIsDialogOpen(false)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </SidebarMenuItem>
+                </>
+              ) : (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild disabled>
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <FileText className="size-4 opacity-50" />
+                        <span className="truncate text-xs">
+                          No hay documentos
+                        </span>
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <SidebarMenuButton>
+                          <FilePlus className="size-4" />
+                          <span className="truncate text-xs">
+                            Agregar Documento
+                          </span>
+                        </SidebarMenuButton>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Agregar Documento</DialogTitle>
+                        </DialogHeader>
+                        <CreateDocumentForm
+                          onSuccess={() => setIsDialogOpen(false)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </SidebarMenuItem>
+                </>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -214,7 +281,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <div className="flex items-center gap-3 overflow-hidden">
                 {/* Avatar Fallback */}
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/20 border border-accent/10 text-accent group-hover:bg-accent/30 group-hover:text-accent-foreground transition-colors">
-                  <User className="size-4" />
+                  {currentProfile?.avatar ? (
+                    <Image
+                      src={currentProfile?.avatar}
+                      alt={databaseUser?.name || "Usuario"}
+                      className="size-4"
+                      width={500}
+                      height={500}
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <UserIcon className="size-4" />
+                  )}
                 </div>
 
                 <div className="flex flex-col overflow-hidden">
@@ -222,7 +300,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     Sesión iniciada
                   </span>
                   <span className="truncate text-sm font-medium leading-none">
-                    {user?.fullName || "Usuario"}
+                    {databaseUser?.name || "Usuario"}
                   </span>
                 </div>
               </div>
@@ -247,6 +325,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 size-4" />
                 <span>Configuración</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {profiles.map((profile) => (
+                <DropdownMenuItem key={profile.id} className="cursor-pointer">
+                  {profile.avatar && (
+                    <Image
+                      src={profile.avatar}
+                      alt={profile.id}
+                      className="size-4 mr-2 rounded-full"
+                      width={16}
+                      height={16}
+                    />
+                  )}
+                  <span>{profile.user?.name || "Perfil"}</span>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem className="cursor-pointer">
+                <UserPlus className="mr-2 size-4" />
+                <span>Crear perfil</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 

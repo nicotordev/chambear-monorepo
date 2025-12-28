@@ -42,13 +42,6 @@ export default async function DashboardPage() {
   const myInterviews = user.interviewSessions ?? [];
   const myReminders = user.reminders ?? [];
 
-  // Mock para documentos (ya que no venían en el backend original,
-  // aquí podrías mapear user.resumes o similar)
-  const myDocuments: any[] = [
-    { id: "1", name: "CV_2025.pdf", size: "1.2 MB", type: "PDF" },
-    { id: "2", name: "Portafolio.pdf", size: "5.5 MB", type: "PDF" },
-  ];
-
   // Cálculo de completitud del perfil
   let profileCompletion = 0;
   if (currentProfile) {
@@ -86,17 +79,13 @@ export default async function DashboardPage() {
             {/* Fila 2: Contenido Principal (Columna Izquierda ancha) */}
             <div className="lg:col-span-8 bg-background flex flex-col gap-px border-r border-border">
               {/* Bloque 1: Recomendaciones */}
-              <div className="bg-background">
-                <DashboardRecommendedJobs jobs={jobs} />
-              </div>
+              <DashboardRecommendedJobs jobs={jobs} />
 
               {/* Bloque 2: Postulaciones Activas */}
-              <div className="bg-background flex-1">
-                <DashboardActiveApplications
-                  applications={myApplications}
-                  jobs={jobs}
-                />
-              </div>
+              <DashboardActiveApplications
+                applications={myApplications}
+                jobs={jobs}
+              />
             </div>
 
             {/* Fila 2: Sidebar Widgets (Columna Derecha estrecha) */}

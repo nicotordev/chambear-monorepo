@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function JobsPage() {
   const jobs = await backend.jobs.list();
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-4rem)] overflow-hidden bg-background animate-in fade-in duration-500">
       {/* Header */}
       <div className="pl-8 py-2 border-b bg-card/30 backdrop-blur-sm">
         <h1 className="text-4xl font-bold tracking-tight">Trabajos</h1>

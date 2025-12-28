@@ -62,11 +62,11 @@ export default async function JobPage({ params }: PageProps) {
   // If not available, default to 0
   const fitScore = job.fitScores?.[0]?.score ?? job.fit ?? 0;
   const fit = clampScore(fitScore);
-  
+
   const decision = pickDecision(fit);
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 bg-background animate-in fade-in duration-500">
       {/* Top bar */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <Button asChild variant="outline">

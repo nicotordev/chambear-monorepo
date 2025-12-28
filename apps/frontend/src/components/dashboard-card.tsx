@@ -22,7 +22,7 @@ export default function DashboardCard({
   action,
 }: DashboardCardProps) {
   return (
-    <Card className="w-full rounded-none border-none">
+    <Card className="w-full rounded-none border-none flex-1">
       <CardHeader className="flex items-center justify-between">
         <div>
           <CardTitle>{title}</CardTitle>
