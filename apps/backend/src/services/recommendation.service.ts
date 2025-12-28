@@ -17,7 +17,7 @@ import { env } from "../scraping/config";
 import type { JobPosting } from "../types/ai";
 
 import jobsService from "./jobs.service";
-import userService from "./user.service";
+
 const MIN_RECENT_JOBS = 5;
 const RECENT_DAYS = 30;
 const RANK_LIMIT = 20;
@@ -99,12 +99,15 @@ const dedupeBySourceUrl = (jobs: readonly JobPosting[]): JobPosting[] => {
 };
 
 const recommendationService = {
-  async getRecommendedJobs(userId: string) {
+  async generateRecommendations(profileId: string) {
     /* ────────────────────────────────
      * 1) User context
      * ──────────────────────────────── */
-    const user = await userService.getMe(userId);
-    const profile = user.profile[0];
+    const profile = await prisma.profile.findUniqueOrThrow({
+      where: { id: profileId },
+      include: { user: true, skills: { include: { skill: true } } },
+    });
+    const user = profile.user;
     if (!profile) throw new Error("User profile not found");
 
     const userContext = `
@@ -264,13 +267,13 @@ Summary: ${profile.summary ?? ""}
 
         await prisma.fitScore.upsert({
           where: {
-            userId_jobId: {
-              userId,
+            profileId_jobId: {
+              profileId: profile.id,
               jobId,
             },
           },
           create: {
-            userId,
+            profileId: profile.id,
             jobId,
             score: item.fitScore,
             rationale: toPrismaJsonValue(item.rationale),

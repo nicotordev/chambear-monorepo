@@ -53,7 +53,7 @@ const getJobById = createRoute({
   },
 });
 
-const getJobRecommendations = createRoute({
+const generateRecommendations = createRoute({
   method: "get",
   path: "/jobs/recommendations",
   responses: {
@@ -80,6 +80,6 @@ const app = new OpenAPIHono();
 
 app.openapi(getPublicJobs, jobsController.getPublicJobs);
 app.openapi(getJobById, jobsController.getJobById);
-app.openapi(getJobRecommendations, jobsController.getJobRecommendations);
+app.openapi(generateRecommendations, jobsController.generateRecommendations);
 
 export default app;

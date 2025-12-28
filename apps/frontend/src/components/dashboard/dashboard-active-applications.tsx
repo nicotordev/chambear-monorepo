@@ -17,13 +17,13 @@ import {
   Clock,
   PlusCircle,
 } from "lucide-react";
+import NewApplicationDialog from "./applications/new-application-dialog";
+import DashboardApplicationDialogAction from "../dashboard-application-dialog-action";
 
 interface DashboardActiveApplicationsProps {
   applications: Application[];
   jobs: Job[];
-  onAddApplication?: () => void; // Trigger para abrir el Modal Manual
 }
-
 const getStatusConfig = (status: ApplicationStatus) => {
   switch (status) {
     case ApplicationStatus.INTERVIEW:
@@ -49,14 +49,13 @@ const getStatusConfig = (status: ApplicationStatus) => {
   }
 };
 
-const getRelativeTime = (date: Date | string) => {
+const getRelativeTime = () => {
   return "Hace 2 días"; // Placeholder para lógica real de fecha
 };
 
 export function DashboardActiveApplications({
   applications,
   jobs,
-  onAddApplication,
 }: DashboardActiveApplicationsProps) {
   const hasApplications = applications.length > 0;
 
@@ -70,20 +69,7 @@ export function DashboardActiveApplications({
       }
       description="Seguimiento manual de tus procesos"
       action={
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              className="h-8 w-8 rounded-full shadow-sm"
-              onClick={onAddApplication} // Conectado
-            >
-              <PlusCircle className="size-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="text-xs">Agregar postulación manual</p>
-          </TooltipContent>
-        </Tooltip>
+       <DashboardApplicationDialogAction />
       }
     >
       <div
@@ -141,7 +127,7 @@ export function DashboardActiveApplications({
                 <div className="flex items-center justify-between border-t border-dashed pt-3 mt-auto">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="size-3.5" />
-                    <span>{getRelativeTime(app.createdAt || new Date())}</span>
+                    <span>{getRelativeTime()}</span>
                   </div>
 
                   <div className="flex items-center text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
@@ -167,7 +153,6 @@ export function DashboardActiveApplications({
               variant="outline"
               size="sm"
               className="h-8"
-              onClick={onAddApplication} // Conectado
             >
               <PlusCircle className="mr-2 size-4" />
               Agregar Postulación

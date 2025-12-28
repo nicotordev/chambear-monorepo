@@ -11,18 +11,22 @@ const applicationService = {
    * Upsert an application for a User + Job.
    * Uses @@unique([userId, jobId])
    */
-  async upsertApplication(userId: string, jobId: string, data: ApplicationInput) {
+  async upsertApplication(
+    profileId: string,
+    jobId: string,
+    data: ApplicationInput
+  ) {
     const validated = ApplicationUpsertSchema.parse(data);
 
     return prisma.application.upsert({
       where: {
-        userId_jobId: {
-          userId,
+        profileId_jobId: {
+          profileId,
           jobId,
         },
       },
       create: {
-        userId,
+        profileId,
         jobId,
         ...validated,
       },
@@ -31,9 +35,9 @@ const applicationService = {
       },
       include: {
         job: {
-            include: {
-                jobSkills: { include: { skill: true } }
-            }
+          include: {
+            jobSkills: { include: { skill: true } },
+          },
         },
         resumeDocument: true,
         coverLetter: true,
@@ -44,16 +48,16 @@ const applicationService = {
   /**
    * Get all applications for a user
    */
-  async getUserApplications(userId: string) {
+  async getUserApplications(profileId: string) {
     return prisma.application.findMany({
-      where: { userId },
+      where: { profileId },
       include: {
         job: {
           include: {
             jobSkills: { include: { skill: true } }, // Include skills to show match
             fitScores: {
-                where: { userId } // Only include the fit score for this user
-            }
+              where: { profileId }, // Only include the fit score for this user
+            },
           },
         },
         resumeDocument: true,
@@ -66,18 +70,18 @@ const applicationService = {
   /**
    * Save (Upsert) FitScore for a User + Job
    */
-  async saveFitScore(userId: string, jobId: string, data: FitScoreInput) {
+  async saveFitScore(profileId: string, jobId: string, data: FitScoreInput) {
     const { score, rationale } = FitScoreSchema.parse(data);
 
     return prisma.fitScore.upsert({
       where: {
-        userId_jobId: {
-          userId,
+        profileId_jobId: {
+          profileId,
           jobId,
         },
       },
       create: {
-        userId,
+        profileId,
         jobId,
         score,
         rationale,

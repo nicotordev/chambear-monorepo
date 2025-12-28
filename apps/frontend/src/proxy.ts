@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
 const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
+const isAuthRoute = createRouteMatcher(["/auth(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   console.info(`[Middleware] Processing ${req.method} ${req.nextUrl.pathname}`);
@@ -26,6 +27,13 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (!_auth.userId) {
     return NextResponse.next();
+  }
+
+  if (_auth.userId && isAuthRoute(req) && req.nextUrl.href !== "/dashboard") {
+    const dashboardURL = req.nextUrl.clone();
+    dashboardURL.pathname = "/dashboard";
+    console.info(`[Middleware] Redirecting to dashboard`);
+    return NextResponse.redirect(dashboardURL);
   }
 
   const { privateMetadata } = await _clerkClient.users.getUser(_auth.userId);

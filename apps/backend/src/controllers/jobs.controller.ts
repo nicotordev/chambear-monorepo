@@ -30,7 +30,7 @@ const jobsController = {
     return c.json(response.success(job), 200);
   },
 
-  async getJobRecommendations(c: Context) {
+  async generateRecommendations(c: Context) {
     const auth = getAuth(c);
     const userId = auth?.userId;
 
@@ -38,7 +38,7 @@ const jobsController = {
       return c.json(response.unauthorized(), 401);
     }
 
-    const jobs = await jobsService.getRecommendedJobs(userId);
+    const jobs = await jobsService.generateRecommendations(userId);
 
     return c.json(response.success([...jobs]), 200);
   },

@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ReminderType } from "@/lib/generated";
+import { z } from "zod";
 
 export const CreateReminderSchema = z.object({
   type: z.enum(ReminderType),
@@ -18,7 +18,7 @@ export const UpdateReminderSchema = z.object({
 
 export const ReminderSchema = z.object({
   id: z.string(),
-  userId: z.string(),
+  profileId: z.string(),
   jobId: z.string().nullable(),
   applicationId: z.string().nullable(),
   type: z.enum(ReminderType),

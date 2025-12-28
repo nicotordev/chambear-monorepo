@@ -119,8 +119,8 @@ const jobsService = {
     });
   },
 
-  async getRecommendedJobs(userId: string) {
-    return recommendationService.getRecommendedJobs(userId);
+  async generateRecommendations(userId: string) {
+    return recommendationService.generateRecommendations(userId);
   },
 
   async getPublicJobs() {

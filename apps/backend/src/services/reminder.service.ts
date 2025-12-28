@@ -6,32 +6,38 @@ import {
 } from "@/schemas/reminder";
 
 const reminderService = {
-  async createReminder(userId: string, data: CreateReminderInput) {
+  async createReminder(profileId: string, data: CreateReminderInput) {
     const validated = CreateReminderSchema.parse(data);
 
     return prisma.reminder.create({
       data: {
-        userId,
+        profileId,
         ...validated,
       },
     });
   },
 
-  async getAllReminders(userId: string) {
+  async getAllReminders(profileId: string) {
     return prisma.reminder.findMany({
-      where: { userId },
+      where: { profileId },
       orderBy: { dueAt: "asc" },
     });
   },
 
-  async getReminderById(userId: string, id: string) {
+  async getReminderById(profileId: string, id: string) {
     return prisma.reminder.findFirst({
-      where: { id, userId },
+      where: { id, profileId },
     });
   },
 
-  async updateReminder(userId: string, id: string, data: UpdateReminderInput) {
-    const existing = await prisma.reminder.findFirst({ where: { id, userId } });
+  async updateReminder(
+    profileId: string,
+    id: string,
+    data: UpdateReminderInput
+  ) {
+    const existing = await prisma.reminder.findFirst({
+      where: { id, profileId },
+    });
     if (!existing) return null;
 
     return prisma.reminder.update({
@@ -40,8 +46,8 @@ const reminderService = {
     });
   },
 
-  async deleteReminder(userId: string, id: string) {
-    const existing = await prisma.reminder.findFirst({ where: { id, userId } });
+  async deleteReminder(profileId: string, id: string) {
+    const existing = await prisma.reminder.findFirst({ where: { id, profileId } });
     if (!existing) return null;
 
     return prisma.reminder.delete({
@@ -49,10 +55,10 @@ const reminderService = {
     });
   },
 
-  async getDueReminders(userId: string, beforeDate: Date = new Date()) {
+  async getDueReminders(profileId: string, beforeDate: Date = new Date()) {
     return prisma.reminder.findMany({
       where: {
-        userId,
+        profileId,
         dueAt: {
           lte: beforeDate,
         },
