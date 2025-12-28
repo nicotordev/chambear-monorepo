@@ -274,6 +274,7 @@ model Document {
   type      DocumentType
   label     String
   content   String
+  url       String?
   version   Int          @default(1)
   summary   String?
   createdAt DateTime     @default(now())

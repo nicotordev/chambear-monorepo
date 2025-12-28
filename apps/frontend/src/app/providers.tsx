@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { useState, useEffect } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -47,19 +48,23 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     // Actually, for this specific lib, it's safer to wait for mount or use a non-persisting client initially.
     // However, simplest safe fix for now is:
     return (
+      <TooltipProvider>
         <ClerkProvider>
-            {/* Fallback provider until persister is ready if strict persistence is needed, 
-                but usually we can just render children or a loader. 
+          {/* Fallback provider until persister is ready if strict persistence is needed,
+                but usually we can just render children or a loader.
                 For onboarding, we want to ensure we don't have hydration errors.
             */}
-             <PersistQueryClientProvider 
-                client={queryClient} 
-                persistOptions={{ persister: createAsyncStoragePersister({ storage: undefined }) }} // No-op persister for SSR
-             >
-                {children}
-            </PersistQueryClientProvider>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{
+              persister: createAsyncStoragePersister({ storage: undefined }),
+            }} // No-op persister for SSR
+          >
+            {children}
+          </PersistQueryClientProvider>
         </ClerkProvider>
-    )
+      </TooltipProvider>
+    );
   }
 
   return (

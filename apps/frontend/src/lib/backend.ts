@@ -119,6 +119,12 @@ export const backend = {
       return res.data;
     },
   },
+
+  documents: {
+    list: (): Promise<Document[]> => fetcher.get<Document[]>("/documents"),
+    create: (file: File): Promise<Document> =>
+      fetcher.post<Document>("/documents", file),
+  },
 };
 
 export default backend;

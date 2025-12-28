@@ -12,18 +12,23 @@ interface DashboardCardProps {
   description?: string;
   cardContentClassName?: string;
   children?: React.ReactNode;
+  action?: React.ReactNode;
 }
 export default function DashboardCard({
   title,
   description,
   cardContentClassName,
   children,
+  action,
 }: DashboardCardProps) {
   return (
     <Card className="w-full rounded-none border-none">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex items-center justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        {action}
       </CardHeader>
       <CardContent
         className={cn(cardContentClassName, "max-w-full overflow-hidden")}

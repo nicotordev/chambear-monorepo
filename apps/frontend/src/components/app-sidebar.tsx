@@ -4,7 +4,6 @@ import {
   Bell,
   Briefcase,
   Calendar,
-  Command,
   FileText,
   LayoutDashboard,
   LifeBuoy,
@@ -30,6 +29,8 @@ import Typography from "@/components/ui/typography";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 
 // Main Navigation - aligned with Dashboard Page Elements
 const navMain = [
@@ -95,6 +96,11 @@ const navSecondary = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useUser();
+  const { data: documents } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => api.getDocuments(),
+  });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="p-4">

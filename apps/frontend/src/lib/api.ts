@@ -3,6 +3,10 @@ import "client-only";
 import { CreateProfileInput } from "@/schemas/user";
 import type { Job, User } from "@/types";
 import axios, { AxiosInstance } from "axios";
+import type {
+  CreateDocumentInput,
+  UpdateDocumentInput,
+} from "@/schemas/document";
 
 class Api {
   private static instance: Api;
@@ -82,6 +86,39 @@ class Api {
       },
     });
     return { url: res.data.data };
+  }
+
+  public async getDocuments(): Promise<Document[]> {
+    try {
+      const res = await this.instance.get("/documents");
+      return res.data.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  public async getDocumentById(id: string): Promise<Document> {
+    const res = await this.instance.get(`/documents/${id}`);
+    return res.data.data;
+  }
+
+  public async createDocument(data: CreateDocumentInput): Promise<Document> {
+    const res = await this.instance.post("/documents", data);
+    return res.data.data;
+  }
+
+  public async updateDocument(
+    id: string,
+    data: UpdateDocumentInput
+  ): Promise<Document> {
+    const res = await this.instance.put(`/documents/${id}`, data);
+    return res.data.data;
+  }
+
+  public async deleteDocument(id: string): Promise<Document> {
+    const res = await this.instance.delete(`/documents/${id}`);
+    return res.data.data;
   }
 }
 

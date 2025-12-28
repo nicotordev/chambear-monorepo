@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Application, Job } from "@/types";
 import { ApplicationStatus } from "@/types/enums";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, PlusCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DashboardActiveApplicationsProps {
   applications: Application[];
@@ -19,6 +24,16 @@ export function DashboardActiveApplications({
     <DashboardCard
       title="Postulaciones Activas"
       description="Seguimiento de tus procesos"
+      action={
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger className="bg-primary text-primary-foreground p-2 rounded-full shadow-md">
+            <PlusCircle className="size-5" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">Agregar postulación</p>
+          </TooltipContent>
+        </Tooltip>
+      }
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {applications.slice(0, 4).map((app) => {

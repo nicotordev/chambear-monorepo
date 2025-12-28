@@ -1,4 +1,4 @@
-import { DocumentType } from "@/lib/generated";
+import { DocumentType } from "@/types";
 import { z } from "zod";
 
 export const CreateDocumentSchema = z.object({
@@ -21,6 +21,6 @@ export const DocumentSchema = CreateDocumentSchema.extend({
   updatedAt: z.date().or(z.string()),
   url: z.string().nullable().optional(),
   version: z.number().int().optional(),
-}).openapi("Document");
+});
 
 export type Document = z.infer<typeof DocumentSchema>;
