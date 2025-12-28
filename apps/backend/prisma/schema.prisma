@@ -108,25 +108,21 @@ enum ReminderType {
 }
 
 model User {
-  id                  String             @id @default(cuid())
-  email               String             @unique
-  clerkId             String             @unique
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  clerkId             String   @unique
   name                String?
-  role                Role               @default(EMPLOYEE)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  onboardingCompleted Boolean            @default(false)
-  profile             Profile[]
-  applications        Application[]
-  fitScores           FitScore[]
-  interviewSessions   InterviewSession[]
-  reminders           Reminder[]
+  role                Role     @default(EMPLOYEE)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  onboardingCompleted Boolean  @default(false)
+  profile             Profile?
 }
 
 model Profile {
   id              String   @id @default(cuid())
   avatar          String?
-  userId          String
+  userId          String   @unique
   headline        String?
   summary         String?
   location        String?
@@ -135,11 +131,15 @@ model Profile {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user        User           @relation(fields: [userId], references: [id])
-  experiences Experience[]
-  educations  Education[]
-  skills      ProfileSkill[]
-  documents   Document[]
+  user              User               @relation(fields: [userId], references: [id])
+  experiences       Experience[]
+  educations        Education[]
+  skills            ProfileSkill[]
+  documents         Document[]
+  applications      Application[]
+  fitScores         FitScore[]
+  interviewSessions InterviewSession[]
+  reminders         Reminder[]
 }
 
 model Experience {
@@ -246,7 +246,6 @@ model JobSkill {
 
 model Application {
   id               String            @id @default(cuid())
-  userId           String
   jobId            String
   status           ApplicationStatus @default(SAVED)
   appliedAt        DateTime?
@@ -257,13 +256,14 @@ model Application {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  user           User       @relation(fields: [userId], references: [id])
   job            Job        @relation(fields: [jobId], references: [id])
   resumeDocument Document?  @relation("ApplicationResume", fields: [resumeDocumentId], references: [id])
   coverLetter    Document?  @relation("ApplicationCoverLetter", fields: [coverLetterId], references: [id])
   reminders      Reminder[]
+  profile        Profile    @relation(fields: [profileId], references: [id])
+  profileId      String
 
-  @@unique([userId, jobId])
+  @@unique([profileId, jobId])
   @@index([status])
 }
 
@@ -289,23 +289,23 @@ model Document {
 
 model FitScore {
   id        String   @id @default(cuid())
-  userId    String
   jobId     String
   /// 0..100 AI fitness score
   score     Int
   rationale Json?
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  job  Job  @relation(fields: [jobId], references: [id])
+  job       Job     @relation(fields: [jobId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id])
+  profileId String
 
-  @@unique([userId, jobId])
+  @@unique([profileId, jobId])
   @@index([score])
 }
 
 model InterviewSession {
   id              String          @id @default(cuid())
-  userId          String
+  profileId       String
   jobId           String
   mode            InterviewMode   @default(VIRTUAL)
   status          InterviewStatus @default(PLANNING)
@@ -317,13 +317,13 @@ model InterviewSession {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
-  job  Job  @relation(fields: [jobId], references: [id])
+  profile Profile @relation(fields: [profileId], references: [id])
+  job     Job     @relation(fields: [jobId], references: [id])
 }
 
 model Reminder {
   id            String       @id @default(cuid())
-  userId        String
+  profileId     String
   jobId         String?
   applicationId String?
   type          ReminderType
@@ -334,7 +334,7 @@ model Reminder {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  user        User         @relation(fields: [userId], references: [id])
+  profile     Profile      @relation(fields: [profileId], references: [id])
   job         Job?         @relation(fields: [jobId], references: [id])
   application Application? @relation(fields: [applicationId], references: [id])
 

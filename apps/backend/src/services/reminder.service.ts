@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import {
   CreateReminderSchema,
   type CreateReminderInput,
+  type UpdateReminderInput,
 } from "@/schemas/reminder";
 
 const reminderService = {
@@ -13,6 +14,38 @@ const reminderService = {
         userId,
         ...validated,
       },
+    });
+  },
+
+  async getAllReminders(userId: string) {
+    return prisma.reminder.findMany({
+      where: { userId },
+      orderBy: { dueAt: "asc" },
+    });
+  },
+
+  async getReminderById(userId: string, id: string) {
+    return prisma.reminder.findFirst({
+      where: { id, userId },
+    });
+  },
+
+  async updateReminder(userId: string, id: string, data: UpdateReminderInput) {
+    const existing = await prisma.reminder.findFirst({ where: { id, userId } });
+    if (!existing) return null;
+
+    return prisma.reminder.update({
+      where: { id },
+      data,
+    });
+  },
+
+  async deleteReminder(userId: string, id: string) {
+    const existing = await prisma.reminder.findFirst({ where: { id, userId } });
+    if (!existing) return null;
+
+    return prisma.reminder.delete({
+      where: { id },
     });
   },
 
@@ -32,19 +65,6 @@ const reminderService = {
       orderBy: { dueAt: "asc" },
     });
   },
-
-  async completeReminder(userId: string, reminderId: string) {
-    // Ensure ownership
-    const rem = await prisma.reminder.findUnique({ where: { id: reminderId }});
-    if (!rem || rem.userId !== userId) {
-         throw new Error("Reminder not found or access denied");
-    }
-
-    return prisma.reminder.update({
-        where: { id: reminderId },
-        data: { completedAt: new Date() }
-    });
-  }
 };
 
 export default reminderService;

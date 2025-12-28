@@ -7,8 +7,8 @@ import { DashboardReminders } from "@/components/dashboard/dashboard-reminders";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import backend from "@/lib/backend";
 
+// Optimizaciones de Next.js
 export const runtime = "nodejs";
-
 export const dynamic = "force-dynamic";
 
 async function getDashboardData() {
@@ -28,44 +28,54 @@ export default async function DashboardPage() {
   const { user, jobs } = await getDashboardData();
 
   if (!user) {
-    // Handle case where user fetch fails or is not authenticated properly handled by middleware usually
+    // Manejo básico de error de carga/autenticación
     return (
-      <div className="p-8 text-center text-muted-foreground">
-        Error loading dashboard. Please try refreshing.
+      <div className="flex h-screen items-center justify-center p-8 text-center text-muted-foreground">
+        Error cargando el panel. Por favor recarga la página.
       </div>
     );
   }
 
-  const currentProfile = user.profile?.[0]; // Assuming user has at least one profile or using the first one
+  // Extracción de datos con Fallbacks seguros
+  const currentProfile = user.profile?.[0];
   const myApplications = user.applications ?? [];
   const myInterviews = user.interviewSessions ?? [];
   const myReminders = user.reminders ?? [];
 
-  // Calculate profile completion (simplified logic based on available fields)
+  // Mock para documentos (ya que no venían en el backend original,
+  // aquí podrías mapear user.resumes o similar)
+  const myDocuments: any[] = [
+    { id: "1", name: "CV_2025.pdf", size: "1.2 MB", type: "PDF" },
+    { id: "2", name: "Portafolio.pdf", size: "5.5 MB", type: "PDF" },
+  ];
+
+  // Cálculo de completitud del perfil
   let profileCompletion = 0;
   if (currentProfile) {
-    if (currentProfile.headline) profileCompletion += 20;
-    if (currentProfile.summary) profileCompletion += 20;
-    if (currentProfile.skills && currentProfile.skills.length > 0)
-      profileCompletion += 20;
-    if (currentProfile.experiences && currentProfile.experiences.length > 0)
-      profileCompletion += 20;
-    if (currentProfile.educations && currentProfile.educations.length > 0)
-      profileCompletion += 20;
+    if (currentProfile?.headline) profileCompletion += 20;
+    if (currentProfile?.summary) profileCompletion += 20;
+    if (currentProfile?.skills?.length ?? 0 > 0) profileCompletion += 20;
+    if (currentProfile?.experiences?.length ?? 0 > 0) profileCompletion += 20;
+    if (currentProfile?.educations?.length ?? 0 > 0) profileCompletion += 20;
   }
 
   return (
-    <div className="flex flex-col space-y-0 animate-in fade-in duration-700 h-full">
+    <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
+      {/* 1. Header Fijo Superior */}
       <DashboardHeader
         currentUser={user}
         currentProfile={currentProfile}
         activeApplicationsCount={myApplications.length}
+        hasInterview={myInterviews.length > 0}
       />
 
-      {/* Main Immersive Grid */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden h-full">
-        <div className="w-full h-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border h-full">
+      {/* 2. Área Principal con Scroll */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {/* Container del Grid */}
+        <div className="min-h-full w-full bg-border/50">
+          {/* Grid Layout Principal (Bento Box Style) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border">
+            {/* Fila 1: Estadísticas (Ancho completo) */}
             <DashboardStats
               applicationsCount={myApplications.length}
               interviewsCount={myInterviews.length}
@@ -73,10 +83,15 @@ export default async function DashboardPage() {
               profileCompletion={profileCompletion}
             />
 
-            {/* Main Content Area */}
-            <div className="lg:col-span-8 bg-background p-0 md:border-r border-border">
-              <div className="divide-y divide-border">
+            {/* Fila 2: Contenido Principal (Columna Izquierda ancha) */}
+            <div className="lg:col-span-8 bg-background flex flex-col gap-px border-r border-border">
+              {/* Bloque 1: Recomendaciones */}
+              <div className="bg-background">
                 <DashboardRecommendedJobs jobs={jobs} />
+              </div>
+
+              {/* Bloque 2: Postulaciones Activas */}
+              <div className="bg-background flex-1">
                 <DashboardActiveApplications
                   applications={myApplications}
                   jobs={jobs}
@@ -84,11 +99,22 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Sidebar Widgets Column */}
-            <div className="lg:col-span-4 bg-background flex flex-col divide-y divide-border">
-              <DashboardNextInterview interviews={myInterviews} jobs={jobs} />
-              <DashboardReminders reminders={myReminders} />
-              <DashboardDocuments />
+            {/* Fila 2: Sidebar Widgets (Columna Derecha estrecha) */}
+            <div className="lg:col-span-4 bg-background flex flex-col gap-px">
+              {/* Widget 1: Próxima Entrevista (Prioridad Alta) */}
+              <div className="bg-background">
+                <DashboardNextInterview interviews={myInterviews} jobs={jobs} />
+              </div>
+
+              {/* Widget 2: Recordatorios */}
+              <div className="bg-background min-h-75">
+                <DashboardReminders reminders={myReminders} />
+              </div>
+
+              {/* Widget 3: Documentos */}
+              <div className="bg-background flex-1">
+                <DashboardDocuments />
+              </div>
             </div>
           </div>
         </div>

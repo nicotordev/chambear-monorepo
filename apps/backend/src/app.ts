@@ -1,6 +1,7 @@
 import jobsRoute from "@/routes/jobs.route";
 import userRoute from "@/routes/user.route";
 import documentRoute from "@/routes/documents.route";
+import remindersRoute from "@/routes/reminders.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -38,5 +39,6 @@ app.use("*", clerkMiddleware());
 app.route("/api/v1", jobsRoute);
 app.route("/api/v1", userRoute);
 app.route("/api/v1", documentRoute);
+app.route("/api/v1", remindersRoute);
 
 export default app;

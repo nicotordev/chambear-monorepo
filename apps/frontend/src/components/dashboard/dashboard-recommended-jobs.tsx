@@ -65,7 +65,7 @@ export function DashboardRecommendedJobs({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="min-w-[300px] space-y-3 rounded-xl border p-4"
+              className="min-w-75 space-y-3 rounded-xl border p-4"
             >
               <div className="flex items-center gap-3">
                 <Skeleton className="size-10 rounded-lg" />
@@ -81,7 +81,7 @@ export function DashboardRecommendedJobs({
         </div>
       ) : hasJobs ? (
         // Estado con Datos
-        <div className="min-h-[200px]">
+        <div className="min-h-50">
           <DashboardCarousel
             slides={jobs.map((job) => (
               <div key={`rec-${job.id}`} className="px-1 py-2">
@@ -99,7 +99,7 @@ export function DashboardRecommendedJobs({
           <h3 className="text-sm font-medium text-foreground">
             Descubre tu próxima pega
           </h3>
-          <p className="mt-1 max-w-[280px] text-xs text-muted-foreground mb-4">
+          <p className="mt-1 max-w-70 text-xs text-muted-foreground mb-4">
             Activa el escáner para que nuestra IA busque ofertas en la web
             basadas en tu perfil.
           </p>
