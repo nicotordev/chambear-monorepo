@@ -1,11 +1,17 @@
-import "client-only";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
 import { CreateProfileInput } from "@/schemas/user";
-import type { Document, Job, User } from "@/types";
+import type {
+  Application,
+  Document,
+  InterviewSession,
+  Job,
+  User,
+} from "@/types";
 import axios, { AxiosInstance } from "axios";
+import "client-only";
 
 class Api {
   private static instance: Api;
@@ -175,6 +181,41 @@ class Api {
       console.error(error);
       throw error;
     }
+  }
+
+  public async createJob(data: any): Promise<Job> {
+    const res = await this.instance.post("/jobs", data);
+    return res.data.data;
+  }
+
+  public async upsertApplication(
+    profileId: string,
+    jobId: string,
+    data: any
+  ): Promise<Application> {
+    const res = await this.instance.post(
+      "/applications",
+      { ...data, jobId },
+      {
+        params: { profileId },
+      }
+    );
+    return res.data.data;
+  }
+
+  public async createInterviewSession(
+    profileId: string,
+    applicationId: string,
+    data: any
+  ): Promise<InterviewSession> {
+    const res = await this.instance.post(
+      `/applications/${applicationId}/interview`,
+      data,
+      {
+        params: { profileId },
+      }
+    );
+    return res.data.data;
   }
 }
 

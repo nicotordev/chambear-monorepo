@@ -47,6 +47,42 @@ const jobsController = {
 
     return c.json(response.success([...jobs]), 200);
   },
+
+  async applyJob(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    const jobId = c.req.param("id");
+    if (!jobId) {
+      return c.json(response.badRequest("Job ID is required"), 400);
+    }
+
+    const job = await jobsService.applyJob(jobId, userId);
+
+    return c.json(response.success(job), 200);
+  },
+
+  async upsertJob(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    try {
+      const body = await c.req.json();
+      const job = await jobsService.upsertJob(body);
+      return c.json(response.success(job), 200);
+    } catch (error) {
+      console.error(error);
+      return c.json(response.error("Failed to upsert job"), 500);
+    }
+  },
 };
 
 export default jobsController;

@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
 import type { CreateProfileInput } from "@/schemas/user";
-import type { InterviewSession, Job, User } from "@/types";
+import type { Application, InterviewSession, Job, Reminder, User } from "@/types";
 
 import "server-only";
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
@@ -86,6 +86,28 @@ const fetcher = {
       ? (data.data as T)
       : (data as T);
   },
+
+  patch: async <T>(url: string, body: any, config?: AxiosRequestConfig) => {
+    const authHeaders = await getAuthHeaders();
+    const { data } = await api.patch<T>(url, body, {
+      ...config,
+      headers: { ...authHeaders, ...config?.headers },
+    });
+    return data && typeof data === "object" && "data" in data
+      ? (data.data as T)
+      : (data as T);
+  },
+
+  delete: async <T>(url: string, config?: AxiosRequestConfig) => {
+    const authHeaders = await getAuthHeaders();
+    const { data } = await api.delete<T>(url, {
+      ...config,
+      headers: { ...authHeaders, ...config?.headers },
+    });
+    return data && typeof data === "object" && "data" in data
+      ? (data.data as T)
+      : (data as T);
+  },
 };
 
 // 4. Definición limpia del SDK
@@ -137,6 +159,41 @@ export const backend = {
     create: (data: CreateInterviewSessionInput): Promise<InterviewSession> =>
       fetcher.post<InterviewSession>("/interviews", data),
   },
+
+  applications: {
+    list: (profileId: string): Promise<Application[]> =>
+      fetcher.get<Application[]>(`/applications?profileId=${profileId}`),
+    getById: (id: string, profileId: string): Promise<Application> =>
+      fetcher.get<Application>(`/applications/${id}?profileId=${profileId}`),
+    upsert: (data: any, profileId: string): Promise<Application> =>
+      fetcher.post<Application>(`/applications?profileId=${profileId}`, data),
+    delete: (id: string, profileId: string): Promise<{ success: boolean }> =>
+      fetcher.delete<{ success: boolean }>(
+        `/applications/${id}?profileId=${profileId}`,
+      ),
+    createInterview: (
+      id: string,
+      data: any,
+      profileId: string,
+    ): Promise<InterviewSession> =>
+      fetcher.post<InterviewSession>(
+        `/applications/${id}/interview?profileId=${profileId}`,
+        data,
+      ),
+  },
+
+  reminders: {
+    create: (data: any): Promise<Reminder> =>
+      fetcher.post<Reminder>("/reminders", data),
+    list: (): Promise<Reminder[]> => fetcher.get<Reminder[]>("/reminders"),
+    getById: (id: string): Promise<Reminder> =>
+      fetcher.get<Reminder>(`/reminders/${id}`),
+    update: (id: string, data: any): Promise<Reminder> =>
+      fetcher.patch<Reminder>(`/reminders/${id}`, data),
+    delete: (id: string): Promise<{ success: boolean }> =>
+      fetcher.delete<{ success: boolean }>(`/reminders/${id}`),
+  },
 };
+
 
 export default backend;

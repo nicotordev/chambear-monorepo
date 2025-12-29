@@ -1,4 +1,4 @@
-import { JobSchema, type JobInput } from "@/schemas/job";
+import { JobUpsertSchema, type JobUpsertInput } from "@/schemas/job";
 import { pineconeJobsClient } from "@/scraping/clients";
 import { JobPosting } from "@/types/ai";
 import { Job } from "../lib/generated";
@@ -15,8 +15,8 @@ const jobsService = {
    * 3. Update if found, Create if not.
    * 4. Index to Pinecone.
    */
-  async upsertJob(data: JobInput) {
-    const validated = JobSchema.parse(data);
+  async upsertJob(data: JobUpsertInput) {
+    const validated = JobUpsertSchema.parse(data);
     const { jobSkills, ...jobData } = validated;
 
     // We need to find the job manually because there is no unique constraint on externalUrl or title+company
@@ -147,6 +147,16 @@ const jobsService = {
         },
       },
     });
+  },
+
+  async applyJob(jobId: string, userId: string) {
+    const application = await prisma.application.create({
+      data: {
+        jobId,
+        profileId: userId,
+      },
+    });
+    return application;
   },
 };
 

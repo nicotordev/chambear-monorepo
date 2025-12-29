@@ -1,4 +1,10 @@
-import { EmploymentType, JobSource, WorkMode, Seniority, UrlKind } from "@/lib/generated";
+import {
+  EmploymentType,
+  JobSource,
+  Seniority,
+  UrlKind,
+  WorkMode,
+} from "@/lib/generated";
 import { z } from "zod";
 
 export const JobSchema = z.object({
@@ -28,6 +34,22 @@ export const JobSchema = z.object({
     })
   ),
 });
+
+export const JobUpsertSchema = JobSchema.extend({
+  id: z.string().optional(),
+  jobSkills: z
+    .array(
+      z.object({
+        skill: z.object({
+          id: z.string().optional(),
+          name: z.string(),
+        }),
+      })
+    )
+    .optional(),
+});
+
+export type JobUpsertInput = z.infer<typeof JobUpsertSchema>;
 
 export const JobPostingSchema = z.object({
   title: z.string(),
