@@ -4,7 +4,11 @@ import { response } from "@/lib/response";
 
 export const GET = async (req: NextRequest) => {
   try {
-    const profileId = req.nextUrl.searchParams.get("profileId");
+    const searchParamsEntries = req.nextUrl.searchParams.entries();
+    const profileId = searchParamsEntries.find(
+      (entry) => entry?.[0] === "profileId"
+    )?.[1];
+
     if (!profileId) {
       return response.badRequest("Missing profileId");
     }

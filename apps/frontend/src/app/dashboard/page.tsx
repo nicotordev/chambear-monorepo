@@ -77,7 +77,7 @@ export default async function DashboardPage() {
             />
 
             {/* Fila 2: Contenido Principal (Columna Izquierda ancha) */}
-            <div className="lg:col-span-8 bg-background flex flex-col gap-px border-r border-border">
+            <div className="lg:col-span-8 bg-background flex flex-col gap-px border-r border-border pb-12">
               {/* Bloque 1: Recomendaciones */}
               <DashboardRecommendedJobs jobs={jobs} />
 

@@ -57,6 +57,19 @@ export class JobLlmClient {
     };
   }
 
+  private removeNulls(obj: unknown): unknown {
+    if (obj === null) return undefined;
+    if (Array.isArray(obj)) {
+      return obj.map((v) => this.removeNulls(v));
+    }
+    if (typeof obj === "object" && obj !== null) {
+      return Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k, this.removeNulls(v)])
+      );
+    }
+    return obj;
+  }
+
   private parseJsonStrict<T>(text: string, schema: z.ZodType<T>): T {
     const raw = text.trim();
     let parsed: unknown;
@@ -71,6 +84,7 @@ export class JobLlmClient {
       const objEnd = raw.lastIndexOf("}");
       if (objStart >= 0 && objEnd > objStart) {
         parsed = tryParse(raw.slice(objStart, objEnd + 1));
+        parsed = this.removeNulls(parsed);
         return schema.parse(parsed);
       }
 
@@ -78,12 +92,14 @@ export class JobLlmClient {
       const arrEnd = raw.lastIndexOf("]");
       if (arrStart >= 0 && arrEnd > arrStart) {
         parsed = tryParse(raw.slice(arrStart, arrEnd + 1));
+        parsed = this.removeNulls(parsed);
         return schema.parse(parsed);
       }
 
       throw new Error("Model did not return valid JSON");
     }
 
+    parsed = this.removeNulls(parsed);
     return schema.parse(parsed);
   }
 
@@ -229,34 +245,59 @@ ${userContext.trim()}
     exhaustive?: boolean
   ): string {
     const base = `
-You extract job postings from a SINGLE web page converted to Markdown.
+    ### SYSTEM ROLE
+    You are a precision Data Extraction Engine. Your specific task is to parse a raw Markdown representation of a webpage and extract structured job data into a strict JSON format.
 
-Return JSON ONLY:
-{
-  "pageIsJobRelated": true/false,
-  "pageKind": "job_listing" | "jobs_index" | "careers" | "login_or_gate" | "blog_or_news" | "company_about" | "irrelevant",
-  "pageReason": "short explanation",
-  "jobs": [ { jobPosting } ]
-}
+    ### INPUT DATA
+    You will receive:
+    1. "sourceUrl": The URL where the content originated.
+    2. "markdown": The raw content of the page.
 
-jobPosting fields:
-- title (required)
-- company, location (optional)
-- remote: "remote" | "hybrid" | "on_site" | "unknown"
-- employmentType: "full_time" | "part_time" | "contract" | "internship" | "temporary" | "unknown"
-- seniority: "junior" | "mid" | "senior" | "staff" | "lead" | "principal" | "unknown"
-- team (optional)
-- descriptionMarkdown (optional, keep it compact)
-- responsibilities, requirements, niceToHave: arrays of strings (optional)
-- compensation (optional)
-- applyUrl (optional, must be a URL)
-- sourceUrl (required; must equal the provided source url)
+    ### CLASSIFICATION LOGIC
+    First, analyze the "pageKind":
+    - "job_listing": A detailed page for a specific single role.
+    - "jobs_index": A list/board containing multiple job summaries/links.
+    - "careers": A general "Work with us" landing page (often has no specific listings, just culture info).
+    - "login_or_gate": Page requires auth or is an ATS login screen.
+    - "blog_or_news": Article talking about jobs/company, not a listing.
+    - "irrelevant": No hiring intent found.
 
-Rules:
-- Use ONLY the provided markdown content
-- If page is not job-related, set pageIsJobRelated=false and jobs=[]
-- If multiple jobs exist, extract as many as are clearly present
-- Do not hallucinate missing details
+    ### EXTRACTION RULES
+    1. **Strict JSON Only**: No markdown formatting, no conversation.
+    2. **No Hallucination**: If a field (like salary or team) is not explicitly present in the text, omit it. Do not guess.
+    3. **Null Handling**: Do NOT use null. If a field is missing, omit the key entirely from the JSON object.
+    4. **Enum Normalization**:
+       - **Remote**: Detect "Remote", "Work from home", "Telecommute" -> "remote". Detect "Hybrid" -> "hybrid". Default to "on_site" if a specific office location is mandatory and no remote option is mentioned. Else "unknown".
+       - **Seniority**: Map "Sr", "Senior" -> "senior"; "Principal" -> "principal"; "Staff" -> "staff"; "Lead", "Manager" -> "lead"; "Entry Level", "Junior" -> "junior". Default "unknown".
+       - **EmploymentType**: Map "Contract", "Contractor" -> "contract"; "Full-time" -> "full_time".
+    5. **Source URL**: The output "sourceUrl" field must exactly match the input provided sourceUrl.
+
+    ### OUTPUT SCHEMA
+    Return this JSON structure:
+    {
+      "pageIsJobRelated": boolean,
+      "pageKind": "job_listing" | "jobs_index" | "careers" | "login_or_gate" | "blog_or_news" | "company_about" | "irrelevant",
+      "pageReason": "Brief reasoning for classification",
+      "jobs": [
+        {
+          "title": "string (Required)",
+          "company": "string (Optional)",
+          "location": "string (Optional)",
+          "remote": "remote" | "hybrid" | "on_site" | "unknown",
+          "employmentType": "full_time" | "part_time" | "contract" | "internship" | "temporary" | "unknown",
+          "seniority": "junior" | "mid" | "senior" | "staff" | "lead" | "principal" | "unknown",
+          "team": "string (Optional)",
+          "descriptionMarkdown": "string (Compact markdown summary, Optional)",
+          "responsibilities": ["string", "string"],
+          "requirements": ["string", "string"],
+          "niceToHave": ["string", "string"],
+          "skills": ["string", "string (Tech stack, tools, languages, frameworks - e.g. 'React', 'TypeScript', 'AWS')"],
+          "compensation": "string (Optional - raw text e.g. '$100k - $120k')",
+          "applyUrl": "string (Valid Absolute URL only, Optional)",
+          "sourceUrl": "string (Required, strictly copy from input)"
+        }
+      ]
+    }
 `.trim();
 
     const mode =
@@ -365,32 +406,47 @@ Rules:
     limit: number = 5
   ): Promise<readonly { query: string; site?: string; location?: string }[]> {
     const system = `
-You are an expert at generating Google Search Dorks for finding specific job postings.
-Based on the user's profile, generate advanced search queries to find relevant job listings.
+    ### SYSTEM ROLE
+    You are an expert Search Logic Engineer specializing in OSINT (Open Source Intelligence) and Recruitment. Your goal is to generate high-precision Google Search Dorks to locate fresh job postings directly on company career pages or ATS (Applicant Tracking Systems) platforms, bypassing low-quality aggregators.
 
-Use operators like: site:, intitle:, inurl:, "exact phrase", AND, OR.
-Focus on finding FRESH content (e.g. using date filters is handled by the caller, but you can suggest structure).
-IMPORTANT: If the user targets a specific country, try to include "site:<countryTLD>" (e.g. site:.cl for Chile) to refine results.
+    ### INPUT PROCESSING
+    Analyze the user's request to extract:
+    1. Target Role: (e.g., "Frontend Developer", "Art Teacher")
+    2. Tech Stack/Keywords: (e.g., "React", "TypeScript", "Canvas")
+    3. Target Location: (e.g., "Chile", "Remote", "Canada")
 
-Return JSON ONLY:
-{
-  "queries": [
-    { "query": "intitle:software engineer ...", "site": "greenhouse.io", "location": "Remote" }
-  ]
-}
+    ### SEARCH CONSTRAINT LOGIC
+    1. Length & Density: Google Search has a hard limit of ~32 terms.
+       * Do NOT use filler words (e.g., "looking for", "best").
+       * Concatenate complex "OR" logic using parentheses "()".
+    2. Localization & Language:
+       * TLD Mapping: If a specific country is targeted, you MUST append "site:.<tld>" (e.g., "site:.cl" for Chile, "site:.ca" for Canada, "site:.de" for Germany).
+       * Language Adaptation: Translate the job title and keywords into the primary professional language of the *target* location (e.g., use Spanish terms for a local role in Chile, but English for a global tech role).
+    3. Freshness & Exclusion:
+       * Always exclude aggregators to find direct listings: "-site:linkedin.com -site:indeed.com -site:glassdoor.com".
+       * Exclude purely informational pages: "-intitle:resume -inurl:blog -inurl:news".
+
+    ### OPERATOR STRATEGY
+    * ATS Targeting: Use "site:greenhouse.io", "site:lever.co", "site:ashbyhq.com", "site:bamboohr.com" combined with "intitle:<Role>" to find listings not indexed by major boards.
+    * URL Patterning: Use "inurl:career", "inurl:jobs", "inurl:vacantes", "inurl:trabaja-con-nosotros" based on the language.
+
+    ### OUTPUT FORMAT
+    Return JSON ONLY. Do not output markdown code blocks or conversational text.
+    Structure:
+    {
+      "queries": [
+        {
+          "query": "The raw search string",
+          "strategy": "Brief explanation (e.g., 'Targeting Greenhouse ATS in Canada')",
+          "estimated_precision": "High/Medium"
+        }
+      ]
+    }
 `.trim();
 
     const user = {
       userContext,
       limit,
-      platforms: [
-        "greenhouse.io",
-        "lever.co",
-        "ashbyhq.com",
-        "workday.com",
-        "icims.com",
-        "smartrecruiters.com",
-      ],
     };
 
     const resp = await this.callJson(
@@ -513,7 +569,15 @@ Return JSON ONLY:
     });
 
     const allJobs: JobPosting[] = [];
-    for (const p of pages) allJobs.push(...p.extraction.jobs);
+    for (const p of pages) {
+      const kind = p.extraction.pageKind;
+      allJobs.push(
+        ...p.extraction.jobs.map((j) => ({
+          ...j,
+          pageKind: kind,
+        }))
+      );
+    }
 
     return { scored: scoredResp.items, pages, jobs: allJobs };
   }

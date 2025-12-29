@@ -108,6 +108,29 @@ enum ReminderType {
   DEADLINE
 }
 
+enum PlanTier {
+  FREE
+  BASE
+  PRO
+  RESULT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum CreditActionType {
+  CV_OPTIMIZATION
+  COVER_LETTER
+  INTERVIEW_SIMULATION
+  SKILL_GAP_ANALYSIS
+  OTHER
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -116,8 +139,13 @@ model User {
   role      Role      @default(EMPLOYEE)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  profiles  Profile[]
+
+  profiles      Profile[]
+  subscription  Subscription?
+  creditWallet  CreditWallet?
 }
+
+
 
 model Profile {
   id                  String   @id @default(cuid())
@@ -340,4 +368,61 @@ model Reminder {
   application Application? @relation(fields: [applicationId], references: [id])
 
   @@index([dueAt])
+}
+
+model Plan {
+  id              String   @id @default(cuid())
+  tier            PlanTier @unique
+  name            String
+  monthlyPriceUsd Int      /// ej: 1999 = $19.99
+  monthlyCredits  Int
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  planId             String
+  status             SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean             @default(false)
+
+  provider           String              /// stripe, paddle, lemonsqueezy
+  providerSubId      String              @unique
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
+}
+
+model CreditMovement {
+  id        String            @id @default(cuid())
+  walletId String
+  amount   Int               /// positivo = recarga, negativo = consumo
+  action   CreditActionType?
+  meta     Json?
+  createdAt DateTime         @default(now())
+
+  wallet CreditWallet @relation(fields: [walletId], references: [id])
+
+  @@index([createdAt])
+}
+
+
+model CreditWallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id])
+  movements CreditMovement[]
 }

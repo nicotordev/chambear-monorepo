@@ -1,13 +1,18 @@
-import { EmploymentType, JobSource, WorkMode } from "@/lib/generated";
+import { EmploymentType, JobSource, WorkMode, Seniority, UrlKind } from "@/lib/generated";
 import { z } from "zod";
 
 export const JobSchema = z.object({
   id: z.string(),
   title: z.string(),
   companyName: z.string(),
+  companyId: z.string().nullish(),
   location: z.string().nullish(),
   employmentType: z.enum(EmploymentType),
   workMode: z.enum(WorkMode),
+  seniority: z.enum(Seniority).default(Seniority.UNKNOWN),
+  urlKind: z.enum(UrlKind).default(UrlKind.IRRELEVANT),
+  salary: z.string().nullish(),
+  tags: z.array(z.string()).default([]),
   description: z.string().nullish(),
   source: z.enum(JobSource),
   externalUrl: z.string().nullish(),

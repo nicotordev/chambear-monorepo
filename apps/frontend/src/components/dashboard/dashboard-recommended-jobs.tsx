@@ -54,7 +54,7 @@ export function DashboardRecommendedJobs({
     >
       {isLoading ? (
         // Estado de Carga (Skeleton UI)
-        <div className="flex gap-4 overflow-hidden py-2">
+        <div className="flex items-stretch gap-4 overflow-hidden py-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="min-w-75 space-y-3 rounded-xl border p-4">
               <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export function DashboardRecommendedJobs({
         <div className="min-h-50">
           <DashboardCarousel
             slides={jobs.map((job) => (
-              <div key={`rec-${job.id}`} className="px-1 py-2">
+              <div key={`rec-${job.id}`} className="px-1 py-2 h-full">
                 <JobCard job={job} />
               </div>
             ))}

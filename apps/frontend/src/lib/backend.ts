@@ -99,11 +99,15 @@ export const backend = {
     getById: (id: string): Promise<Job> => fetcher.get<Job>(`/jobs/${id}`),
 
     scan: (body?: any, profileId?: string): Promise<void> =>
-      fetcher.post<void>(`/jobs/scan?profileId=${profileId}`, body),
+      fetcher.get<void>(`/jobs/scan?profileId=${profileId}`),
   },
 
   user: {
-    getMe: (): Promise<User> => fetcher.get<User>("/user/me"),
+    getMe: (token?: string): Promise<User> => fetcher.get<User>("/user/me", token ? {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    } : undefined),
 
     upsertProfile: (data: CreateProfileInput): Promise<User> =>
       fetcher.put<User>("/user/me", data),

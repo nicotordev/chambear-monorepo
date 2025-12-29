@@ -2,12 +2,17 @@ import { randomUUID } from "node:crypto";
 import {
   JobSource,
   Prisma,
+  UrlKind,
   type EmploymentType,
   type WorkMode,
 } from "../lib/generated";
 import { prisma } from "../lib/prisma";
 import { generateEmbedding } from "../lib/utils/ai";
-import { mapEmploymentType, mapWorkMode } from "../lib/utils/mapping";
+import {
+  mapEmploymentType,
+  mapWorkMode,
+  mapSeniority,
+} from "../lib/utils/mapping";
 import {
   brightdataClient,
   jobLlmClient,
@@ -22,6 +27,7 @@ const MIN_RECENT_JOBS = 5;
 const RECENT_DAYS = 30;
 const RANK_LIMIT = 20;
 const PINECONE_TOP_K = 50;
+const LOG_PREFIX = "[RecommendationService]";
 
 type RetrievedJob = Readonly<{
   job: JobPosting;
@@ -53,8 +59,6 @@ const employmentTypeToAi = (et: EmploymentType): EmploymentType => {
 const toPrismaJsonValue = (
   value: unknown
 ): Prisma.InputJsonValue | typeof Prisma.JsonNull => {
-  // Queremos almacenar rationale en JSON sin `any`.
-  // Aceptamos primitives, arrays, objects plain. Si no es serializable, lo stringificamos.
   const seen = new Set<unknown>();
 
   const normalize = (v: unknown): Prisma.InputJsonValue | null => {
@@ -79,7 +83,6 @@ const toPrismaJsonValue = (
       return out;
     }
 
-    // bigint / symbol / function / undefined, etc.
     return String(v);
   };
 
@@ -100,6 +103,9 @@ const dedupeBySourceUrl = (jobs: readonly JobPosting[]): JobPosting[] => {
 
 const recommendationService = {
   async scanJobs(profileId: string) {
+    console.time(`${LOG_PREFIX} scanJobs total`);
+    console.info(`${LOG_PREFIX} Starting scan for profileId: ${profileId}`);
+
     /* ────────────────────────────────
      * 1) User context
      * ──────────────────────────────── */
@@ -108,7 +114,10 @@ const recommendationService = {
       include: { user: true, skills: { include: { skill: true } } },
     });
     const user = profile.user;
-    if (!profile) throw new Error("User profile not found");
+    if (!profile) {
+      console.error(`${LOG_PREFIX} User profile not found: ${profileId}`);
+      throw new Error("User profile not found");
+    }
 
     const userContext = `
 User: ${user.name} (${user.email})
@@ -119,6 +128,8 @@ Skills: ${profile.skills.map((s) => s.skill.name).join(", ")}
 Headline: ${profile.headline ?? ""}
 Summary: ${profile.summary ?? ""}
 `.trim();
+
+    console.debug(`${LOG_PREFIX} User context built for: ${user.email}`);
 
     /* ────────────────────────────────
      * 2) Load recent DB jobs
@@ -139,6 +150,7 @@ Summary: ${profile.summary ?? ""}
       employmentType: employmentTypeToAi(j.employmentType),
       sourceUrl: j.externalUrl ?? "",
       descriptionMarkdown: j.description ?? "",
+      pageKind: j.urlKind,
     }));
 
     // Evita mandar “jobs” sin URL a Pinecone (no index/lookup/dedupe posible)
@@ -146,27 +158,49 @@ Summary: ${profile.summary ?? ""}
       (j) => j.sourceUrl.trim().length > 0
     );
 
+    console.info(
+      `${LOG_PREFIX} Loaded ${mappedDbJobs.length} valid recent jobs from DB (raw: ${recentJobs.length})`
+    );
+
     /* ────────────────────────────────
      * 3) Pinecone relevance filtering
      * ──────────────────────────────── */
-    let relevantJobs: readonly RetrievedJob[] =
-      mappedDbJobs.length > 0
-        ? await pineconeJobsClient.retrieveRelevantJobs({
-            jobs: mappedDbJobs,
-            userContext,
-            embed: generateEmbedding,
-            topK: PINECONE_TOP_K,
-          })
-        : [];
+    let relevantJobs: readonly RetrievedJob[] = [];
+
+    if (mappedDbJobs.length > 0) {
+      console.time(`${LOG_PREFIX} Pinecone retrieval`);
+      relevantJobs = await pineconeJobsClient.retrieveRelevantJobs({
+        jobs: mappedDbJobs,
+        userContext,
+        embed: generateEmbedding,
+        topK: PINECONE_TOP_K,
+      });
+      console.timeEnd(`${LOG_PREFIX} Pinecone retrieval`);
+      console.info(
+        `${LOG_PREFIX} Pinecone returned ${relevantJobs.length} relevant jobs`
+      );
+    } else {
+      console.warn(`${LOG_PREFIX} No DB jobs to filter via Pinecone.`);
+    }
 
     /* ────────────────────────────────
      * 4) Scrape if insufficient
      * ──────────────────────────────── */
     if (relevantJobs.length < MIN_RECENT_JOBS) {
+      console.info(
+        `${LOG_PREFIX} Insufficient relevant jobs (${relevantJobs.length} < ${MIN_RECENT_JOBS}). Initiating scrape...`
+      );
+
+      console.time(`${LOG_PREFIX} Full Scraping Flow`);
       const queries = await jobLlmClient.generateSearchDorks(userContext, 3);
+      console.debug(
+        `${LOG_PREFIX} Generated ${queries.length} search queries.`
+      );
+
       const scrapedJobs: JobPosting[] = [];
 
       for (const q of queries) {
+        console.debug(`${LOG_PREFIX} Executing search query: "${q.query}"`);
         try {
           const result = await brightdataClient.runSync({
             zone: env.brightDataSerpZone,
@@ -178,10 +212,14 @@ Summary: ${profile.summary ?? ""}
             const urls = await jobLlmClient.extractUrlsFromSearchMarkdown(
               String(result.body)
             );
+            console.debug(
+              `${LOG_PREFIX} Found ${urls.length} URLs in search result.`
+            );
 
             const extracted = await jobLlmClient.scoreThenFetchThenExtractJobs({
               urls: urls.map((u) => u.url),
               fetchMarkdown: async (url: string) => {
+                console.debug(`${LOG_PREFIX} Fetching markdown for: ${url}`);
                 const [res] = await brightdataClient.runSyncScrape(
                   env.brightDataZone,
                   [url]
@@ -192,32 +230,61 @@ Summary: ${profile.summary ?? ""}
               maxToScrape: 5,
             });
 
+            console.info(
+              `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
+            );
             scrapedJobs.push(...extracted.jobs);
+          } else {
+            console.warn(
+              `${LOG_PREFIX} Search returned no raw body for query: ${q.query}`
+            );
           }
         } catch (err) {
-          console.error("Scraping failed", err);
+          console.error(
+            `${LOG_PREFIX} Scraping failed for query "${q.query}"`,
+            err
+          );
         }
       }
 
       const scrapedUnique = dedupeBySourceUrl(scrapedJobs);
-
-      await Promise.all(
-        scrapedUnique.map((job) =>
-          jobsService.upsertJob({
-            id: randomUUID(),
-            title: job.title,
-            companyName: job.company ?? "Unknown",
-            location: job.location,
-            employmentType: mapEmploymentType(job.employmentType),
-            workMode: mapWorkMode(job.remote),
-            description: job.descriptionMarkdown,
-            source: JobSource.EXTERNAL_API,
-            externalUrl: job.sourceUrl,
-            createdAt: new Date(),
-            jobSkills: [],
-          })
-        )
+      console.info(
+        `${LOG_PREFIX} Total unique scraped jobs: ${scrapedUnique.length}`
       );
+
+      if (scrapedUnique.length > 0) {
+        console.debug(`${LOG_PREFIX} Upserting scraped jobs to DB...`);
+        await Promise.all(
+          scrapedUnique.map((job) =>
+            jobsService.upsertJob({
+              id: randomUUID(),
+              title: job.title,
+              companyName: job.company ?? "Unknown",
+              location: job.location,
+              employmentType: mapEmploymentType(job.employmentType),
+              workMode: mapWorkMode(job.remote),
+              seniority: mapSeniority(job.seniority),
+              description: job.descriptionMarkdown,
+              salary: job.compensation,
+              tags: [
+                ...(job.requirements || []),
+                ...(job.niceToHave || []),
+              ].slice(0, 10), // Limit to avoid massive arrays
+              urlKind: job.pageKind ?? UrlKind.IRRELEVANT,
+              source: JobSource.EXTERNAL_API,
+              externalUrl: job.sourceUrl,
+              createdAt: new Date(),
+              jobSkills: (job.skills || []).map((skillName) => ({
+                skill: {
+                  id: randomUUID(),
+                  name: skillName,
+                },
+              })),
+            })
+          )
+        );
+        console.debug(`${LOG_PREFIX} Upsert complete.`);
+      }
 
       relevantJobs = relevantJobs.concat(
         scrapedUnique.map((job) => ({
@@ -225,16 +292,28 @@ Summary: ${profile.summary ?? ""}
           retrievalScore: 1.0,
         }))
       );
+
+      console.timeEnd(`${LOG_PREFIX} Full Scraping Flow`);
+    } else {
+      console.info(
+        `${LOG_PREFIX} Sufficient jobs found (${relevantJobs.length}). Skipping scrape.`
+      );
     }
 
     /* ────────────────────────────────
      * 5) Rank jobs
      * ──────────────────────────────── */
+    console.info(`${LOG_PREFIX} Ranking ${relevantJobs.length} candidates...`);
+    console.time(`${LOG_PREFIX} LLM Ranking`);
+
     const ranked = await jobLlmClient.rankJobs({
       jobs: relevantJobs.map((r) => r.job),
       userContext,
       topK: RANK_LIMIT,
     });
+
+    console.timeEnd(`${LOG_PREFIX} LLM Ranking`);
+    console.info(`${LOG_PREFIX} Returned ${ranked.items.length} ranked items.`);
 
     /* ────────────────────────────────
      * 6) Persist fit scores (no N+1)
@@ -244,6 +323,10 @@ Summary: ${profile.summary ?? ""}
       .filter((u) => u.length > 0);
 
     const uniqueUrls = Array.from(new Set(urls));
+
+    console.debug(
+      `${LOG_PREFIX} Matching ${uniqueUrls.length} ranked URLs to DB IDs...`
+    );
 
     const dbJobs = uniqueUrls.length
       ? await prisma.job.findMany({
@@ -257,13 +340,23 @@ Summary: ${profile.summary ?? ""}
       if (j.externalUrl) byExternalUrl.set(j.externalUrl, j.id);
     }
 
+    console.debug(
+      `${LOG_PREFIX} Persisting FitScores for ${ranked.items.length} items...`
+    );
+    let persistedCount = 0;
+
     await Promise.all(
       ranked.items.map(async (item) => {
         const url = item.job.sourceUrl.trim();
         if (!url) return;
 
         const jobId = byExternalUrl.get(url);
-        if (!jobId) return;
+        if (!jobId) {
+          console.warn(
+            `${LOG_PREFIX} Job ID not found for URL during fitScore save: ${url}`
+          );
+          return;
+        }
 
         await prisma.fitScore.upsert({
           where: {
@@ -283,8 +376,14 @@ Summary: ${profile.summary ?? ""}
             rationale: toPrismaJsonValue(item.rationale),
           },
         });
+        persistedCount++;
       })
     );
+
+    console.info(
+      `${LOG_PREFIX} Successfully persisted ${persistedCount} FitScores.`
+    );
+    console.timeEnd(`${LOG_PREFIX} scanJobs total`);
 
     return ranked.items;
   },

@@ -57,11 +57,11 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-2xl font-semibold leading-tight text-balance">
-          {selectedJob.title}
+          {selectedJob?.title}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {selectedJob.company?.name ?? "Empresa Confidencial"} ·{" "}
-          {selectedJob.location ?? "Remoto"}
+          {selectedJob?.company?.name ?? "Empresa Confidencial"} ·{" "}
+          {selectedJob?.location ?? "Remoto"}
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
 
         {/* SINGLE PRIMARY ACTION */}
         <Button asChild size="lg" className="w-full font-semibold">
-          <Link href={`/dashboard/jobs/${selectedJob.id}`}>
+          <Link href={`/dashboard/jobs/${selectedJob?.id}`}>
             Ver oferta completa
           </Link>
         </Button>
@@ -98,12 +98,12 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
       <div className="space-y-4">
         <h3 className="font-medium text-lg">Descripción</h3>
         <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-          {selectedJob.description ?? "Sin descripción disponible."}
+          {selectedJob?.description ?? "Sin descripción disponible."}
         </p>
 
-        {selectedJob.tags && selectedJob.tags.length > 0 && (
+        {selectedJob?.tags && selectedJob?.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2">
-            {selectedJob.tags.map((tag) => (
+            {selectedJob?.tags.map((tag) => (
               <Badge
                 key={tag}
                 variant="secondary"
@@ -127,7 +127,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
           className="text-muted-foreground"
         >
           <Link
-            href={selectedJob.source || "#"}
+            href={selectedJob?.source || "#"}
             target="_blank"
             rel="noreferrer"
           >

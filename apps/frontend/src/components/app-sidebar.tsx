@@ -56,8 +56,9 @@ import {
 } from "@/components/ui/dialog";
 
 import api from "@/lib/api";
-import { useUser as useAppUser } from "@/contexts/user-context"
+import { useUser as useAppUser } from "@/contexts/user-context";
 import CreateDocumentForm from "./create-document-form";
+import { cn } from "@/lib/utils";
 
 // Secondary Navigation
 const navSecondary = [
@@ -73,12 +74,13 @@ const navSecondary = [
   },
 ];
 
-
-
 // --- Componente Principal ---
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, isLoaded } = useUser();
-  const { currentProfile, user: databaseUser } = useAppUser();
+  const {
+    currentProfile,
+    user: databaseUser,
+    switchProfile,
+  } = useAppUser();
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
@@ -318,8 +320,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              {profiles.map((profile) => (
-                <DropdownMenuItem key={profile.id} className="cursor-pointer">
+              {profiles.map((profile, index) => (
+                <DropdownMenuItem
+                  key={profile.id}
+                  className={cn(
+                    "cursor-pointer",
+                    profile.id === currentProfile?.id && "bg-primary",
+                  )}
+                  onClick={() => switchProfile(profile.id)}
+                >
                   {profile.avatar && (
                     <Image
                       src={profile.avatar}
@@ -329,7 +338,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       height={16}
                     />
                   )}
-                  <span>{profile.user?.name || "Perfil"}</span>
+                  <span>
+                    {profile.headline
+                      ? profile.headline + " " + (index + 1)
+                      : "Perfil " + (index + 1)}
+                  </span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuItem className="cursor-pointer">

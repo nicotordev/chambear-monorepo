@@ -2,10 +2,12 @@ import backend from "@/lib/backend";
 import { response } from "@/lib/response";
 import type { NextRequest, NextResponse } from "next/server";
 
-export const POST = async (req: NextRequest): Promise<NextResponse> => {
+export const GET = async (req: NextRequest): Promise<NextResponse> => {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const profileId = searchParams.get("profileId");
+    const searchParamsEntries = req.nextUrl.searchParams.entries();
+    const profileId = searchParamsEntries.find(
+      (entry) => entry?.[0] === "profileId"
+    )?.[1];
 
     if (!profileId) {
       return response.badRequest("Profile ID is required");

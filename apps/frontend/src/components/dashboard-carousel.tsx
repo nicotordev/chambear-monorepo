@@ -56,7 +56,7 @@ export default function DashboardCarousel({ slides }: DashboardCarouselProps) {
   return (
     <div className="relative group">
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex -ml-4 py-1 select-none">
+        <div className="flex items-stretch -ml-4 py-1 select-none">
           {slides.map((slide, index) => (
             <div
               // biome-ignore lint/suspicious/noArrayIndexKey: slides are static

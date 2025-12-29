@@ -38,6 +38,16 @@ const jobsService = {
     }
 
     const savedJob = await prisma.$transaction(async (tx) => {
+      // Handle Company Linkage
+      if (jobData.companyName) {
+        const company = await tx.company.upsert({
+          where: { name: jobData.companyName },
+          create: { name: jobData.companyName },
+          update: {},
+        });
+        jobData.companyId = company.id;
+      }
+
       let job: Job;
 
       if (existingJob) {
@@ -125,32 +135,16 @@ const jobsService = {
 
   async getPublicJobs() {
     return await prisma.job.findMany({
-      select: {
-        id: true,
-        title: true,
-        companyName: true,
-        location: true,
-        employmentType: true,
-        workMode: true,
-        description: true,
-        source: true,
-        externalUrl: true,
-        postedAt: true,
-        expiresAt: true,
-        createdAt: true,
-        jobSkills: {
-          select: {
-            skill: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
       orderBy: {
         createdAt: "desc",
+      },
+      include: {
+        company: true,
+        jobSkills: {
+          include: {
+            skill: true,
+          },
+        },
       },
     });
   },

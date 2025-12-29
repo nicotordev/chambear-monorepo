@@ -43,7 +43,6 @@ const jobsController = {
       return c.json(response.badRequest("Profile ID is required"), 400);
     }
 
-    // TODO: Verify if the profile belongs to the user
     const jobs = await jobsService.scanJobs(profileId);
 
     return c.json(response.success([...jobs]), 200);

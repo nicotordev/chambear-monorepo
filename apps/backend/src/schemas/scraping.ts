@@ -55,6 +55,7 @@ export const JobPostingSchema = z.object({
   responsibilities: z.array(z.string().min(1)).optional(),
   requirements: z.array(z.string().min(1)).optional(),
   niceToHave: z.array(z.string().min(1)).optional(),
+  skills: z.array(z.string().min(1)).optional(),
   compensation: z.string().min(1).optional(),
   applyUrl: z.string().url().optional(),
   sourceUrl: z.string().url(),

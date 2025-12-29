@@ -70,13 +70,15 @@ export type JobPosting = Readonly<{
 
   team?: string;
   descriptionMarkdown?: string;
-  responsibilities?: readonly string[];
-  requirements?: readonly string[];
-  niceToHave?: readonly string[];
+  responsibilities?: string[];
+  requirements?: string[];
+  niceToHave?: string[];
+  skills?: string[];
   compensation?: string;
   applyUrl?: string;
 
   sourceUrl: string;
+  pageKind?: UrlKind;
 }>;
 
 export type ExtractJobsOutput = Readonly<{

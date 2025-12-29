@@ -29,28 +29,6 @@ const getPublicJobs = createRoute({
   },
 });
 
-const getJobById = createRoute({
-  method: "get",
-  path: "/jobs/:id",
-  responses: {
-    200: {
-      description: "Get job by id",
-      content: {
-        "application/json": {
-          schema: createSuccessResponseSchema(JobSchema),
-        },
-      },
-    },
-    404: {
-      description: "Job not found",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-  },
-});
 
 const scanJobs = createRoute({
   method: "get",
@@ -88,10 +66,33 @@ const scanJobs = createRoute({
   },
 });
 
+const getJobById = createRoute({
+  method: "get",
+  path: "/jobs/:id",
+  responses: {
+    200: {
+      description: "Get job by id",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(JobSchema),
+        },
+      },
+    },
+    404: {
+      description: "Job not found",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 const app = new OpenAPIHono();
 
 app.openapi(getPublicJobs, jobsController.getPublicJobs);
-app.openapi(getJobById, jobsController.getJobById);
 app.openapi(scanJobs, jobsController.scanJobs);
+app.openapi(getJobById, jobsController.getJobById);
 
 export default app;

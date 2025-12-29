@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type MiddlewareConfig } from "next/server";
 import api from "./lib/api";
 import { getCookie } from "cookies-next/server";
+import backend from "./lib/backend";
 
 // Ideally middleware should run on edge, but if your 'api' library
 // uses Node-specific modules (like FS or direct DB connections), keep this.
@@ -51,7 +52,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Note: Fetching data in Middleware can add latency. Ensure api.getUser is fast.
   const _auth = await auth();
   const token = await _auth.getToken();
-  const user = await api.getUser(token || undefined).catch((err) => {
+  const user = await backend.user.getMe(token || undefined).catch((err) => {
     console.error("[Middleware] Failed to fetch user:", err);
     return null;
   });

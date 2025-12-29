@@ -1,3 +1,4 @@
+import "client-only";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
@@ -63,18 +64,26 @@ class Api {
   }
 
   public async getUser(token?: string): Promise<User> {
-    const res = await this.instance.get("/user/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await this.instance.get(
+      "/user/me",
+      token
+        ? {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        : undefined
+    );
     if (!("data" in res.data)) {
       throw new Error("Invalid response format");
     }
     return res.data.data;
   }
 
-  public async upsertUser(data: CreateProfileInput, profileId?: string): Promise<User> {
+  public async upsertUser(
+    data: CreateProfileInput,
+    profileId?: string
+  ): Promise<User> {
     const res = await this.instance.post("/user/me", data, {
       params: { profileId },
     });
