@@ -48,11 +48,39 @@ const getStatusConfig = (status: ApplicationStatus) => {
       };
   }
 };
+export const getRelativeTime = (date: Date | string): string => {
+  const now = new Date();
+  const target = new Date(date);
 
-const getRelativeTime = () => {
-  return "Hace 2 días"; // Placeholder para lógica real de fecha
+  // Validate date
+  if (isNaN(target.getTime())) return "Invalid date";
+
+  // Calculate difference in seconds
+  const diffInSeconds = (target.getTime() - now.getTime()) / 1000;
+
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  const cutoffs = [
+    { unit: "year", seconds: 31536000 },
+    { unit: "month", seconds: 2592000 },
+    { unit: "week", seconds: 604800 },
+    { unit: "day", seconds: 86400 },
+    { unit: "hour", seconds: 3600 },
+    { unit: "minute", seconds: 60 },
+  ];
+
+  // Loop through units to find the best fit
+  for (const { unit, seconds } of cutoffs) {
+    if (Math.abs(diffInSeconds) >= seconds) {
+      return rtf.format(
+        Math.round(diffInSeconds / seconds),
+        unit as Intl.RelativeTimeFormatUnit
+      );
+    }
+  }
+
+  return "Just now";
 };
-
 export function DashboardActiveApplications({
   applications,
   jobs,
@@ -68,9 +96,7 @@ export function DashboardActiveApplications({
         </span>
       }
       description="Seguimiento manual de tus procesos"
-      action={
-       <DashboardApplicationDialogAction />
-      }
+      action={<DashboardApplicationDialogAction />}
     >
       <div
         className={cn(
@@ -127,7 +153,7 @@ export function DashboardActiveApplications({
                 <div className="flex items-center justify-between border-t border-dashed pt-3 mt-auto">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="size-3.5" />
-                    <span>{getRelativeTime()}</span>
+                    <span>{getRelativeTime(app.createdAt)}</span> 
                   </div>
 
                   <div className="flex items-center text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
@@ -149,11 +175,7 @@ export function DashboardActiveApplications({
             <p className="mb-4 mt-2 max-w-xs text-xs text-muted-foreground">
               Lleva el registro de tus postulaciones externas aquí.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-            >
+            <Button variant="outline" size="sm" className="h-8">
               <PlusCircle className="mr-2 size-4" />
               Agregar Postulación
             </Button>
