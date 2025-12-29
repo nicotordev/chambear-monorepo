@@ -30,7 +30,7 @@ export default function OnboardingFlowStep4({
   removeEdu,
   eduFields,
 }: OnboardingFlowStep4Props) {
-  const educations = form.watch("educations");
+  const educations = form.watch("educations") || [];
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -144,7 +144,7 @@ export default function OnboardingFlowStep4({
                     <FormControl>
                       <Input
                         type="date"
-                        disabled={!!educations?.[index]?.current}
+                        disabled={educations?.[index]?.current === true}
                         value={formatDateForInput(
                           field.value as Date | undefined
                         )}

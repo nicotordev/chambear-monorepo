@@ -15,6 +15,7 @@ interface UserContextType {
   isLoading: boolean;
   switchProfile: (profileId: string) => void;
   refreshUser: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -93,6 +94,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         switchProfile,
         refreshUser,
+        refreshProfile: refreshUser,
       }}
     >
       {children}
@@ -113,5 +115,5 @@ export function useProfile() {
   if (context === undefined) {
     throw new Error("useProfile must be used within a UserProvider");
   }
-  return context.currentProfile;
+  return context;
 }

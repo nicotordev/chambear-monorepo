@@ -27,7 +27,7 @@ type ErrorInput =
 const response = {
   success<T>(data: T, message = "Success", status = 200): SuccessResponse<T> {
     return {
-      data,
+      data: data && typeof data === 'object' && 'data' in data ? data.data as T : data,
       meta: {
         ok: true,
         status,

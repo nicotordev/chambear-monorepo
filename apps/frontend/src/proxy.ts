@@ -1,72 +1,121 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type MiddlewareConfig } from "next/server";
 import api from "./lib/api";
+import { getCookie } from "cookies-next/server";
 
+// Ideally middleware should run on edge, but if your 'api' library
+// uses Node-specific modules (like FS or direct DB connections), keep this.
 export const runtime = "nodejs";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
+// 1. Define Route Groups
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
-const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
-const isAuthRoute = createRouteMatcher(["/auth(.*)"]);
+// Routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/onboarding(.*)",
+]);
+// Routes strictly for authentication (login/signup)
+const isAuthRoute = createRouteMatcher([
+  "/auth(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  console.info(`[Middleware] Processing ${req.method} ${req.nextUrl.pathname}`);
+  const { userId } = await auth();
+  const path = req.nextUrl.pathname;
 
+  console.info(`[Middleware] Processing ${req.method} ${path}`);
+
+  // 1. Skip API routes and static assets early
   if (isApiRoute(req)) {
     return NextResponse.next();
   }
 
-  if (isProtectedRoute(req)) {
-    console.info(`[Middleware] Route is protected: ${req.nextUrl.pathname}`);
+  // 2. Handle Unauthenticated Users trying to access Protected Routes
+  if (!userId && isProtectedRoute(req)) {
+    console.info(
+      `[Middleware] Unauthorized access to ${path}. Redirecting to sign-in.`
+    );
     await auth.protect();
   }
 
-  const _auth = await auth();
-
-  if (!_auth.userId) {
+  // 3. If user is NOT logged in and not on a protected route (e.g. landing page), allow.
+  if (!userId) {
     return NextResponse.next();
   }
 
-  if (_auth.userId && isAuthRoute(req) && req.nextUrl.href !== "/dashboard") {
-    const dashboardURL = req.nextUrl.clone();
-    dashboardURL.pathname = "/dashboard";
-    console.info(`[Middleware] Redirecting to dashboard`);
-    return NextResponse.redirect(dashboardURL);
-  }
+  // --- Authenticated Logic Below ---
 
-  const user = await api.getUser().catch(() => null);
-  const isOnBoarded = user?.profiles?.some(
-    (profile) => profile.onboardingCompleted
-  );
+  // 4. Fetch User Data to check Onboarding Status
+  // Note: Fetching data in Middleware can add latency. Ensure api.getUser is fast.
+  const _auth = await auth();
+  const token = await _auth.getToken();
+  const user = await api.getUser(token || undefined).catch((err) => {
+    console.error("[Middleware] Failed to fetch user:", err);
+    return null;
+  });
+
+  // Simplified logic to check if onboarding is complete
+  // Adjust this based on your exact DB structure
+  const profiles = user?.profiles;
+  const profilesLength = Number(profiles?.length);
+  const currentProfileId = await getCookie("chambear_current_profile_id", {
+    req,
+  });
+  const currentProfile =
+    profilesLength > 0
+      ? profiles?.find((profile) => profile.id === currentProfileId)
+      : profilesLength > 0
+      ? profiles?.[0]
+      : null;
+  const isOnboarded = !!currentProfile?.onboardingCompleted;
 
   console.info(
-    `[Middleware] User: ${_auth.userId}, Onboarding completed: ${!!isOnBoarded}`
+    `[Middleware] User: ${userId} | Onboarded: ${isOnboarded} | Path: ${path}`
   );
 
-  const dashboardURL = req.nextUrl.clone();
-  dashboardURL.pathname = "/dashboard";
+  // 5. Redirect Logic Matrix
 
-  if (isOnBoarded) {
-    if (isOnboardingRoute(req)) {
-      if (req.nextUrl.href === dashboardURL.href) return NextResponse.next();
-      console.info(`[Middleware] Redirecting to dashboard`);
-      return NextResponse.redirect(dashboardURL);
-    } else {
-      return NextResponse.next();
-    }
+  // CASE A: User is logged in but trying to access Auth pages (Sign In/Up)
+  if (isAuthRoute(req)) {
+    const target = isOnboarded ? "/dashboard" : "/onboarding";
+    console.info(
+      `[Middleware] Auth route accessed by logged in user. Redirecting to ${target}`
+    );
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
-  const onboardingURL = req.nextUrl.clone();
-  onboardingURL.pathname = "/onboarding";
+  // CASE B: User is Onboarded
+  if (isOnboarded) {
+    // If they try to go to onboarding again, kick them to dashboard
+    if (path.startsWith("/onboarding")) {
+      console.info(`[Middleware] Already onboarded. Redirecting to dashboard.`);
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    // Allow access to dashboard or other protected routes
+    return NextResponse.next();
+  }
 
-  if (req.nextUrl.href === onboardingURL.href) return NextResponse.next();
-  console.info(`[Middleware] Redirecting to onboarding`);
-  return NextResponse.redirect(onboardingURL);
+  // CASE C: User is NOT Onboarded
+  if (!isOnboarded) {
+    // If they are NOT on the onboarding page, force them there
+    if (!path.startsWith("/onboarding")) {
+      console.info(
+        `[Middleware] Onboarding incomplete. Redirecting to /onboarding.`
+      );
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+    // If they are already on /onboarding, allow access
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
 });
 
 export const config: MiddlewareConfig = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
+    // Skip Next.js internals and all static files
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
     "/(api|trpc)(.*)",

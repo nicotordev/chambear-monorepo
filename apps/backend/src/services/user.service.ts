@@ -89,37 +89,27 @@ const userService = {
     const replaceSkills = true;
 
     const result = await prisma.$transaction(async (tx) => {
-      // If your model is "1 profile per user", prefer upserting by userId.
-      // If you truly support multiple profiles, keep the id-based behavior.
-      const profileId = validated.id;
-
-      if (user.id === null) {
-        throw new Error("User ID is required");
-      }
-
-      const profile = profileId
-        ? await tx.profile.update({
-            where: { id: profileId },
-            data: {
-              headline: validated.headline,
-              summary: validated.summary,
-              location: validated.location,
-              avatar: validated.avatar,
-              yearsExperience: validated.yearsExperience,
-              targetRoles: validated.targetRoles,
-            },
-          })
-        : await tx.profile.create({
-            data: {
-              userId: user.id,
-              headline: validated.headline,
-              summary: validated.summary,
-              location: validated.location,
-              avatar: validated.avatar,
-              yearsExperience: validated.yearsExperience,
-              targetRoles: validated.targetRoles,
-            },
-          });
+      // Use upsert to handle both create and update scenarios safely regarding the unique userId constraint
+      const profile = await tx.profile.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          headline: validated.headline,
+          summary: validated.summary,
+          location: validated.location,
+          avatar: validated.avatar,
+          yearsExperience: validated.yearsExperience,
+          targetRoles: validated.targetRoles,
+        },
+        update: {
+          headline: validated.headline,
+          summary: validated.summary,
+          location: validated.location,
+          avatar: validated.avatar,
+          yearsExperience: validated.yearsExperience,
+          targetRoles: validated.targetRoles,
+        },
+      });
 
       // ---------- Experiences (MERGE by default) ----------
       const keptExperienceIds: string[] = [];
@@ -283,25 +273,25 @@ const userService = {
       const onboardingReady = isOnboardingReady(snapshot);
 
       if (onboardingReady) {
-        await prisma.profile.update({
+        await tx.profile.update({
           where: { id: profile.id },
           data: { onboardingCompleted: onboardingReady },
         });
       }
 
-      const fullProfile = await tx.profile.findUniqueOrThrow({
-        where: { id: profile.id },
-        include: {
-          experiences: true,
-          educations: true,
-          skills: { include: { skill: true } },
-        },
-      });
-
       return {
-        profile: fullProfile,
+        profileId: profile.id,
         onboardingJustCompleted: onboardingReady,
       };
+    });
+
+    const fullProfile = await prisma.profile.findUniqueOrThrow({
+      where: { id: result.profileId },
+      include: {
+        experiences: true,
+        educations: true,
+        skills: { include: { skill: true } },
+      },
     });
 
     // Update Clerk metadata OUTSIDE the transaction.
@@ -323,7 +313,7 @@ const userService = {
       });
     }
 
-    return result.profile;
+    return fullProfile;
   },
 
   async uploadAvatar(file: File, clerkId: string) {
@@ -368,15 +358,16 @@ const userService = {
  * Check if the profile snapshot meets all criteria to be considered "Onboarding Completed".
  */
 function isOnboardingReady(snapshot: ProfileOnboardingSnapshot): boolean {
-  if (!snapshot.headline || snapshot.headline.length < 10) return false;
-  if (!snapshot.summary || snapshot.summary.length < 50) return false;
+  // Relaxed "mostly complete" criteria
+  if (!snapshot.headline || snapshot.headline.length < 5) return false;
+  if (!snapshot.summary || snapshot.summary.length < 20) return false;
   if (!snapshot.location || snapshot.location.length < 2) return false;
   if (snapshot.yearsExperience === null || snapshot.yearsExperience < 0)
     return false;
   if (snapshot.targetRolesCount < 1) return false;
   if (snapshot.experiencesCount < 1) return false;
   if (snapshot.educationsCount < 1) return false;
-  if (snapshot.skillsCount < 3) return false;
+  if (snapshot.skillsCount < 1) return false;
 
   return true;
 }

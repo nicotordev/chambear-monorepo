@@ -134,7 +134,7 @@ export default function OnboardingFlowStep3({
                     <FormControl>
                       <Input
                         type="date"
-                        disabled={experiences?.[index]?.current}
+                        disabled={!!experiences?.[index]?.current}
                         value={formatDateForInput(
                           field.value as Date | undefined
                         )}

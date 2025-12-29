@@ -1,10 +1,14 @@
-import { response } from "@/lib/response";
-import backend from "@/lib/backend";
 import type { NextRequest } from "next/server";
+import backend from "@/lib/backend";
+import { response } from "@/lib/response";
 
-export const GET = async (_req: NextRequest) => {
+export const GET = async (req: NextRequest) => {
   try {
-    const documents = await backend.documents.list();
+    const profileId = req.nextUrl.searchParams.get("profileId");
+    if (!profileId) {
+      return response.badRequest("Missing profileId");
+    }
+    const documents = await backend.documents.list(profileId);
     return response.success(documents);
   } catch (error) {
     return response.handleAxios(error);

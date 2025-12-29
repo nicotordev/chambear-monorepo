@@ -1,4 +1,3 @@
-
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
@@ -63,16 +62,22 @@ class Api {
     return res.data.data;
   }
 
-  public async getUser(): Promise<User> {
-    const res = await this.instance.get("/user/me");
+  public async getUser(token?: string): Promise<User> {
+    const res = await this.instance.get("/user/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     if (!("data" in res.data)) {
       throw new Error("Invalid response format");
     }
     return res.data.data;
   }
 
-  public async upsertUser(data: CreateProfileInput): Promise<User> {
-    const res = await this.instance.post("/user/me", data);
+  public async upsertUser(data: CreateProfileInput, profileId?: string): Promise<User> {
+    const res = await this.instance.post("/user/me", data, {
+      params: { profileId },
+    });
     return res.data.data;
   }
 
@@ -84,7 +89,7 @@ class Api {
         "Content-Type": "multipart/form-data",
       },
     });
-    return { url: res.data.data };
+    return res.data.data;
   }
 
   public async getDocuments(profileId: string): Promise<Document[]> {

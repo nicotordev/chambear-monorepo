@@ -29,6 +29,7 @@ import OnboardingFlowStep2 from "./onboarding-flow-step-2";
 import OnboardingFlowStep3 from "./onboarding-flow-step-3";
 import OnboardingFlowStep4 from "./onboarding-flow-step-4";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useProfile } from "@/contexts/user-context";
 
 const STEPS = [
   { id: 1, label: "Profile", icon: User, description: "Basic Info" },
@@ -39,6 +40,7 @@ const STEPS = [
 
 export default function OnboardingFlow() {
   const [profilePic, setProfilePic] = useState<string | null>(null);
+  const { currentProfile, refreshProfile } = useProfile();
   const {
     form,
     currentStep,
@@ -131,18 +133,22 @@ export default function OnboardingFlow() {
 
     if (isValid) {
       try {
-        const upsertUserPromise = api.upsertUser(form.getValues());
+        const upsertUserPromise = api.upsertUser({
+          ...form.getValues(),
+          id: currentProfile?.id,
+        });
         toast.promise(upsertUserPromise, {
           loading: "Saving profile...",
           success: "Profile saved!",
           error: "Failed to save profile",
         });
         await upsertUserPromise;
+        await refreshProfile();
         if (currentStep < totalSteps) {
           handleStep(currentStep + 1);
           scrollToTop();
         } else {
-          onSubmit();
+          await onSubmit();
         }
       } catch (error) {
         console.error(error);

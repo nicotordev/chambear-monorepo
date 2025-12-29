@@ -63,7 +63,7 @@ const userController = {
 
     try {
       const finalURL = await userService.uploadAvatar(file, userId);
-      return c.json(response.success(finalURL), 200);
+      return c.json(response.success({ url: finalURL }), 200);
     } catch (error) {
       console.error(error);
       return c.json(response.error("Failed to upload avatar"), 500);

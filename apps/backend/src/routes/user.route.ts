@@ -106,7 +106,7 @@ const avatarUpload = createRoute({
       description: "User avatar uploaded successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(z.string()),
+          schema: createSuccessResponseSchema(z.object({ url: z.string() })),
         },
       },
     },

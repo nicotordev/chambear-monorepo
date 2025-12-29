@@ -41,7 +41,7 @@ export default function OnboardingFlowStep1({
                 >
                   <Avatar className="w-32 h-32 border-4 border-muted group-hover:border-primary transition-colors">
                     <AvatarImage
-                      src={field.value || profilePic || "/avatar.png"}
+                      src={profilePic || "/avatar.png"}
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-muted flex flex-col items-center justify-center">

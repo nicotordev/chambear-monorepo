@@ -1,9 +1,7 @@
-import { SuccessResponse } from "@/lib/response";
-import { CreateProfileInput } from "@/schemas/user";
-import type { Job, User } from "@/types";
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
-import type { InterviewSession } from "@/types";
+import type { CreateProfileInput } from "@/schemas/user";
+import type { InterviewSession, Job, User } from "@/types";
 
 import "server-only";
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
@@ -19,7 +17,7 @@ const api: AxiosInstance = axios.create({
 // Logging Interceptors
 api.interceptors.request.use((config) => {
   console.log(
-    `[Backend Request] ${config.method?.toUpperCase()} ${config.url}`
+    `[Backend Request] ${config.method?.toUpperCase()} ${config.url}`,
   );
   return config;
 });
@@ -29,7 +27,7 @@ api.interceptors.response.use(
     console.log(
       `[Backend Response] ${response.config.method?.toUpperCase()} ${
         response.config.url
-      } - Status: ${response.status}`
+      } - Status: ${response.status}`,
     );
     return response;
   },
@@ -38,10 +36,10 @@ api.interceptors.response.use(
       `[Backend Error] ${error.config?.method?.toUpperCase()} ${
         error.config?.url
       } -`,
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     return Promise.reject(error);
-  }
+  },
 );
 
 // 2. Helper privado para inyectar headers automáticamente
@@ -100,7 +98,8 @@ export const backend = {
 
     getById: (id: string): Promise<Job> => fetcher.get<Job>(`/jobs/${id}`),
 
-    scan: (body?: any, profileId?: string): Promise<void> => fetcher.post<void>(`/jobs/scan?profileId=${profileId}`, body),
+    scan: (body?: any, profileId?: string): Promise<void> =>
+      fetcher.post<void>(`/jobs/scan?profileId=${profileId}`, body),
   },
 
   user: {
@@ -112,21 +111,18 @@ export const backend = {
     uploadAvatar: async (file: File): Promise<string> => {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetcher.post<SuccessResponse<string>>(
-        "/user/avatar",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      return res.data;
+      const data = await fetcher.post<string>("/user/avatar", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return data;
     },
   },
 
   documents: {
-    list: (): Promise<Document[]> => fetcher.get<Document[]>("/documents"),
+    list: (profileId: string): Promise<Document[]> =>
+      fetcher.get<Document[]>(`/documents?profileId=${profileId}`),
     create: (file: File): Promise<Document> =>
       fetcher.post<Document>("/documents", file),
   },

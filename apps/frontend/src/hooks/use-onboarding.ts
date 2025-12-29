@@ -4,13 +4,14 @@ import api from "@/lib/api";
 import { CreateProfileInput, CreateProfileSchema } from "@/schemas/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SkillLevel } from "@/types";
 
 export const useOnboarding = () => {
+  const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
@@ -156,7 +157,14 @@ export const useOnboarding = () => {
   };
 
   const onSubmit = async (data: CreateProfileInput) => {
-    mutation.mutate(data);
+    try {
+      await mutation.mutateAsync(data);
+      if (pathname === "/onboarding") {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return {
