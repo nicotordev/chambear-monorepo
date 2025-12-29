@@ -27,9 +27,6 @@ type ProfileOnboardingSnapshot = {
 
 const userService = {
   /**
-   * Get user profile with all relations
-   */
-  /**
    * Get current user with all profiles
    */
   async getMe(clerkId: string) {
@@ -38,7 +35,7 @@ const userService = {
     let user = await prisma.user.findUnique({
       where: { clerkId },
       include: {
-        profile: {
+        profiles: {
           include: {
             experiences: { orderBy: { startDate: "desc" } },
             educations: { orderBy: { startDate: "desc" } },
@@ -62,7 +59,7 @@ const userService = {
           role: Role.EMPLOYEE,
         },
         include: {
-          profile: {
+          profiles: {
             include: {
               experiences: { orderBy: { startDate: "desc" } },
               educations: { orderBy: { startDate: "desc" } },
@@ -285,13 +282,10 @@ const userService = {
 
       const onboardingReady = isOnboardingReady(snapshot);
 
-      const shouldMarkCompleted =
-        onboardingReady && user.onboardingCompleted === false;
-
-      if (shouldMarkCompleted) {
-        await tx.user.update({
-          where: { id: user.id },
-          data: { onboardingCompleted: true },
+      if (onboardingReady) {
+        await prisma.profile.update({
+          where: { id: profile.id },
+          data: { onboardingCompleted: onboardingReady },
         });
       }
 
@@ -306,7 +300,7 @@ const userService = {
 
       return {
         profile: fullProfile,
-        onboardingJustCompleted: shouldMarkCompleted,
+        onboardingJustCompleted: onboardingReady,
       };
     });
 

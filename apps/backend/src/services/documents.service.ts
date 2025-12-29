@@ -26,17 +26,17 @@ const documentService = {
     });
   },
 
-  async getProfileDocuments(profileId: string, userId: string) {
+  async getProfileDocuments(profileId: string) {
     return prisma.document.findMany({
-      where: { profile: { id: profileId, userId } },
+      where: { profileId },
       orderBy: { createdAt: "desc" },
     });
   },
 
-  async getDocumentById(profileId: string, documentId: string, userId: string) {
+  async getDocumentById(profileId: string, documentId: string) {
     // Ensure ownership
     const doc = await prisma.document.findUnique({
-      where: { id: documentId, profile: { id: profileId, userId } },
+      where: { id: documentId, profileId },
     });
     if (!doc) {
       throw new Error("Document not found or access denied");
@@ -44,34 +44,33 @@ const documentService = {
     return doc;
   },
 
-  async deleteDocument(profileId: string, documentId: string, userId: string) {
+  async deleteDocument(profileId: string, documentId: string) {
     // Ensure ownership
     const doc = await prisma.document.findUnique({
-      where: { id: documentId, profile: { id: profileId, userId } },
+      where: { id: documentId, profileId },
     });
     if (!doc) {
       throw new Error("Document not found or access denied");
     }
     return prisma.document.delete({
-      where: { id: documentId, profile: { id: profileId, userId } },
+      where: { id: documentId, profileId },
     });
   },
 
   async updateDocument(
     profileId: string,
     documentId: string,
-    data: UpdateDocumentInput,
-    userId: string
+    data: UpdateDocumentInput
   ) {
     // Ensure ownership
     const doc = await prisma.document.findUnique({
-      where: { id: documentId, profile: { id: profileId, userId } },
+      where: { id: documentId, profileId },
     });
     if (!doc) {
       throw new Error("Document not found or access denied");
     }
     return prisma.document.update({
-      where: { id: documentId, profile: { id: profileId, userId } },
+      where: { id: documentId, profileId },
       data: UpdateDocumentSchema.parse(data),
     });
   },

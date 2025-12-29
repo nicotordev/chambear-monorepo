@@ -99,6 +99,8 @@ export const backend = {
       fetcher.get<Job[]>("/jobs/recommendations"),
 
     getById: (id: string): Promise<Job> => fetcher.get<Job>(`/jobs/${id}`),
+
+    scan: (body?: any, profileId?: string): Promise<void> => fetcher.post<void>(`/jobs/scan?profileId=${profileId}`, body),
   },
 
   user: {

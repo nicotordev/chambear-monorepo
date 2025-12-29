@@ -99,7 +99,7 @@ const dedupeBySourceUrl = (jobs: readonly JobPosting[]): JobPosting[] => {
 };
 
 const recommendationService = {
-  async generateRecommendations(profileId: string) {
+  async scanJobs(profileId: string) {
     /* ────────────────────────────────
      * 1) User context
      * ──────────────────────────────── */

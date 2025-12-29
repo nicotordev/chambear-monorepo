@@ -277,7 +277,7 @@ export default function NewApplicationDialog({
                       <div className="relative">
                         <Textarea
                           placeholder="Detalles sobre el stack tecnológico, rango salarial, o puntos clave de la vacante..."
-                          className="resize-none min-h-[100px] bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all pl-3"
+                          className="resize-none min-h-25 bg-muted/30 border-muted-foreground/20 focus:bg-background transition-all pl-3"
                           {...field}
                         />
                       </div>

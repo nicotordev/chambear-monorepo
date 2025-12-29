@@ -1,11 +1,10 @@
 import jobsController from "@/controllers/jobs.controller";
 import { JobSchema, RankedJobSchema } from "@/schemas/job";
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { createRoute, z } from "@hono/zod-openapi";
 import {
   createSuccessResponseSchema,
   ErrorResponseSchema,
 } from "@/schemas/response";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 const getPublicJobs = createRoute({
   method: "get",
@@ -53,9 +52,14 @@ const getJobById = createRoute({
   },
 });
 
-const generateRecommendations = createRoute({
+const scanJobs = createRoute({
   method: "get",
-  path: "/jobs/recommendations",
+  path: "/jobs/scan",
+  request: {
+    query: z.object({
+      profileId: z.string(),
+    }),
+  },
   responses: {
     200: {
       description: "Get job recommendations",
@@ -73,6 +77,14 @@ const generateRecommendations = createRoute({
         },
       },
     },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
   },
 });
 
@@ -80,6 +92,6 @@ const app = new OpenAPIHono();
 
 app.openapi(getPublicJobs, jobsController.getPublicJobs);
 app.openapi(getJobById, jobsController.getJobById);
-app.openapi(generateRecommendations, jobsController.generateRecommendations);
+app.openapi(scanJobs, jobsController.scanJobs);
 
 export default app;

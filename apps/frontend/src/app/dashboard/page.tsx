@@ -37,7 +37,7 @@ export default async function DashboardPage() {
   }
 
   // Extracción de datos con Fallbacks seguros
-  const currentProfile = user.profile?.[0];
+  const currentProfile = user.profiles?.[0];
   const myApplications = user.applications ?? [];
   const myInterviews = user.interviewSessions ?? [];
   const myReminders = user.reminders ?? [];

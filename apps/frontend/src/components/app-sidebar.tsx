@@ -54,21 +54,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import api from "@/lib/api";
-import { useUser as useAppUser } from "@/contexts/user-context";
-import useDocuments from "@/hooks/use-documents"; // Asegúrate de importar tu hook aquí
-import { DocumentType } from "@/types/enums"; // Asumiendo que tienes este enum
+import { useUser as useAppUser } from "@/contexts/user-context"
 import CreateDocumentForm from "./create-document-form";
 
 // Secondary Navigation
@@ -94,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const profiles = databaseUser?.profile || [];
+  const profiles = databaseUser?.profiles || [];
   const profileId = currentProfile?.id;
 
   const { data: documents } = useQuery({

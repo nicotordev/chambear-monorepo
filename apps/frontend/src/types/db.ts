@@ -20,7 +20,7 @@ export interface User {
   role: Role;
   createdAt: Date;
   updatedAt: Date;
-  profile?: Profile[];
+  profiles?: Profile[];
   applications?: Application[];
   fitScores?: FitScore[];
   documents?: Document[];
@@ -30,6 +30,7 @@ export interface User {
 
 export interface Profile {
   id: string;
+  onboardingCompleted: boolean;
   userId: string;
   avatar: string | null;
   headline: string | null;

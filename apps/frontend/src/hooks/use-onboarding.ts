@@ -43,8 +43,8 @@ export const useOnboarding = () => {
 
   useEffect(() => {
     if (userDetails.isSuccess && userDetails.data) {
-      const p = userDetails.data.profile || [];
-      
+      const p = userDetails.data.profiles || [];
+
       // If no profiles, set to new
       if (p.length === 0 && selectedProfileId !== "new") {
         setSelectedProfileId("new");
@@ -54,8 +54,9 @@ export const useOnboarding = () => {
       // If profiles exist and none selected, select the most recent one
       if (p.length > 0 && !selectedProfileId) {
         // Sort by createdAt desc
-        const sorted = [...p].sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const sorted = [...p].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setSelectedProfileId(sorted[0].id);
       }
@@ -80,7 +81,7 @@ export const useOnboarding = () => {
       return;
     }
 
-    const currentProfile = userDetails.data.profile?.find(
+    const currentProfile = userDetails.data.profiles?.find(
       (p) => p.id === selectedProfileId
     );
 
@@ -166,7 +167,7 @@ export const useOnboarding = () => {
     currentStep,
     handleStep,
     totalSteps,
-    profiles: userDetails.data?.profile || [],
+    profiles: userDetails.data?.profiles || [],
     selectedProfileId,
     selectProfile: setSelectedProfileId,
     isLoading: userDetails.isLoading,

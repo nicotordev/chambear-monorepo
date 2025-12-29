@@ -41,7 +41,6 @@ const documentsController = {
     try {
       const publicDocuments = await documentService.getProfileDocuments(
         profileId,
-        userId
       );
 
       return c.json(
@@ -92,7 +91,6 @@ const documentsController = {
       const document = await documentService.getDocumentById(
         profileId,
         documentId,
-        userId
       );
 
       return c.json(
@@ -199,7 +197,6 @@ const documentsController = {
         profileId,
         documentId,
         body,
-        userId
       );
 
       return c.json(
@@ -242,7 +239,6 @@ const documentsController = {
       const document = await documentService.deleteDocument(
         profileId,
         documentId,
-        userId
       );
 
       return c.json(

@@ -18,7 +18,7 @@ const aiContextService = {
 
     // Also try to fetch the most recent resume text
     const resume = await prisma.document.findFirst({
-      where: { profile: { id: profileId }, type: DocumentType.RESUME },
+      where: { profileId: profileId, type: DocumentType.RESUME },
       orderBy: { createdAt: "desc" },
       select: { content: true, summary: true },
     });

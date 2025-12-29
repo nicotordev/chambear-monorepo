@@ -58,7 +58,7 @@ export default async function ProfilePage() {
   }
 
   // Tomamos el primer perfil disponible o undefined
-  const profile = user.profile?.[0];
+  const profile = user.profiles?.[0];
 
   // --- ESTADO VACÍO: Usuario sin perfil ---
   if (!profile) {

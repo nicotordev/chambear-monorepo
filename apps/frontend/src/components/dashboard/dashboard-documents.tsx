@@ -108,7 +108,7 @@ export function DashboardDocuments() {
       toast.error("Document has no URL");
     }
   };
-  
+
   const handleDelete = async (e: React.MouseEvent, docId: string) => {
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this document?")) {
@@ -150,7 +150,7 @@ export function DashboardDocuments() {
         <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <FolderOpen className="size-3.5" /> Mis Documentos
         </h3>
-        
+
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -294,8 +294,8 @@ export function DashboardDocuments() {
             <p className="text-sm font-medium text-foreground">
               Tu portafolio está vacío
             </p>
-            <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
-              Sube tu CV o Portafolio para aplicar más rápido.
+            <p className="mt-1 max-w-45 text-xs text-muted-foreground">
+              Sube tu CV o Portafolio para aplicar más rápido. 
             </p>
             <Button
               variant="ghost"

@@ -1,12 +1,11 @@
-import "client-only";
 
-import { CreateProfileInput } from "@/schemas/user";
-import type { Job, User, Document } from "@/types";
-import axios, { AxiosInstance } from "axios";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
+import { CreateProfileInput } from "@/schemas/user";
+import type { Document, Job, User } from "@/types";
+import axios, { AxiosInstance } from "axios";
 
 class Api {
   private static instance: Api;
@@ -153,9 +152,11 @@ class Api {
     return res.data.data;
   }
 
-  public async scanJobs(): Promise<void> {
+  public async scanJobs(profileId: string): Promise<void> {
     try {
-      await this.instance.post("/jobs/scan");
+      await this.instance.get("/jobs/scan", {
+        params: { profileId },
+      });
     } catch (error) {
       console.error(error);
       throw error;

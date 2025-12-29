@@ -1,6 +1,6 @@
 import type { Context, Env } from "hono";
 import { getAuth } from "@hono/clerk-auth";
-import response from "../lib/utils/response";
+import response from "../../lib/utils/response";
 
 export default async function authenticateRequest(
   c: Context<Env, "*">,

@@ -1,9 +1,8 @@
-import {
-  clerkClient,
-  clerkMiddleware,
-  createRouteMatcher,
-} from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse, type MiddlewareConfig } from "next/server";
+import api from "./lib/api";
+
+export const runtime = "nodejs";
 
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
@@ -23,7 +22,6 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   const _auth = await auth();
-  const _clerkClient = await clerkClient();
 
   if (!_auth.userId) {
     return NextResponse.next();
@@ -36,8 +34,10 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(dashboardURL);
   }
 
-  const { privateMetadata } = await _clerkClient.users.getUser(_auth.userId);
-  const isOnBoarded = privateMetadata?.onboardingCompleted;
+  const user = await api.getUser().catch(() => null);
+  const isOnBoarded = user?.profiles?.some(
+    (profile) => profile.onboardingCompleted
+  );
 
   console.info(
     `[Middleware] User: ${_auth.userId}, Onboarding completed: ${!!isOnBoarded}`
@@ -64,7 +64,7 @@ export default clerkMiddleware(async (auth, req) => {
   return NextResponse.redirect(onboardingURL);
 });
 
-export const config = {
+export const config: MiddlewareConfig = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",

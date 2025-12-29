@@ -1,10 +1,10 @@
 import { JobSchema, type JobInput } from "@/schemas/job";
+import { pineconeJobsClient } from "@/scraping/clients";
+import { JobPosting } from "@/types/ai";
 import { Job } from "../lib/generated";
 import { prisma } from "../lib/prisma";
-import { pineconeJobsClient } from "@/scraping/clients";
-import recommendationService from "./recommendation.service";
 import { generateEmbedding } from "../lib/utils/ai";
-import { JobPosting } from "@/types/ai";
+import recommendationService from "./recommendation.service";
 
 const jobsService = {
   /**
@@ -119,8 +119,8 @@ const jobsService = {
     });
   },
 
-  async generateRecommendations(userId: string) {
-    return recommendationService.generateRecommendations(userId);
+  async scanJobs(profileId: string) {
+    return recommendationService.scanJobs(profileId);
   },
 
   async getPublicJobs() {
