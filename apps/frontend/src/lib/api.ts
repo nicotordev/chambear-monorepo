@@ -100,7 +100,10 @@ class Api {
     }
   }
 
-  public async getDocumentById(id: string, profileId: string): Promise<Document> {
+  public async getDocumentById(
+    id: string,
+    profileId: string
+  ): Promise<Document> {
     const res = await this.instance.get(`/documents/${id}`, {
       params: { profileId },
     });
@@ -128,7 +131,10 @@ class Api {
     return res.data.data;
   }
 
-  public async deleteDocument(id: string, profileId: string): Promise<Document> {
+  public async deleteDocument(
+    id: string,
+    profileId: string
+  ): Promise<Document> {
     const res = await this.instance.delete(`/documents/${id}`, {
       params: { profileId },
     });
@@ -145,6 +151,15 @@ class Api {
       },
     });
     return res.data.data;
+  }
+
+  public async scanJobs(): Promise<void> {
+    try {
+      await this.instance.post("/jobs/scan");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }
 

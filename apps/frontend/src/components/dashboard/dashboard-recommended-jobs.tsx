@@ -10,17 +10,16 @@ import {
 } from "@/components/ui/tooltip";
 import type { Job } from "@/types";
 import { Briefcase, FolderSearch, Loader2, Sparkles } from "lucide-react";
+import DashboardScanJobs from "./dashboard-scan-jobs";
 
 interface DashboardRecommendedJobsProps {
   jobs: Job[];
   isLoading?: boolean; // Nuevo estado
-  onScan?: () => void; // Acción para detonar el scraper
 }
 
 export function DashboardRecommendedJobs({
   jobs,
   isLoading = false,
-  onScan,
 }: DashboardRecommendedJobsProps) {
   const hasJobs = jobs && jobs.length > 0;
 
@@ -37,13 +36,7 @@ export function DashboardRecommendedJobs({
       action={
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={isLoading}
-              onClick={onScan}
-              className="size-8 rounded-full bg-background shadow-sm hover:bg-accent transition-all"
-            >
+            <Button variant="outline" size="icon" disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="size-4 text-primary animate-spin" />
               ) : (
@@ -63,10 +56,7 @@ export function DashboardRecommendedJobs({
         // Estado de Carga (Skeleton UI)
         <div className="flex gap-4 overflow-hidden py-2">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="min-w-75 space-y-3 rounded-xl border p-4"
-            >
+            <div key={i} className="min-w-75 space-y-3 rounded-xl border p-4">
               <div className="flex items-center gap-3">
                 <Skeleton className="size-10 rounded-lg" />
                 <div className="space-y-2">
@@ -103,10 +93,7 @@ export function DashboardRecommendedJobs({
             Activa el escáner para que nuestra IA busque ofertas en la web
             basadas en tu perfil.
           </p>
-          <Button onClick={onScan} size="sm" className="gap-2">
-            <FolderSearch className="size-4" />
-            Escanear ahora
-          </Button>
+          <DashboardScanJobs />
         </div>
       )}
     </DashboardCard>
