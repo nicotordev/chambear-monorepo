@@ -89,19 +89,19 @@ export default async function DashboardPage() {
             </div>
 
             {/* Fila 2: Sidebar Widgets (Columna Derecha estrecha) */}
-            <div className="lg:col-span-4 bg-background flex flex-col gap-px">
+            <div className="lg:col-span-4 bg-background flex flex-col gap-px pb-16">
               {/* Widget 1: Próxima Entrevista (Prioridad Alta) */}
               <div className="bg-background">
                 <DashboardNextInterview interviews={myInterviews} jobs={jobs} />
               </div>
 
               {/* Widget 2: Recordatorios */}
-              <div className="bg-background min-h-75">
+              <div className="bg-background">
                 <DashboardReminders reminders={myReminders} />
               </div>
 
               {/* Widget 3: Documentos */}
-              <div className="bg-background flex-1">
+              <div className="bg-background">
                 <DashboardDocuments />
               </div>
             </div>

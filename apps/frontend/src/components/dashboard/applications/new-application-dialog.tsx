@@ -115,7 +115,7 @@ export default function NewApplicationDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent className="sm:max-w-137.5 p-0">
         <div className="px-6 pt-6 pb-0">
           <DialogHeader className="mb-4">
             <div className="flex items-center gap-3 mb-2">
@@ -294,14 +294,12 @@ export default function NewApplicationDialog({
                 variant="ghost"
                 onClick={() => setOpen(false)}
                 disabled={isLoading}
-                className="hover:bg-background border border-transparent hover:border-border"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all"
               >
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
