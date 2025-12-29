@@ -14,12 +14,10 @@ import DashboardScanJobs from "./dashboard-scan-jobs";
 
 interface DashboardRecommendedJobsProps {
   jobs: Job[];
-  isLoading?: boolean; // Nuevo estado
 }
 
 export function DashboardRecommendedJobs({
   jobs,
-  isLoading = false,
 }: DashboardRecommendedJobsProps) {
   const hasJobs = jobs && jobs.length > 0;
 
@@ -36,40 +34,17 @@ export function DashboardRecommendedJobs({
       action={
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="size-4 text-primary animate-spin" />
-              ) : (
-                <FolderSearch className="size-4 text-primary" />
-              )}
+            <Button variant="outline" size="icon">
+              <FolderSearch className="size-4 text-primary" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p className="text-xs">
-              {isLoading ? "Buscando..." : "Escanear nuevas pegas"}
-            </p>
+            <p className="text-xs">Escanear nuevas pegas</p>
           </TooltipContent>
         </Tooltip>
       }
     >
-      {isLoading ? (
-        // Estado de Carga (Skeleton UI)
-        <div className="flex items-stretch gap-4 overflow-hidden py-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="min-w-75 space-y-3 rounded-xl border p-4">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 rounded-lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          ))}
-        </div>
-      ) : hasJobs ? (
+      {hasJobs ? (
         // Estado con Datos
         <div className="min-h-50">
           <DashboardCarousel

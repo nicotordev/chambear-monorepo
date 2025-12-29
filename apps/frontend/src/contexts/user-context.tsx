@@ -65,7 +65,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [profiles, getCookie]);
 
   const currentProfile = profiles.find(
-    (p) => p.id === getCookie("chambear_current_profile_id"),
+    (p) => p.id === getCookie("chambear_current_profile_id")
   );
 
   const switchProfile = (profileId: string) => {
@@ -114,6 +114,14 @@ export function useProfile() {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error("useProfile must be used within a UserProvider");
+  }
+  return context;
+}
+
+export function useAppUser() {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error("useAppUser must be used within a UserProvider");
   }
   return context;
 }
