@@ -1,7 +1,20 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "Root"
+		},
+		{
+			"path": "apps/frontend",
+			"name": "Frontend",
+		},
+		{
+			"path": "apps/backend",
+			"name": "Backend",
+		},
+		{
+			"name": "Cronjobs",
+			"path": "apps/cronjobs"
 		}
 	],
 	"settings": {}

@@ -1,12 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type MiddlewareConfig } from "next/server";
-import api from "./lib/api";
 import { getCookie } from "cookies-next/server";
 import backend from "./lib/backend";
-
-// Ideally middleware should run on edge, but if your 'api' library
-// uses Node-specific modules (like FS or direct DB connections), keep this.
-export const runtime = "nodejs";
 
 // 1. Define Route Groups
 const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
@@ -22,6 +17,8 @@ const isAuthRoute = createRouteMatcher([
   "/sign-up(.*)",
 ]);
 
+const isRoot = createRouteMatcher(["/"]);
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const path = req.nextUrl.pathname;
@@ -29,7 +26,7 @@ export default clerkMiddleware(async (auth, req) => {
   console.info(`[Middleware] Processing ${req.method} ${path}`);
 
   // 1. Skip API routes and static assets early
-  if (isApiRoute(req)) {
+  if (isApiRoute(req) || isRoot(req)) {
     return NextResponse.next();
   }
 
