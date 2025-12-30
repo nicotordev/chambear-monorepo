@@ -1,17 +1,20 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { InterviewSession, Job } from "@/types";
 import { cn } from "@/lib/utils";
-import { Calendar, Clock, MapPin, Video } from "lucide-react";
+import type { InterviewSession, Job } from "@/types";
+import { Calendar, Clock, Plus, Video } from "lucide-react";
+import DashboardInterviewCreation from "./interviews/dashboard-interview-creation";
 
 interface DashboardNextInterviewProps {
   interviews: InterviewSession[];
   jobs: Job[];
+  profileId: string;
 }
 
 export function DashboardNextInterview({
   interviews,
   jobs,
+  profileId,
 }: DashboardNextInterviewProps) {
   // Aseguramos obtener la entrevista más próxima real (ordenar por fecha si es necesario)
   const nextInterview =
@@ -61,14 +64,21 @@ export function DashboardNextInterview({
           <Clock className="size-4" />
           {nextInterview ? "Próxima Entrevista" : "Agenda"}
         </h3>
-        {nextInterview && (
-          <Badge
-            variant={isToday ? "destructive" : "secondary"}
-            className="animate-pulse"
-          >
-            {isToday ? "Es hoy" : "Programada"}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {nextInterview && (
+            <Badge
+              variant={isToday ? "destructive" : "secondary"}
+              className="animate-pulse"
+            >
+              {isToday ? "Es hoy" : "Programada"}
+            </Badge>
+          )}
+          <DashboardInterviewCreation jobs={jobs} profileId={profileId}>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <Plus className="size-4" />
+            </Button>
+          </DashboardInterviewCreation>
+        </div>
       </div>
 
       {nextInterview && job ? (
@@ -133,9 +143,13 @@ export function DashboardNextInterview({
           <p className="text-sm font-medium text-foreground">
             No tienes entrevistas agendadas
           </p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-50">
-            Sigue postulando para conseguir tu próxima oportunidad.
-          </p>
+          <div className="mt-4">
+            <DashboardInterviewCreation jobs={jobs} profileId={profileId}>
+              <Button variant="outline" size="sm">
+                Agendar Entrevista
+              </Button>
+            </DashboardInterviewCreation>
+          </div>
         </div>
       )}
     </div>

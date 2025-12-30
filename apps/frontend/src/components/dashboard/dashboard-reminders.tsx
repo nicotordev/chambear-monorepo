@@ -2,7 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Reminder } from "@/types";
-import { Bell, BellOff, Check, Clock } from "lucide-react";
+import { Bell, BellOff, BellPlus, Check, Clock } from "lucide-react";
+import DashboardReminderCreation from "./dashboard-reminder-creation";
 
 interface DashboardRemindersProps {
   reminders: Reminder[];
@@ -30,17 +31,24 @@ export function DashboardReminders({
     <div className="flex flex-col p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          <Bell className="size-3.5" /> Recordatorios
-        </h3>
-        {hasReminders && (
-          <Badge
-            variant="secondary"
-            className="flex size-5 items-center justify-center rounded-full p-0 text-[10px]"
-          >
-            {reminders.length}
-          </Badge>
-        )}
+        <div>
+          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <Bell className="size-3.5" /> Recordatorios
+          </h3>
+          {hasReminders && (
+            <Badge
+              variant="secondary"
+              className="flex size-5 items-center justify-center rounded-full p-0 text-[10px]"
+            >
+              {reminders.length}
+            </Badge>
+          )}
+        </div>
+        <DashboardReminderCreation>
+          <Button variant="outline" size="icon">
+            <BellPlus className="size-4 text-primary" />
+          </Button>
+        </DashboardReminderCreation>
       </div>
 
       {/* Content */}

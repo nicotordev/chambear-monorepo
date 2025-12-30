@@ -8,6 +8,7 @@ import type {
   Document,
   InterviewSession,
   Job,
+  Reminder,
   User,
 } from "@/types";
 import axios, { AxiosInstance } from "axios";
@@ -215,6 +216,11 @@ class Api {
         params: { profileId },
       }
     );
+    return res.data.data;
+  }
+
+  public async createReminder(data: any): Promise<Reminder> {
+    const res = await this.instance.post("/reminders", data);
     return res.data.data;
   }
 }
