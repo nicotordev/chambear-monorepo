@@ -72,8 +72,8 @@ const formSchema = z.object({
 
 interface DashboardInterviewCreationProps {
   jobs: Job[];
-  profileId: string;
-  children?: React.ReactNode;
+  profileId?: string;
+  children: React.ReactNode;
 }
 
 export default function DashboardInterviewCreation({
@@ -124,6 +124,8 @@ export default function DashboardInterviewCreation({
         durationMinutes: values.durationMinutes,
         notes: values.notes,
       };
+
+      if (!profileId) throw new Error("Profile ID is required");
 
       await api.createInterviewSession(profileId, application.id, payload);
 

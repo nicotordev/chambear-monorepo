@@ -8,7 +8,7 @@ import DashboardInterviewCreation from "./interviews/dashboard-interview-creatio
 interface DashboardNextInterviewProps {
   interviews: InterviewSession[];
   jobs: Job[];
-  profileId: string;
+  profileId?: string;
 }
 
 export function DashboardNextInterview({

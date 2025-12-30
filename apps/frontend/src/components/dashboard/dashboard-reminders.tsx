@@ -114,7 +114,7 @@ export function DashboardReminders({
               <BellOff className="size-5 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground">Todo al día</p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-[150px]">
+            <p className="text-xs text-muted-foreground mt-1 max-w-37.5">
               No tienes recordatorios pendientes. ¡Buen trabajo!
             </p>
           </div>

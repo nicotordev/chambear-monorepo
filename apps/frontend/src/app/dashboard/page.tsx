@@ -92,7 +92,7 @@ export default async function DashboardPage() {
             <div className="lg:col-span-4 bg-background flex flex-col gap-px pb-16">
               {/* Widget 1: Próxima Entrevista (Prioridad Alta) */}
               <div className="bg-background">
-                <DashboardNextInterview interviews={myInterviews} jobs={jobs} />
+                <DashboardNextInterview interviews={myInterviews} jobs={jobs} profileId={currentProfile?.id} />
               </div>
 
               {/* Widget 2: Recordatorios */}
