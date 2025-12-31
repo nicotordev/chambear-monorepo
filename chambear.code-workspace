@@ -1,21 +1,33 @@
 {
-	"folders": [
-		{
-			"path": ".",
-			"name": "Root"
-		},
-		{
-			"path": "apps/frontend",
-			"name": "Frontend",
-		},
-		{
-			"path": "apps/backend",
-			"name": "Backend",
-		},
-		{
-			"name": "Cronjobs",
-			"path": "apps/cronjobs"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": ".",
+      "name": "Root"
+    },
+    {
+      "path": "apps/frontend",
+      "name": "Frontend"
+    },
+    {
+      "path": "apps/backend",
+      "name": "Backend"
+    },
+    {
+      "name": "Cronjobs",
+      "path": "apps/cronjobs"
+    }
+  ],
+  "settings": {
+    "sqltools.connections": [
+      {
+        "ssh": "Disabled",
+        "previewLimit": 50,
+        "server": "localhost",
+        "driver": "PostgreSQL",
+        "name": "postgres_default",
+        "group": "postgres",
+        "connectString": "postgresql://postgres:postgres@localhost:5432/chambear"
+      }
+    ]
+  }
 }

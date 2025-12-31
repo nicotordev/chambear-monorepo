@@ -1,156 +1,145 @@
-import Link from "next/link";
-import { SignIn, SignUp } from "@clerk/nextjs";
-import { TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
 import Logo from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { SignIn } from "@clerk/nextjs";
+import { ArrowLeft, Star } from "lucide-react";
 import Image from "next/image";
-import TabTrigger from "@/components/tab-triggers";
+import Link from "next/link";
 
-export default function Auth() {
+export default function AuthPage() {
   return (
-    // CONTENEDOR PRINCIPAL
-    // flex: Activa Flexbox.
-    // min-h-screen: Ocupa toda la altura.
-    <main className="flex min-h-screen w-full">
-      {/* IZQUIERDA (Formulario)
-        - w-full: En móvil ocupa el 100%.
-        - md:w-1/2: En desktop ocupa exactamente el 50%.
-        - bg-background: Variable de shadcn (blanco o negro según el tema).
+    <div className="flex min-h-screen w-full bg-background">
+      {/* -----------------------------------------------------------------------
+        LEFT SIDE (Form)
+        Fixed width on large screens (lg:w-1/2) to prevent it from looking
+        "smaller" or squeezed by the image side.
+        -----------------------------------------------------------------------
       */}
-      <section className="relative flex w-full flex-col items-center justify-center bg-background px-4 py-12 sm:px-12 md:w-1/2">
-        {/* Botón Volver
-           - Mobile: static (flujo normal) con margen inferior.
-           - Desktop: absolute (esquina superior izquierda).
-        */}
-        <div className="w-full max-w-sm mb-8 md:mb-0 md:absolute md:top-8 md:left-8">
-          <Link
-            href="/"
-            className="group flex w-fit items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back to Home
-          </Link>
+      <div className="relative flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 xl:w-[45%] xl:px-24">
+        {/* Mobile-only background decorations (hidden on desktop for cleaner split) */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 lg:hidden">
+          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[100px]" />
+          <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-accent/5 blur-[120px]" />
         </div>
 
-        <div className="w-full max-w-sm space-y-6">
-          <div className="flex flex-col items-center text-center space-y-2">
-            {/* Logo container usando bg-primary y text-primary-foreground */}
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground mb-4">
+        {/* Back Button */}
+        <div className="absolute top-6 left-4 sm:left-8 z-20">
+          <Button
+            asChild
+            variant="ghost"
+            className="group gap-2 pl-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Link href="/">
+              <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
+
+        {/* Form Container */}
+        <div className="mx-auto w-full max-w-sm relative z-10">
+          <div className="mb-8 text-center lg:text-left">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 mb-6 transition-transform hover:scale-105"
+            >
               <Logo />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            </Link>
+            <h2 className="text-3xl font-display font-bold tracking-tight text-foreground">
               Welcome back
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your email below to access your account
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sign in to your account to continue with Chambear.
             </p>
           </div>
 
-          <TabTrigger>
-            <TabsContent value="sign-in">
-              <SignIn
-                routing="virtual"
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    card: "shadow-none p-0 border-none bg-transparent",
-                    headerTitle: "hidden",
-                    headerSubtitle: "hidden",
-                    // Variables shadcn para input y botones
-                    socialButtonsBlockButton:
-                      "bg-background border border-input hover:bg-accent hover:text-accent-foreground text-foreground",
-                    formFieldInput:
-                      "bg-background border-input text-foreground focus:ring-ring",
-                    formButtonPrimary:
-                      "bg-primary text-primary-foreground hover:bg-primary/90",
-                    footerAction: "hidden",
-                    textNormal: "text-muted-foreground",
-                    textSmall: "text-muted-foreground",
-                  },
-                }}
-              />
-            </TabsContent>
-
-            <TabsContent value="sign-up">
-              <SignUp
-                routing="virtual"
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    card: "shadow-none p-0 border-none bg-transparent",
-                    headerTitle: "hidden",
-                    headerSubtitle: "hidden",
-                    socialButtonsBlockButton:
-                      "bg-background border border-input hover:bg-accent hover:text-accent-foreground text-foreground",
-                    formFieldInput:
-                      "bg-background border-input text-foreground focus:ring-ring",
-                    formButtonPrimary:
-                      "bg-primary text-primary-foreground hover:bg-primary/90",
-                    footerAction: "hidden",
-                    textNormal: "text-muted-foreground",
-                    textSmall: "text-muted-foreground",
-                  },
-                }}
-              />
-            </TabsContent>
-          </TabTrigger>
-
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
-
-      {/* DERECHA (Visual / Branding)
-        - hidden: Oculto en móvil.
-        - md:flex: Visible en tablet/desktop.
-        - md:w-1/2: Ocupa exactamente el 50% restante.
-        - bg-muted: Color de fondo secundario de shadcn (gris suave).
-        - border-l border-border: Borde izquierdo sutil usando variables del tema.
-      */}
-      <section className="hidden flex-col justify-between bg-muted p-10 text-foreground dark:border-l border-border md:flex md:w-1/2">
-        <div className="flex items-center text-lg font-medium text-foreground">
-          <Logo />
-        </div>
-
-        <div className="h-full flex items-center justify-center p-6">
-          <Image
-            src="/assets/img/illustrations/undraw_starting-work_ifnt.svg"
-            width={720}
-            height={1280}
-            alt="Undraw working illustration"
-            className="mx-auto max-w-full h-auto max-h-180 object-contain"
-            priority
+          <SignIn
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                card: "shadow-none p-0 border-none bg-transparent w-full",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton:
+                  "bg-card border border-input hover:bg-accent hover:text-accent-foreground text-foreground text-sm font-medium h-10 py-2 transition-all duration-200 hover:shadow-sm",
+                socialButtonsBlockButtonText: "text-foreground font-medium",
+                dividerLine: "bg-border",
+                dividerText:
+                  "text-muted-foreground px-2 font-medium uppercase text-xs tracking-wider",
+                formFieldLabel: "text-foreground font-medium text-sm mb-1.5",
+                formFieldInput:
+                  "bg-background border-input text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg h-10 px-3 py-1 transition-all duration-200",
+                formButtonPrimary:
+                  "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 h-10 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 transform hover:-translate-y-0.5",
+                footerAction: "text-muted-foreground",
+                footerActionLink:
+                  "text-primary hover:text-primary/80 font-semibold underline-offset-4 hover:underline transition-colors",
+                formFieldAction:
+                  "text-primary hover:text-primary/80 font-semibold transition-colors",
+                identityPreviewText: "text-foreground",
+                identityPreviewEditButton: "text-primary hover:text-primary/90",
+              },
+              layout: {
+                socialButtonsPlacement: "bottom",
+                socialButtonsVariant: "blockButton",
+              },
+            }}
           />
         </div>
+      </div>
 
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2 border-l-2 border-primary pl-6 italic">
-            <p className="text-lg text-foreground">
-              &ldquo;The Chambear app has been a game-changer at the moment of
-              searching for jobs, it has saved me a lot of time and effort.
-              Highly recommended!&rdquo;
-            </p>
-            <footer className="text-sm text-muted-foreground not-italic">
-              — Sofia Davis, Software Engineer
-            </footer>
-          </blockquote>
+      {/* -----------------------------------------------------------------------
+        RIGHT SIDE (Image/Asset)
+        Takes remaining space (flex-1) but is hidden on mobile/tablet (hidden lg:flex).
+        -----------------------------------------------------------------------
+      */}
+      <div className="relative hidden w-0 flex-1 lg:flex flex-col items-center justify-center bg-muted/30 dark:bg-muted/10 overflow-hidden border-l border-border/50">
+        {/* Background Gradients */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 opacity-80" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
         </div>
-      </section>
-    </main>
+
+        {/* Content Wrapper */}
+        <div className="relative z-10 w-full max-w-lg px-8 flex flex-col items-center">
+          {/* Illustration */}
+          <div className="relative w-full aspect-[4/3] mb-12 animate-in fade-in zoom-in duration-700">
+            <Image
+              src="/assets/img/illustrations/undraw_working_n9u0.svg"
+              alt="Working on authentication"
+              fill
+              className="object-contain drop-shadow-2xl mix-blend-multiply dark:mix-blend-normal"
+              priority
+            />
+          </div>
+
+          {/* Testimonial */}
+          <div className="text-center space-y-6 max-w-md animate-in slide-in-from-bottom-8 duration-700 delay-200">
+            <blockquote className="space-y-4">
+              <p className="text-xl font-medium leading-relaxed text-foreground/90 font-heading">
+                "Chambear has completely transformed how our team handles daily
+                workflows. It's not just a tool, it's a productivity
+                powerhouse."
+              </p>
+              <footer className="flex items-center justify-center gap-4">
+                <div className="flex gap-1 text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="size-4 fill-current" />
+                  ))}
+                </div>
+              </footer>
+            </blockquote>
+
+            <div className="pt-6 border-t border-border/50 w-full max-w-[200px] mx-auto">
+              <p className="text-sm font-semibold text-foreground">
+                Top Rated Platform
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Trusted by 10,000+ users
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

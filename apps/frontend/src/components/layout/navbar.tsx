@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { LinkAsChild } from "../common/LinkAsChild";
+import Logo from "../logo";
 
 const products = [
   {
@@ -90,17 +91,8 @@ export default function Navbar() {
         {/* LOGO */}
         <div className="flex lg:flex-1">
           <Link href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Your Company</span>
-            <img
-              alt="Logo"
-              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-              className="h-8 w-auto dark:hidden"
-            />
-            <img
-              alt="Logo Dark"
-              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-              className="h-8 w-auto hidden dark:block"
-            />
+            <span className="sr-only">Chambear.ai</span>
+            <Logo />
           </Link>
         </div>
 
@@ -220,11 +212,12 @@ export default function Navbar() {
                             />
                           </div>
                           <div className="flex-auto">
-                            <Link href={item.href} passHref>
-                              <a className="block font-semibold text-foreground">
-                                {item.name}
-                                <span className="absolute inset-0" />
-                              </a>
+                            <Link
+                              href={item.href}
+                              className="block font-semibold text-foreground"
+                            >
+                              {item.name}
+                              <span className="absolute inset-0" />
                             </Link>
                             <p className="mt-1 text-muted-foreground">
                               {item.description}
@@ -297,7 +290,7 @@ export default function Navbar() {
         {/* LOGIN BUTTON */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           <Link
-            href="#"
+            href="/auth"
             className="text-sm font-semibold leading-6 text-foreground hover:text-primary transition-colors"
           >
             Log in <span aria-hidden="true">&rarr;</span>

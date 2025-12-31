@@ -8,8 +8,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
+  --font-sora: var(--font-sora);
+  --font-space: var(--font-space-grotesk);
+  --font-fraunces: var(--font-fraunces);
+
+  --font-heading: var(--font-sora);
+  --font-display: var(--font-fraunces);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -166,5 +174,53 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+
+  button {
+    @apply font-semibold;
+    @apply rounded-full;
+    @apply px-2 py-0.5;
+    @apply text-xs;
+    @apply font-medium;
+    @apply w-fit;
+    @apply whitespace-nowrap;
+    @apply shrink-0;
+    @apply [&>svg]:size-3;
+    @apply [&>svg]:pointer-events-none;
+    @apply focus-visible:border-ring;
+    @apply focus-visible:ring-ring/50;
+    @apply focus-visible:ring-[3px];
+    @apply aria-invalid:ring-destructive/20;
+    @apply aria-invalid:border-destructive;
+    @apply transition-[color,box-shadow];
+    @apply overflow-hidden;
+  }
+
+  a {
+    @apply font-semibold;
+    @apply rounded-full;
+    @apply px-2 py-0.5;
+    @apply text-xs;
+    @apply font-medium;
+    @apply w-fit;
+    @apply whitespace-nowrap;
+    @apply shrink-0;
+    @apply [&>svg]:size-3;
+    @apply [&>svg]:pointer-events-none;
+    @apply focus-visible:border-ring;
+    @apply focus-visible:ring-ring/50;
+    @apply focus-visible:ring-[3px];
+    @apply aria-invalid:ring-destructive/20;
+    @apply aria-invalid:border-destructive;
+    @apply transition-[color,box-shadow];
+    @apply overflow-hidden;
   }
 }

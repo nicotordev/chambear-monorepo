@@ -56,13 +56,12 @@ export default function HeroSection() {
             {/* TEXT COLUMN */}
             <div className="relative w-full lg:max-w-xl lg:shrink-0 xl:max-w-2xl">
               <h1 className="text-5xl font-semibold tracking-tight text-pretty text-foreground sm:text-7xl">
-                We’re changing the way people connect
+                We scour the web to find your perfect job match
               </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-muted-foreground sm:max-w-md sm:text-xl/8 lg:max-w-none">
-                Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
-                lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat
-                fugiat aliqua. Anim aute id magna aliqua ad ad non deserunt
-                sunt.
+                Our AI agent scrapes thousands of career pages, extracts
+                compatible opportunities, and scores them against your profile.
+                Stop searching, start interviewing.
               </p>
               <div className="mt-10 flex items-center gap-x-6">
                 <Button size="lg">Get started</Button>
