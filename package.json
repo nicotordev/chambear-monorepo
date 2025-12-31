@@ -3,16 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "start:backend": "bun run --filter=chambear-backend start",
-    "start:frontend": "bun run --filter=chambear-frontend start",
-    "dev": "bun run dev:backend & bun run dev:frontend",
-    "dev:backend": "bun run --filter=chambear-backend dev",
-    "dev:frontend": "bun run --filter=chambear-frontend dev"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
+  "scripts": {},
+  "packageManager": "pnpm@10.24.0",
   "peerDependencies": {
     "typescript": "^5"
   },

@@ -5,7 +5,7 @@ import app from "@/app";
 const port = Number.parseInt(process.env.PORT ?? "3001", 10);
 const host = process.env.HOST ?? "0.0.0.0";
 
-const bun = (globalThis as { Bun?: typeof Bun }).Bun;
+const bun = (globalThis as any).Bun;
 const server = bun?.serve
   ? bun.serve({ fetch: app.fetch, port, hostname: host })
   : serve({ fetch: app.fetch, port, hostname: host });

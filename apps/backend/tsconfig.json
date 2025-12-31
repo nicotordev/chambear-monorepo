@@ -8,13 +8,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["bun-types"],
+    "outDir": "./dist",
     "strict": true, 
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "moduleDetection": "force",

@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+
+onlyBuiltDependencies:
+  - '@clerk/shared'
+  - '@prisma/engines'
+  - esbuild
+  - prisma
+  - puppeteer
+  - sharp
