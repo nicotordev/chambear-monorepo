@@ -1,9 +1,9 @@
 import { bdclient, BRDError, type BdClientOptions } from "@brightdata/sdk";
+import { env } from "../../config";
 import type {
   UnlockerSyncRequest,
   UnlockerSyncResponse,
 } from "../../types/brightdata";
-import { env } from "../config";
 
 /**
  * SDK viejo:
@@ -144,12 +144,12 @@ class BrightDataClient {
     return this.mapResponse(res, format);
   }
 
-  public async runSyncScrape(zone: string, urls: string[]): Promise<string[]> {
+  public async runSyncScrape(urls: string[]): Promise<string[]> {
     const results = await Promise.all(
       urls.map((url) =>
         this.runSync({
           url,
-          zone,
+          zone: env.brightDataZone,
           format: "raw",
           data_format: "markdown",
         })
@@ -189,7 +189,7 @@ class BrightDataClient {
    */
   public async triggerSyncSerpSearch(
     q: string,
-    country: string,
+    country: string
   ): Promise<SerpParsedResult[]> {
     const res = await this.searchCompat([q], {
       zone: env.brightDataSerpZone,

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { env } from "process";
 import {
   JobSource,
   Prisma,
@@ -10,15 +10,14 @@ import { prisma } from "../lib/prisma";
 import { generateEmbedding } from "../lib/utils/ai";
 import {
   mapEmploymentType,
-  mapWorkMode,
   mapSeniority,
+  mapWorkMode,
 } from "../lib/utils/mapping";
 import {
   brightdataClient,
   jobLlmClient,
   pineconeJobsClient,
 } from "../scraping/clients";
-import { env } from "../scraping/config";
 import type { JobPosting } from "../types/ai";
 import jobsService from "./jobs.service";
 
@@ -292,10 +291,7 @@ Summary: ${profile.summary ?? ""}
           const extracted = await jobLlmClient.scoreThenFetchThenExtractJobs({
             urls,
             fetchMarkdown: async (url: string) => {
-              const [res] = await brightdataClient.runSyncScrape(
-                env.brightDataZone,
-                [url]
-              );
+              const [res] = await brightdataClient.runSyncScrape([url]);
               return res;
             },
             userContext,

@@ -1,8 +1,8 @@
-import applicationsRoute from "@/routes/applications.route";
-import documentRoute from "@/routes/documents.route";
-import jobsRoute from "@/routes/jobs.route";
-import remindersRoute from "@/routes/reminders.route";
-import userRoute from "@/routes/user.route";
+import applicationsRoute from "@/lib/routes/applications.route";
+import documentRoute from "@/lib/routes/documents.route";
+import jobsRoute from "@/lib/routes/jobs.route";
+import remindersRoute from "@/lib/routes/reminders.route";
+import userRoute from "@/lib/routes/user.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";

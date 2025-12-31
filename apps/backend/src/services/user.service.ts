@@ -5,6 +5,7 @@ import { createClerkClient } from "@clerk/backend";
 import { prisma } from "../lib/prisma";
 
 import { CreateProfileInput } from "@/schemas/user";
+import stripe from "@/lib/stripe";
 
 type CreateProfileInputWithOptionalId = CreateProfileInput & {
   /** If true, missing items will be removed (replace-all behavior). Defaults to false (merge). */
@@ -69,6 +70,8 @@ const userService = {
         },
       });
     }
+
+
 
     return user;
   },

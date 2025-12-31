@@ -13,4 +13,5 @@ export const env = {
   brightDataCustomer: process.env.BRIGHTDATA_CUSTOMER ?? "",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
   searchApiKey: process.env.SEARCH_API_KEY ?? "",
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
 };
