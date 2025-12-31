@@ -139,6 +139,7 @@ model User {
   role      Role      @default(EMPLOYEE)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  stripeCustomerId String?
 
   profiles      Profile[]
   subscription  Subscription?
