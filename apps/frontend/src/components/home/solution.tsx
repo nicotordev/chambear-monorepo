@@ -1,23 +1,22 @@
 import { CheckCircle, Target, Zap } from "lucide-react";
-import { Badge } from "../ui/badge";
 
 const features = [
   {
-    name: "AI Term Generation",
+    name: "CV & Cover Letter Optimization",
     description:
-      "We analyze your CV to create a vast matrix of relevant search terms, ensuring we catch every possible title variation.",
+      "Use credits to surgically adapt your CV and generate compelling cover letters for every single application.",
     icon: Zap,
   },
   {
-    name: "Deep Web Scraping",
+    name: "Interview Simulation",
     description:
-      "Our bots navigate to actual company career pages to find the source of truth, not just aggregators.",
+      "Burn a few credits to practice with our AI interviewer. It knows the role, the company, and asks the hard questions.",
     icon: Target,
   },
   {
     name: "Intelligent Re-ranking",
     description:
-      "We compare every extracted job against your profile, scoring them by fit, so you only see the top 1%.",
+      "We score every opportunity against your profile. Detailed match analysis ensures you only spend effort on high-probability roles.",
     icon: CheckCircle,
   },
 ];
@@ -27,24 +26,18 @@ export default function Solution() {
     <section className="overflow-hidden bg-background py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-center">
-          <div className="px-6 lg:px-0 lg:pt-4 lg:pr-4 lg:order-last">
-            <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-              <Badge
-                variant="outline"
-                className="mb-4 border-primary/20 text-primary bg-primary/5"
-              >
-                The Solution
-              </Badge>
+          <div className="lg:pt-4 lg:pr-4 lg:order-last">
+            <div className=" lg:max-w-lg">
               <h2 className="text-base/7 font-semibold text-primary">
-                Web-Scale Extraction
+                The Model
               </h2>
               <p className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                We scrape the web for you
+                Pay for results, not just time
               </p>
               <p className="mt-6 text-lg/8 text-muted-foreground">
-                Our script generates thousands of search terms based on your
-                profile, crawls valid domains, and uses AI to extract structured
-                job data from any page.
+                Our credit system connects your investment directly to your
+                career outcomes. Subscribe to a plan, load your wallet, and
+                deploy AI agents where they have the most impact.
               </p>
               <dl className="mt-10 max-w-xl space-y-8 text-base/7 text-muted-foreground lg:max-w-none">
                 {features.map((feature) => (

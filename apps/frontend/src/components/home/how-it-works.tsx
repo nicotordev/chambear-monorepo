@@ -4,21 +4,21 @@ import { Badge } from "../ui/badge";
 const steps = [
   {
     icon: Upload,
-    title: "1. Profile Analysis",
+    title: "1. Subscribe & Load",
     description:
-      "Upload your CV. We use AI to understand your skils and generate optimal search terms.",
+      "Choose a Tier (Free, Base, Pro) to activate your subscription and receive your monthly credit allowance.",
   },
   {
     icon: Search,
-    title: "2. Global Scraping",
+    title: "2. Deploy Agents",
     description:
-      "Our agents scour the web, visiting company career pages and scraping real-time job data.",
+      "Spend credits on high-value actions: CV Optimization, Skill Analysis, or Interview Simulations.",
   },
   {
     icon: Briefcase,
-    title: "3. AI Matching",
+    title: "3. Audit & Succeed",
     description:
-      "We extract core requirements and re-process every job to calculate a precise compatibility score.",
+      "Track every token used in your Audit Log. Refine your strategy and land the role with surgical precision.",
   },
 ];
 
@@ -31,7 +31,7 @@ export default function HowItWorks() {
         <div className="absolute bottom-[-10%] left-[-5%] w-125 h-125 bg-accent/5 rounded-full blur-3xl opacity-50" />
       </div>
 
-      <div className="container px-4 md:px-6 mx-auto relative z-10">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center justify-center text-center mb-16 space-y-4">
           <Badge
             variant="outline"

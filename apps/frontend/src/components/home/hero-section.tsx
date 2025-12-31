@@ -56,17 +56,17 @@ export default function HeroSection() {
             {/* TEXT COLUMN */}
             <div className="relative w-full lg:max-w-xl lg:shrink-0 xl:max-w-2xl">
               <h1 className="text-5xl font-semibold tracking-tight text-pretty text-foreground sm:text-7xl">
-                We scour the web to find your perfect job match
+                Surgical precision for your job search
               </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-muted-foreground sm:max-w-md sm:text-xl/8 lg:max-w-none">
-                Our AI agent scrapes thousands of career pages, extracts
-                compatible opportunities, and scores them against your profile.
-                Stop searching, start interviewing.
+                Optimize CVs, generate cover letters, and simulate interviews
+                using our smart credit system. Choose your plan and pay only for
+                results.
               </p>
               <div className="mt-10 flex items-center gap-x-6">
-                <Button size="lg">Get started</Button>
+                <Button size="lg">Start for Free</Button>
                 <Button variant="ghost" size="lg" className="group">
-                  Live demo{" "}
+                  View Plans{" "}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>

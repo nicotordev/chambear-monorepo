@@ -3,21 +3,21 @@ import { Badge } from "../ui/badge";
 
 const problems = [
   {
-    name: "Limited Visibility",
+    name: "Rigid Subscriptions",
     description:
-      "You miss 70% of opportunities because they live on individual company sites, not just on LinkedIn or Indeed.",
-    icon: Search,
+      "Most tools charge you a flat fee regardless of whether you use them once or a hundred times. You pay for time, not value.",
+    icon: Search, // Icon can stay or change if needed
   },
   {
-    name: "Keyword Guessing",
+    name: "Hidden Costs",
     description:
-      'If you search for "Software Engineer" you miss "Product Developer". You shouldn\'t need to guess how companies name their roles.',
+      "Professional career coaching and CV writing can cost thousands. Traditional tools lack transparency in what you're actually paying for.",
     icon: FileText,
   },
   {
-    name: "Information Overload",
+    name: "Generic Outcomes",
     description:
-      "Wasting hours reading descriptions that don't match your seniority or tech stack just to find one potential lead.",
+      "Using the same static CV for every application is a recipe for rejection. Manual customization is too slow to scale.",
     icon: XCircle,
   },
 ];
@@ -27,14 +27,8 @@ export default function Problem() {
     <section className="overflow-hidden bg-background py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
-          <div className="px-6 lg:px-0 lg:pt-4 lg:pr-4">
-            <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-              <Badge
-                variant="outline"
-                className="mb-4 border-primary/20 text-primary bg-primary/5"
-              >
-                The Old Way
-              </Badge>
+          <div className="lg:pt-4 lg:pr-4">
+            <div className=" lg:max-w-lg">
               <h2 className="text-base/7 font-semibold text-primary">
                 The Application Trap
               </h2>

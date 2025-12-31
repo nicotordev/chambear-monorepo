@@ -1,14 +1,13 @@
 "use client";
 
 import {
-  Blocks,
-  Fingerprint,
+  BarChart,
+  CreditCard,
+  FileText,
+  Globe,
   Menu,
-  MousePointer2,
-  Phone,
-  PieChart,
   PlayCircle,
-  RefreshCcw,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
@@ -42,40 +41,34 @@ import Logo from "../logo";
 
 const products = [
   {
-    name: "Analytics",
-    description: "Get a better understanding of your traffic",
+    name: "CV Optimization",
+    description: "Surgically adapt your CV for every role",
     href: "#",
-    icon: PieChart,
+    icon: FileText,
   },
   {
-    name: "Engagement",
-    description: "Speak directly to your customers",
+    name: "Interview Simulator",
+    description: "Practice with an AI that knows the job",
     href: "#",
-    icon: MousePointer2,
+    icon: Zap,
   },
   {
-    name: "Security",
-    description: "Your customers’ data will be safe and secure",
+    name: "Skill Gap Analysis",
+    description: "See exactly what you're missing",
     href: "#",
-    icon: Fingerprint,
+    icon: BarChart,
   },
   {
-    name: "Integrations",
-    description: "Connect with third-party tools",
+    name: "Job Discovery",
+    description: "Find roles across 50+ countries",
     href: "#",
-    icon: Blocks,
-  },
-  {
-    name: "Automations",
-    description: "Build strategic funnels that will convert",
-    href: "#",
-    icon: RefreshCcw,
+    icon: Globe,
   },
 ];
 
 const callsToAction = [
-  { name: "Watch demo", href: "#", icon: PlayCircle },
-  { name: "Contact sales", href: "#", icon: Phone },
+  { name: "View Plans", href: "#", icon: CreditCard },
+  { name: "Start Free Trial", href: "#", icon: PlayCircle },
 ];
 
 export default function Navbar() {
@@ -121,12 +114,12 @@ export default function Navbar() {
 
               <div className="mt-6 flow-root">
                 <div className="-my-6 divide-y divide-border">
-                  <div className="space-y-2 py-6">
+                  <div className="space-y-2 py-6 px-3">
                     {/* MOBILE ACCORDION */}
-                    <Accordion type="single" collapsible className="w-full">
+                    <Accordion type="single" collapsible className="w-full px">
                       <AccordionItem value="item-1" className="border-none">
                         {/* CAMBIO 3: hover manuales -> hover:bg-accent */}
-                        <AccordionTrigger className="py-2 text-base font-semibold hover:no-underline hover:bg-accent px-3 rounded-lg text-foreground">
+                        <AccordionTrigger className="py-2 text-base font-semibold hover:no-underline hover:bg-accent rounded-lg text-foreground">
                           Product
                         </AccordionTrigger>
                         <AccordionContent>
@@ -160,7 +153,7 @@ export default function Navbar() {
                       href="#"
                       className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-accent"
                     >
-                      Marketplace
+                      How it Works
                     </Link>
                     <Link
                       href="#"
@@ -169,7 +162,7 @@ export default function Navbar() {
                       Company
                     </Link>
                   </div>
-                  <div className="py-6">
+                  <div className="py-6 px-3">
                     <Link
                       href="#"
                       className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold text-foreground hover:bg-accent"
@@ -267,7 +260,7 @@ export default function Navbar() {
                       "bg-transparent hover:bg-transparent text-muted-foreground hover:text-primary font-semibold"
                     )}
                   >
-                    Marketplace
+                    How it Works
                   </NavigationMenuLink>
                 </LinkAsChild>
               </NavigationMenuItem>
