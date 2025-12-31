@@ -72,6 +72,7 @@ export const RankedJobSchema = z.object({
   job: JobPostingSchema,
   fitScore: z.number().min(0).max(100),
   rationale: z.string().min(1),
+  reject: z.boolean().optional(),
 });
 
 export const RankJobsResponseSchema = z.object({

@@ -1,39 +1,40 @@
 import { OpenAI } from "openai";
+import type { ResponsesModel } from "openai/resources/shared.mjs";
 import { z } from "zod";
 import {
-  RetryOptions,
+  EMPLOYMENT_TYPE_MAP,
+  SENIORITY_MAP,
+  URL_KIND_MAP,
+  WORK_MODE_MAP,
+} from "../../constants/maps";
+import {
+  canonicalizeJobs,
+  dedupeCanonicalJobs,
+} from "../../domain/jobs/canonicalization";
+import { UrlKind } from "../../lib/generated";
+import { chunk, clamp, withRetry } from "../../lib/utils/common";
+import { assertNonEmpty, normalizeUrl } from "../../lib/utils/misc-utils";
+import {
+  ExtractJobsResponseSchema,
+  GenerateSearchDorksResponseSchema,
+  RankJobsResponseSchema,
+  ScoreUrlsResponseSchema,
+} from "../../schemas/scraping";
+import {
+  EmbedFn,
+  ExtractJobsInput,
+  ExtractJobsOutput,
+  FetchMarkdown,
   JobLlmClientOptions,
+  JobPosting,
+  RankJobsInput,
+  RankJobsOutput,
+  RetryOptions,
   ScoreUrlsInput,
   ScoreUrlsOutput,
   ScoredUrl,
-  ExtractJobsInput,
-  ExtractJobsOutput,
-  RankJobsInput,
-  RankJobsOutput,
-  JobPosting,
-  EmbedFn,
-  FetchMarkdown,
 } from "../../types/ai";
 import { PineconeJobsClient } from "./ai";
-import { withRetry, chunk, clamp } from "../../lib/utils/common";
-import {
-  ScoreUrlsResponseSchema,
-  ExtractJobsResponseSchema,
-  RankJobsResponseSchema,
-  GenerateSearchDorksResponseSchema,
-} from "../../schemas/scraping";
-import { UrlKind } from "../../lib/generated";
-import {
-  URL_KIND_MAP,
-  WORK_MODE_MAP,
-  EMPLOYMENT_TYPE_MAP,
-  SENIORITY_MAP,
-} from "../../constants/maps";
-import {
-  assertNonEmpty,
-  mapLimit,
-  normalizeUrl,
-} from "../../lib/utils/misc-utils";
 
 /* =========================
  * Client class (LLM)
@@ -106,11 +107,12 @@ export class JobLlmClient {
   private async callJson<T>(
     system: string,
     user: unknown,
-    schema: z.ZodType<T>
+    schema: z.ZodType<T>,
+    overrideModel?: ResponsesModel
   ): Promise<T> {
     const run = async (): Promise<T> => {
       const res = await this.openai.responses.create({
-        model: this.model,
+        model: overrideModel ?? this.model,
         temperature: this.temperature,
         input: [
           { role: "system", content: system },
@@ -143,16 +145,16 @@ Rules:
 - Use only URL patterns + domain cues (do not fetch pages).
 
 Scoring:
-- 90-100: specific job posting OR job listings/search index
-- 70-89: careers page likely linking to jobs
-- 40-69: maybe relevant
-- 0-39: irrelevant or gated
+- 95-100: ATS job listing OR direct job posting page
+- 80-94: ATS jobs index / search page listing multiple jobs
+- 65-79: careers landing page that likely links to listings
+- 0-64: everything else (do not waste scraping budget)
 
-Heuristics:
-- Strong job signals: /jobs, /careers, /job/, /positions, /vacancies, /work-with-us, /join-us
-- Platforms: greenhouse.io, lever.co, ashbyhq.com, workday, icims, smartrecruiters => job-related
-- Login/captcha/paywall => login_or_gate, low score
-- Blog/news/about => not job pages
+Hard negatives (always <= 10):
+- Blog/news/articles, press, about pages
+- Anything requiring login/captcha to view job content
+- Generic company pages unrelated to hiring
+
 `.trim();
 
     if (!userContext || userContext.trim().length === 0) return base;
@@ -330,7 +332,12 @@ ${userContext.trim()}
       markdown: input.markdown,
     };
 
-    const resp = await this.callJson(system, user, ExtractJobsResponseSchema);
+    const resp = await this.callJson(
+      system,
+      user,
+      ExtractJobsResponseSchema,
+      "gpt-5.2"
+    );
 
     // hard guarantee: every job must point to the same source url we provided
     const jobs = resp.jobs.map((j) => ({
@@ -353,20 +360,37 @@ ${userContext.trim()}
 
   private buildRankJobsSystemPrompt(): string {
     return `
-You rank job postings for a candidate based on their preferences.
+  You are a strict job recommender.
 
-Return JSON ONLY:
-{
-  "items": [
-    { "job": { ... }, "fitScore": 0-100, "rationale": "short" }
-  ]
-}
+  You must BOTH:
+  1) Filter out clearly incompatible jobs (reject them).
+  2) Rank the remaining jobs by best fit.
 
-Rules:
-- Higher score = better fit.
-- Do not hallucinate requirements; use only fields in each job.
-- Keep rationale short and specific.
-`.trim();
+  Return JSON ONLY:
+  {
+    "items": [
+      {
+        "job": { ... },
+        "fitScore": 0-100,
+        "rationale": "short",
+        "reject": false
+      }
+    ]
+  }
+
+  Rules:
+  - Use ONLY the provided job fields. Do NOT hallucinate.
+  - "reject": true if ANY is true:
+    - Non-software roles (legal/counsel/hr/sales/marketing/accounting/etc.)
+    - Location restriction incompatible with the user (e.g. "US only" when user is not US)
+    - Requires onsite in a different country and no remote/hybrid option
+  - If reject=true, still include the item but set fitScore <= 10 and rationale = a short reject reason.
+  - Prefer jobs whose title + skills overlap with the user's stated stack and role.
+  - Penalize "junior" if the user signals mid/senior, and penalize "senior/principal" if the user signals junior.
+  - Keep rationale under 20 words.
+
+  Output exactly topK items AFTER sorting by fitScore descending (but include rejected items only if not enough remain).
+  `.trim();
   }
 
   public async rankJobs(input: RankJobsInput): Promise<RankJobsOutput> {
@@ -378,92 +402,155 @@ Rules:
       topK,
     };
 
-    const resp = await this.callJson(system, user, RankJobsResponseSchema);
+    const resp = await this.callJson(
+      system,
+      user,
+      RankJobsResponseSchema,
+      "gpt-5.2"
+    );
 
-    const items = resp.items
-      .map((it) => ({
-        job: {
-          ...it.job,
-          remote: it.job.remote ? WORK_MODE_MAP[it.job.remote] : undefined,
-          employmentType: it.job.employmentType
-            ? EMPLOYMENT_TYPE_MAP[it.job.employmentType]
-            : undefined,
-          seniority: it.job.seniority
-            ? SENIORITY_MAP[it.job.seniority]
-            : undefined,
-        },
-        fitScore: clamp(it.fitScore, 0, 100),
-        rationale: it.rationale,
-      }))
-      .sort((a, b) => b.fitScore - a.fitScore)
-      .slice(0, topK);
+    const normalized = resp.items.map((it) => ({
+      job: {
+        ...it.job,
+        remote: it.job.remote ? WORK_MODE_MAP[it.job.remote] : undefined,
+        employmentType: it.job.employmentType
+          ? EMPLOYMENT_TYPE_MAP[it.job.employmentType]
+          : undefined,
+        seniority: it.job.seniority
+          ? SENIORITY_MAP[it.job.seniority]
+          : undefined,
+      },
+      fitScore: clamp(it.fitScore, 0, 100),
+      rationale: it.rationale,
+      reject: it.reject === true,
+    }));
 
-    return { items };
+    const sorted = normalized.sort((a, b) => b.fitScore - a.fitScore);
+
+    // If we have enough non-rejected, drop rejected completely
+    const nonRejected = sorted.filter((x) => !x.reject);
+    const picked =
+      nonRejected.length >= topK
+        ? nonRejected.slice(0, topK)
+        : sorted.slice(0, topK);
+
+    return { items: picked.map(({ reject: _r, ...rest }) => rest) };
   }
 
   public async generateSearchDorks(
     userContext: string,
     limit: number = 5
   ): Promise<readonly { query: string; site?: string; location?: string }[]> {
+    const clampLimit = (n: number): number => {
+      const x = Number.isFinite(n) ? Math.floor(n) : 5;
+      return Math.max(1, Math.min(10, x));
+    };
+
+    const formatIsoDate = (d: Date): string => {
+      const pad2 = (v: number): string => String(v).padStart(2, "0");
+      const year = d.getUTCFullYear();
+      const month = pad2(d.getUTCMonth() + 1);
+      const day = pad2(d.getUTCDate());
+      return `${year}-${month}-${day}`;
+    };
+
+    const daysAgoUtc = (days: number): string => {
+      const now = new Date();
+      const ms = days * 24 * 60 * 60 * 1000;
+      return formatIsoDate(new Date(now.getTime() - ms));
+    };
+
+    const safeLimit = clampLimit(limit);
+    const afterDateIso = daysAgoUtc(30);
+
     const system = `
-    ### SYSTEM ROLE
-    You are an expert Search Logic Engineer specializing in OSINT (Open Source Intelligence) and Recruitment. Your goal is to generate high-precision Google Search Dorks to locate fresh job postings directly on company career pages or ATS (Applicant Tracking Systems) platforms, bypassing low-quality aggregators.
+  ### SYSTEM ROLE
+  You are an expert Search Logic Engineer specializing in OSINT and Recruitment.
+  Your goal is to generate high-precision Google Search Dorks to locate fresh job postings
+  directly on company career pages or ATS platforms, bypassing aggregators.
 
-    ### INPUT PROCESSING
-    Analyze the user's request to extract:
-    1. Target Role: (e.g., "Frontend Developer", "Art Teacher")
-    2. Tech Stack/Keywords: (e.g., "React", "TypeScript", "Canvas")
-    3. Target Location: (e.g., "Chile", "Remote", "Canada")
+  ### INPUT PROCESSING
+  Extract:
+  1) Target Role
+  2) Tech Stack/Keywords
+  3) Target Location / Remote preference
+  4) Contractor vs Employee preference (if stated)
 
-    ### SEARCH CONSTRAINT LOGIC
-    1. Length & Density: Google Search has a hard limit of ~32 terms.
-       * Do NOT use filler words (e.g., "looking for", "best").
-       * Concatenate complex "OR" logic using parentheses "()".
-    2. Localization & Language:
-       * TLD Mapping: If a specific country is targeted, you MUST append "site:.<tld>" (e.g., "site:.cl" for Chile, "site:.ca" for Canada, "site:.de" for Germany).
-       * Language Adaptation: Translate the job title and keywords into the primary professional language of the *target* location (e.g., use Spanish terms for a local role in Chile, but English for a global tech role).
-    3. Freshness & Exclusion:
-       * Always exclude aggregators to find direct listings: "-site:linkedin.com -site:indeed.com -site:glassdoor.com".
-       * Exclude purely informational pages: "-intitle:resume -inurl:blog -inurl:news".
+  ### HARD CONSTRAINTS (IMPORTANT)
+  - Return EXACTLY ${safeLimit} queries.
+  - Use ONLY these 4 templates (pick the best ones; do not invent new templates):
+    T1) site:{ATS_DOMAIN} intitle:({ROLE_OR}) ({TECH_OR}) (remote OR "work from home")
+    T2) site:{ATS_DOMAIN} ("{ROLE_PHRASE}") ({TECH_OR}) (remote OR "work from home")
+    T3) (inurl:careers OR inurl:jobs OR inurl:vacantes OR inurl:trabaja-con-nosotros) intitle:({ROLE_OR}) ({TECH_OR})
+    T4) site:{TLD} (inurl:careers OR inurl:jobs OR inurl:vacantes OR inurl:trabaja-con-nosotros) intitle:({ROLE_OR}) ({TECH_OR})
 
-    ### OPERATOR STRATEGY
-    * ATS Targeting: Use "site:greenhouse.io", "site:lever.co", "site:ashbyhq.com", "site:bamboohr.com" combined with "intitle:<Role>" to find listings not indexed by major boards.
-    * URL Patterning: Use "inurl:career", "inurl:jobs", "inurl:vacantes", "inurl:trabaja-con-nosotros" based on the language.
+  - Each query MUST:
+    1) include EXACTLY ONE of:
+       - ATS target: site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:bamboohr.com
+       - OR URL-pattern target: inurl:careers/jobs/vacantes/trabaja-con-nosotros (+ optional site:.tld)
+    2) include at most 3 tech keywords total (keep it broad).
+    3) include aggregator exclusions:
+       -site:linkedin.com -site:indeed.com -site:glassdoor.com
+    4) include info exclusions:
+       -inurl:blog -inurl:news -intitle:resume -intitle:cv
+    5) include freshness token:
+       after:${afterDateIso}
+  - If user prefers contractor/freelance, include ONE of:
+    (contract OR contractor OR freelance)
 
-    ### OUTPUT FORMAT
-    Return JSON ONLY. Do not output markdown code blocks or conversational text.
-    Structure:
-    {
-      "queries": [
-        {
-          "query": "The raw search string",
-          "strategy": "Brief explanation (e.g., 'Targeting Greenhouse ATS in Canada')",
-          "estimated_precision": "High/Medium"
-        }
-      ]
-    }
-`.trim();
+  ### LOCALIZATION & LANGUAGE
+  - If target is local to a country, add site:.<tld> (e.g., site:.cl).
+  - If role is global/remote, keep English role tokens.
+  - Keep queries under ~32 terms.
+
+  ### OUTPUT FORMAT
+  Return JSON ONLY:
+  {
+    "queries": [
+      { "query": "The raw search string", "strategy": "Brief explanation", "estimated_precision": "High|Medium" }
+    ]
+  }
+  `.trim();
 
     const user = {
       userContext,
-      limit,
+      limit: safeLimit,
+      afterDateIso,
     };
 
     const resp = await this.callJson(
       system,
       user,
-      GenerateSearchDorksResponseSchema
+      GenerateSearchDorksResponseSchema,
+      "gpt-5.2"
     );
-    return resp.queries.slice(0, limit);
+
+    // Normalize to your existing return type (query/site/location)
+    return resp.queries.slice(0, safeLimit).map((q) => ({
+      query: q.query,
+      site: q.site,
+      location: q.location,
+    }));
   }
 
   public async extractUrlsFromSearchMarkdown(
     markdown: string
   ): Promise<readonly { url: string; title: string }[]> {
     const system = `
-You are an expert at parsing search engine results in Markdown.
-Extract all organic search result links.
-Ignore ads, internal google links, and navigation links.
+You parse SERP results represented as Markdown.
+
+Extract ONLY external organic results that are likely to be job-related pages.
+
+Exclude:
+- Ads / sponsored results
+- Aggregators and boards: linkedin.com, indeed.com, glassdoor.com, monster.com, ziprecruiter.com, talent.com, jooble.org
+- Google internal links and redirects unless you can recover the final URL
+- Social: twitter/x.com, facebook, instagram
+- Non-job content: blog/news/about pages unless the URL strongly indicates jobs/careers
+
+Prefer:
+- ATS domains: greenhouse.io, lever.co, ashbyhq.com, bamboohr.com, workday, icims, smartrecruiters
+- URLs containing: /jobs, /careers, /job/, /positions, /vacancies, /join-us, /work-with-us
 
 Return JSON ONLY:
 {
@@ -482,8 +569,22 @@ Return JSON ONLY:
       ),
     });
 
-    const resp = await this.callJson(system, { markdown }, schema);
-    return resp.results;
+    const resp = await this.callJson(system, { markdown }, schema, "gpt-5.2");
+
+    // cheap dedupe + normalize
+    const seen = new Set<string>();
+    const out: Array<{ url: string; title: string }> = [];
+
+    for (const r of resp.results) {
+      const u = normalizeUrl(r.url);
+      if (!u) continue;
+      const key = u.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ url: u, title: r.title.trim() });
+    }
+
+    return out;
   }
 
   /**
@@ -500,6 +601,7 @@ Return JSON ONLY:
       userContext?: string;
       batchSize?: number;
       maxToScrape?: number; // default 10
+      targetJobs?: number; // default 25
       minScoreToScrape?: number; // default 60
       keepCareers?: boolean; // default true
       exhaustiveExtraction?: boolean; // default true
@@ -518,6 +620,7 @@ Return JSON ONLY:
     }>
   > {
     const maxToScrape = params.maxToScrape ?? 10;
+    const targetJobs = params.targetJobs ?? 25;
     const minScoreToScrape = params.minScoreToScrape ?? 60;
     const keepCareers = params.keepCareers ?? true;
     const concurrency = params.concurrency ?? 3;
@@ -551,35 +654,68 @@ Return JSON ONLY:
       .sort((a, b) => b.score - a.score)
       .slice(0, maxToScrape);
 
-    const pages = await mapLimit(filtered, concurrency, async (it) => {
-      const md = await params.fetchMarkdown(it.url);
-      const extraction = await this.extractJobsFromMarkdown({
-        url: it.url,
-        markdown: md,
-        userContext: params.userContext,
-        exhaustive: params.exhaustiveExtraction ?? true,
-      });
-
-      return {
-        url: it.url,
-        scored: it,
-        markdown: md,
-        extraction,
-      };
-    });
+    const pages: Array<{
+      url: string;
+      scored: ScoredUrl;
+      markdown: string;
+      extraction: ExtractJobsOutput;
+    }> = [];
 
     const allJobs: JobPosting[] = [];
-    for (const p of pages) {
-      const kind = p.extraction.pageKind;
-      allJobs.push(
-        ...p.extraction.jobs.map((j) => ({
+
+    // Chunking logic for controlled concurrency loop
+    const chunk = <T>(arr: T[], size: number): T[][] =>
+      Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+        arr.slice(i * size, i * size + size)
+      );
+
+    const batches = chunk(filtered, concurrency);
+
+    for (const batch of batches) {
+      if (allJobs.length >= targetJobs) break;
+
+      const results = await Promise.all(
+        batch.map(async (it) => {
+          try {
+            const md = await params.fetchMarkdown(it.url);
+            const extraction = await this.extractJobsFromMarkdown({
+              url: it.url,
+              markdown: md,
+              userContext: params.userContext,
+              exhaustive: params.exhaustiveExtraction ?? true,
+            });
+            return {
+              url: it.url,
+              scored: it,
+              markdown: md,
+              extraction,
+            };
+          } catch (err) {
+            console.error(
+              `[JobLLM] Failed to scrape/extract from ${it.url}`,
+              err
+            );
+            return null;
+          }
+        })
+      );
+
+      for (const res of results) {
+        if (!res) continue;
+        pages.push(res);
+        const kind = res.extraction.pageKind;
+        const newJobs = res.extraction.jobs.map((j) => ({
           ...j,
           pageKind: kind,
-        }))
-      );
+        }));
+        allJobs.push(...newJobs);
+      }
     }
 
-    return { scored: scoredResp.items, pages, jobs: allJobs };
+    const canonicalized = canonicalizeJobs(allJobs);
+    const deduped = dedupeCanonicalJobs(canonicalized).map((x) => x.job);
+
+    return { scored: scoredResp.items, pages, jobs: deduped };
   }
 
   /**

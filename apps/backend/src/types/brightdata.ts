@@ -1,4 +1,4 @@
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type UnlockerFormat = "raw" | "json";
 
 export type UnlockerSyncRequest = Readonly<{
