@@ -29,9 +29,9 @@ COPY --from=prune /app/pruned/node_modules ./node_modules
 COPY --from=build /app/apps/backend/dist ./dist
 COPY --from=build /app/apps/backend/prisma ./prisma
 # Copy generated prisma client if it's not in node_modules (it usually is, but sometimes needed explicitly)
-# In pnpm monorepos, prisma client often ends up in root node_modules or hoisted. 
+# In pnpm monorepos, prisma client often ends up in root node_modules or hoisted.
 # However, the 'pruned' step with --prod should capture necessary deps.
 # Let's ensure the dist runs.
 
 EXPOSE 8000
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/server.cjs"]

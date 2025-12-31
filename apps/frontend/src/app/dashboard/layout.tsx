@@ -1,7 +1,7 @@
-import { type ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import AppSidebarJobSearcher from "@/components/app-sidebar-job-searcher";
 import JobCardProvider from "@/components/job-card/job-card-provider";
+import { type ReactNode, Suspense } from "react";
 
 import {
   SidebarInset,
@@ -22,7 +22,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <SidebarTrigger />
               <div className="h-6 w-px bg-border" />
               <div className="flex-1" />
-              <AppSidebarJobSearcher />
+              <Suspense>
+                <AppSidebarJobSearcher />
+              </Suspense>
             </header>
 
             <div className="w-full h-full">{children}</div>
