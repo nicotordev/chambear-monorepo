@@ -1,6 +1,14 @@
 "use client";
 
 import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
+import {
+  ArrowRight,
   BarChart,
   CreditCard,
   FileText,
@@ -85,7 +93,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <header className="bg-background border-b">
+    <header className="bg-background border-b sticky top-0 left-0 z-50">
       <nav
         aria-label="Global"
         className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8"
@@ -168,12 +176,37 @@ export default function Navbar() {
                     </Link>
                   </div>
                   <div className="py-6 px-3">
-                    <Link
-                      href="/auth"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold text-foreground hover:bg-accent"
-                    >
-                      Log in
-                    </Link>
+                    <SignedOut>
+                      <div className="flex flex-col gap-3">
+                        <SignInButton mode="modal">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start -mx-3 px-3 text-base"
+                          >
+                            Log in
+                          </Button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                          <Button className="w-full justify-start -mx-3 px-3 text-base">
+                            Get Started
+                          </Button>
+                        </SignUpButton>
+                      </div>
+                    </SignedOut>
+                    <SignedIn>
+                      <div className="flex items-center gap-4 py-2">
+                        <UserButton
+                          appearance={{
+                            elements: {
+                              avatarBox: "h-9 w-9",
+                            },
+                          }}
+                        />
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          Manage Account
+                        </span>
+                      </div>
+                    </SignedIn>
                   </div>
                 </div>
               </div>
@@ -214,30 +247,28 @@ export default function Navbar() {
                           </div>
                         </div>
                       ))}
-                      {
-                        callsToAction.map((item) => (
-                          <div
-                            key={item.name}
-                            className="group relative flex items-center gap-x-6 rounded-lg p-4 text-sm hover:bg-accent"
-                          >
-                            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted group-hover:bg-background">
-                              <item.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                            </div>
-                            <div className="flex-auto">
-                              <Link
-                                href={item.href}
-                                className="block font-semibold text-foreground"
-                              >
-                                {item.name}
-                                <span className="absolute inset-0" />
-                              </Link>
-                              <p className="mt-1 text-muted-foreground">
-                                {item.description}
-                              </p>
-                            </div>
+                      {callsToAction.map((item) => (
+                        <div
+                          key={item.name}
+                          className="group relative flex items-center gap-x-6 rounded-lg p-4 text-sm hover:bg-accent"
+                        >
+                          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted group-hover:bg-background">
+                            <item.icon className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
                           </div>
-                        ))
-                      }
+                          <div className="flex-auto">
+                            <Link
+                              href={item.href}
+                              className="block font-semibold text-foreground"
+                            >
+                              {item.name}
+                              <span className="absolute inset-0" />
+                            </Link>
+                            <p className="mt-1 text-muted-foreground">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </NavigationMenuContent>
@@ -287,12 +318,27 @@ export default function Navbar() {
 
         {/* LOGIN */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <Link
-            href="/auth"
-            className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
-          >
-            Log in <span aria-hidden="true">→</span>
-          </Link>
+          <SignedIn>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-10 w-10",
+                },
+              }}
+            />
+          </SignedIn>
+          <SignedOut>
+            <div className="flex items-center gap-4">
+              <SignInButton mode="modal">
+                <Button variant="ghost">Log in</Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button>
+                  Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
         </div>
       </nav>
     </header>

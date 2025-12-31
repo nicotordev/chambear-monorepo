@@ -75,7 +75,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           "antialiased bg-background text-foreground",
           // default typography preset (puedes cambiarlo a typo-artistic, etc.)
           "typo-serious",
-          "w-dvw h-dvh",
+          "h-dvh",
         ].join(" ")}
       >
         <Toaster />

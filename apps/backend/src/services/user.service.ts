@@ -71,7 +71,25 @@ const userService = {
       });
     }
 
-
+    if (!user.stripeCustomerId) {
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email,
+        name: user.name ?? undefined,
+      });
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: stripeCustomer.id },
+        include: {
+          profiles: {
+            include: {
+              experiences: { orderBy: { startDate: "desc" } },
+              educations: { orderBy: { startDate: "desc" } },
+              skills: { include: { skill: true } },
+            },
+          },
+        },
+      });
+    }
 
     return user;
   },
