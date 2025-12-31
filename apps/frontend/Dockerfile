@@ -1,14 +1,19 @@
 FROM node:20-alpine AS base
 RUN npm install -g pnpm
 
+# Dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/backend/package.json ./apps/backend/package.json
+COPY apps/frontend/package.json ./apps/frontend/package.json
+RUN pnpm install --frozen-lockfile
+
 # Builder
 FROM base AS builder
 WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Install all dependencies (including dev deps for building)
-RUN pnpm install --frozen-lockfile
-
-# Build frontend
 WORKDIR /app/apps/frontend
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
