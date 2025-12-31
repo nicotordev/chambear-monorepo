@@ -1,7 +1,7 @@
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { SignIn } from "@clerk/nextjs";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -10,12 +10,9 @@ export default function AuthPage() {
     <div className="flex min-h-screen w-full bg-background">
       {/* -----------------------------------------------------------------------
         LEFT SIDE (Form)
-        Fixed width on large screens (lg:w-1/2) to prevent it from looking
-        "smaller" or squeezed by the image side.
-        -----------------------------------------------------------------------
-      */}
+        ----------------------------------------------------------------------- */}
       <div className="relative flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 xl:w-[45%] xl:px-24">
-        {/* Mobile-only background decorations (hidden on desktop for cleaner split) */}
+        {/* Mobile-only background decorations */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 lg:hidden">
           <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[100px]" />
           <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-accent/5 blur-[120px]" />
@@ -48,7 +45,7 @@ export default function AuthPage() {
               Welcome back
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Sign in to your account to continue with Chambear.
+              Sign in to continue your job search with intention.
             </p>
           </div>
 
@@ -88,10 +85,8 @@ export default function AuthPage() {
       </div>
 
       {/* -----------------------------------------------------------------------
-        RIGHT SIDE (Image/Asset)
-        Takes remaining space (flex-1) but is hidden on mobile/tablet (hidden lg:flex).
-        -----------------------------------------------------------------------
-      */}
+        RIGHT SIDE (Decorative / Atmospheric)
+        ----------------------------------------------------------------------- */}
       <div className="relative hidden w-0 flex-1 lg:flex flex-col items-center justify-center bg-muted/30 dark:bg-muted/10 overflow-hidden border-l border-border/50">
         {/* Background Gradients */}
         <div className="absolute inset-0 z-0">
@@ -105,38 +100,26 @@ export default function AuthPage() {
           <div className="relative w-full aspect-[4/3] mb-12 animate-in fade-in zoom-in duration-700">
             <Image
               src="/assets/img/illustrations/undraw_working_n9u0.svg"
-              alt="Working on authentication"
+              alt="Focused work illustration"
               fill
               className="object-contain drop-shadow-2xl mix-blend-multiply dark:mix-blend-normal"
               priority
             />
           </div>
 
-          {/* Testimonial */}
+          {/* Atmospheric Text */}
           <div className="text-center space-y-6 max-w-md animate-in slide-in-from-bottom-8 duration-700 delay-200">
-            <blockquote className="space-y-4">
-              <p className="text-xl font-medium leading-relaxed text-foreground/90 font-heading">
-                "Chambear has completely transformed how our team handles daily
-                workflows. It's not just a tool, it's a productivity
-                powerhouse."
-              </p>
-              <footer className="flex items-center justify-center gap-4">
-                <div className="flex gap-1 text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="size-4 fill-current" />
-                  ))}
-                </div>
-              </footer>
-            </blockquote>
+            <p className="text-xl leading-relaxed tracking-tight text-foreground/85 font-normal">
+              Apply with intention.
+              <br />
+              Every role, tailored.
+              <br />
+              Every decision, informed.
+            </p>
 
-            <div className="pt-6 border-t border-border/50 w-full max-w-[200px] mx-auto">
-              <p className="text-sm font-semibold text-foreground">
-                Top Rated Platform
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Trusted by 10,000+ users
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Your AI-powered job search workspace.
+            </p>
           </div>
         </div>
       </div>
