@@ -1,0 +1,99 @@
+Aquí tienes una adaptación del Project Brief diseñada específicamente para el **mercado estadounidense en 2026**.
+
+**Cambios clave en la adaptación:**
+
+* **Rebranding:** "Chambear" es un coloquialismo latino que no resuena en EE.UU. Se sugiere un nombre más corporativo, dinámico y tecnológico (ej. *Careercare.ai* o *JobPilot*).
+* **Contexto Tecnológico 2026:** Se asume que la IA generativa ya es estándar. El valor no es "usar IA", sino "Agentes de IA" que actúan de forma autónoma y la capacidad de superar filtros anti-IA.
+* **Dolores de mercado (Pain Points) específicos de EE.UU.:** Se hace énfasis en los "Ghost Jobs" (trabajos falsos/fantasmas) y la saturación de los sistemas ATS (Applicant Tracking Systems).
+
+---
+
+# Project Brief: Careercare.ai (formerly Chambear.ai)
+
+**The AI-Agent Driven Career Acceleration Platform**
+
+### 1. Executive Summary
+
+**Careercare.ai** is a next-generation web and mobile ecosystem designed to disrupt the US talent acquisition market. By 2026, job seekers are overwhelmed by AI-generated noise; Careercare.ai leverages **Agentic AI** not just to create content, but to execute strategic career moves. From hyper-personalized resume tailoring to real-time biometric interview coaching, our goal is to slash "Time-to-Hire" and convert application volume into high-quality offers.
+
+### 2. Project Overview
+
+| Field | Detail |
+| --- | --- |
+| **Project Name** | **Careercare.ai** (Working Title) |
+| **Core Purpose** | To operationalize and automate the job search lifecycle using Autonomous AI Agents. |
+| **Platforms** | Web App (Command Center), Mobile App (iOS/Android for notifications & quick actions). |
+| **Status** | Conceptual / Pre-Seed Planning Phase. |
+| **Target Launch** | Q3 2026 |
+
+### 3. Target Audience (US Market 2026)
+
+The primary demographic includes digital-native professionals and workforce veterans navigating a volatile, skill-based economy.
+
+| Segment | Description | Key US Market Needs |
+| --- | --- | --- |
+| **The "Zoomer" Climber (Gen Z)** | 22-29 years old. 1-6 years exp. Aggressively seeking salary jumps and remote/hybrid roles. | Speed. Beating the ATS algorithm. "Humanizing" AI content to avoid detection. |
+| **The New Grad** | 20-24 years old. Entering a hyper-competitive entry-level market. | Turning academic theory into "corporate speak." Finding hidden entry-level roles that aren't "ghost jobs." |
+| **The Career Pivoters** | 35-50 years old. Reskilling due to AI displacement or industry shifts. | translating legacy skills into tech-adjacent terminology. Navigating ageism via modern branding. |
+
+### 4. Problem & Unique Value Proposition (UVP)
+
+#### 4.1. Pain Points (2026 Context)
+
+1. **The "Black Box" ATS:** Legacy keywords no longer work. 2026 ATS algorithms use semantic vector matching, rejecting 98% of generic applications instantly.
+2. **Application Fatigue & Ghost Jobs:** Americans apply to hundreds of roles, many of which are "ghost jobs" (listings kept open with no intent to hire).
+3. **The "AI-Sounding" Trap:** Recruiters are using tools to filter out obviously ChatGPT-written cover letters. Users need AI that sounds authentic, not robotic.
+
+#### 4.2. Unique Value Proposition (UVP)
+
+**"Your Personal Career Agent."**
+Unlike 2024-era tools that just *wrote* for you, Careercare.ai *thinks* for you. It actively reverse-engineers the hiring algorithm, ensuring your profile is mathematically the perfect fit for the role, while maintaining a human, authentic voice.
+
+### 5. Key Product Features
+
+#### A. Smart Match & Market Intelligence (The Agent)
+
+* **Semantic Vector Matching:** Beyond keywords. The AI analyzes the user's "Career DNA" against job descriptions.
+* **Ghost Job Filter:** Proprietary algorithm that flags listings likely to be stale or fake based on posting dates and hiring velocity data.
+* **Fit Score & Gap Analysis:** A predictive score (0-100%) explaining *exactly* why you match (or don't) and what specific certification creates the missing bridge.
+
+#### B. Dynamic Document Engine (The Builder)
+
+* **Context-Aware Resume Builder:** Generates ATS-compliant resumes.
+* **"Stealth Mode" Writing:** The AI rephrases bullet points to sound human and pass "AI-detection" filters used by HR departments.
+* **One-Click Tailoring:** User selects a job, and the engine rewrites the Professional Summary and Experience bullets instantly to mirror the job description's language patterns.
+
+#### C. Career Dojo (The Coach)
+
+* **Biometric Interview Simulator:** Uses camera and mic to analyze micro-expressions, tone confidence, and pacing. Provides real-time feedback (e.g., "You're speaking too fast," "Eye contact is low").
+* **STAR Method Generator:** Automatically converts user's past messy project notes into crisp Situation-Task-Action-Result narratives.
+* **Upskill Impulse:** Links directly to micro-credentials (Coursera, Udacity) that fill the immediate gaps for a target role.
+
+#### D. Workflow & CRM
+
+* **Kanban Job Board:** Drag-and-drop interface (Saved -> Applied -> Interviewing -> Offer).
+* **Smart Nudge System:** "It's been 3 days since you applied. Based on this company's average response time, send a follow-up email now. Here is the draft."
+
+### 6. Branding & Tone
+
+| Aspect | Detail |
+| --- | --- |
+| **Naming Strategy** | **Careercare.ai, JobPilot, Propel.ai, HiredVelocity.** (Must sound sleek, tech-forward, and remove the "struggle" connotation). |
+| **Personality** | The "High-Performance Coach." Efficient, data-driven, sleek, but empathetic. |
+| **Tone of Voice** | Confident, action-oriented, concise. "Silicon Valley Professional." No fluff. |
+| **Keywords** | Optimization, Velocity, Agentic, Strategic Fit, Human-Centric AI. |
+| **Tagline** | *Careercare.ai: Don't just apply. Compete.* |
+
+### 7. Technical & Data Requirements
+
+* **Data Compliance:** Must be strictly **CCPA** (California) and **GDPR** compliant. High emphasis on user data privacy.
+* **LLM Tech Stack:** Hybrid approach. Large models (GPT-5/Claude equivalent) for reasoning, and smaller, fine-tuned models for "humanizing" text.
+* **Aggregators:** API integration with major US job boards (LinkedIn, Indeed, Glassdoor, ZipRecruiter) and niche tech boards (Dice, Wellfound).
+* **Infrastructure:** Cloud-native (AWS/GCP) for scalability. Vector Database (Pinecone/Weaviate) for semantic matching.
+
+### 8. Success Criteria (KPIs)
+
+1. **Interview Conversion Rate (ICR):** Target > 20% (significantly higher than the <2% industry average).
+2. **Time-to-Offer:** Reduction in the average job search duration from 5 months (US avg) to < 2 months.
+3. **"Stealth" Success:** User content passing AI-detection filters at a 95% rate.
+4. **LTV (Lifetime Value):** Users retaining the subscription even after being hired for "Career Maintenance" and passive opportunity monitoring.
