@@ -1,19 +1,21 @@
 import "dotenv/config";
 
-const API_URL = process.env.API_URL || "http://localhost:3001";
 const CRON_SECRET = process.env.CRON_SECRET;
+const ENV_API_URL = process.env.API_URL;
+const PATH = "/api/v1/webhooks/scrappers/users";
 
 if (!CRON_SECRET) {
   console.error("❌ CRON_SECRET is not defined in environment variables");
   process.exit(1);
 }
 
-const triggerScrape = async () => {
-  const startTime = performance.now();
-  const targetUrl = `${API_URL}/api/v1/webhooks/scrappers/users`;
+const attemptTrigger = async (baseUrl: string): Promise<boolean> => {
+  // Ensure no double slashes if baseUrl ends with /
+  const cleanBase = baseUrl.replace(/\/$/, "");
+  const targetUrl = `${cleanBase}${PATH}`;
 
-  console.log(`\n🚀 [Cron] Starting scrape trigger...`);
-  console.log(`📍 Target: ${targetUrl}`);
+  console.log(`📍 Attempting target: ${targetUrl}`);
+  const startTime = performance.now();
 
   try {
     const res = await fetch(targetUrl, {
@@ -33,22 +35,52 @@ const triggerScrape = async () => {
     }
 
     const data = await res.json();
-    console.log(`\n✅ Scrape triggered successfully!`);
+    console.log(`✅ Scrape triggered successfully at ${targetUrl}`);
     console.log(`⏱️  Duration: ${duration}s`);
     console.log(`📦 Response:`, JSON.stringify(data, null, 2));
-    console.log("-----------------------------------\n");
-  } catch (error) {
+    return true;
+  } catch (error: any) {
     const endTime = performance.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-
-    console.error(`\n❌ Error triggering scrape after ${duration}s:`);
-    if (error instanceof Error) {
-      console.error(`👉 ${error.message}`);
-    } else {
-      console.error(`👉`, error);
+    console.warn(`⚠️  Failed attempt at ${targetUrl} after ${duration}s: ${error.message}`);
+    if (error.cause) {
+      console.warn(`   Cause:`, error.cause);
     }
-    process.exit(1);
+    return false;
   }
 };
 
-triggerScrape();
+const main = async () => {
+  console.log(`
+🚀 [Cron] Starting scrape trigger process...`);
+
+  // Candidate URLs to try
+  const candidates: string[] = [];
+
+  if (ENV_API_URL) {
+    candidates.push(ENV_API_URL);
+  }
+  
+  // Add fallbacks for Docker/Local environments
+  // We avoid adding duplicates if ENV_API_URL is already one of them
+  const fallbacks = ["http://backend:3001", "http://localhost:3001"];
+  
+  for (const fb of fallbacks) {
+    if (fb !== ENV_API_URL) {
+      candidates.push(fb);
+    }
+  }
+
+  for (const baseUrl of candidates) {
+    const success = await attemptTrigger(baseUrl);
+    if (success) {
+      console.log("-----------------------------------\n");
+      process.exit(0);
+    }
+  }
+
+  console.error("\n❌ All attempts failed. Could not trigger scrape.");
+  process.exit(1);
+};
+
+main();

@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run trigger-scraping-cron\"",
+    "dev:server": "tsx watch src/server.ts",
     "build": "tsup src/server.ts --format cjs --clean",
     "start": "node dist/server.cjs",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "prisma:migrate": "prisma migrate"
+    "prisma:migrate": "prisma migrate",
+    "trigger-scraping-cron": "node src/scripts/trigger-scraping-cron.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
@@ -45,6 +47,7 @@
     "@types/cheerio": "^1.0.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.3",
+    "concurrently": "^9.2.1",
     "prisma": "^7.2.0",
     "tsc-alias": "^1.8.16",
     "tsup": "^8.5.1",
