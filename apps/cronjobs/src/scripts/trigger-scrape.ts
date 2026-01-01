@@ -1,7 +1,7 @@
-import { env } from "bun";
+import 'dotenv/config'
 
-const API_URL = env.API_URL || "http://localhost:3001";
-const CRON_SECRET = env.CRON_SECRET;
+const API_URL = process.env.API_URL || "http://localhost:3001";
+const CRON_SECRET = process.env.CRON_SECRET;
 
 if (!CRON_SECRET) {
   console.error("❌ CRON_SECRET is not defined");
