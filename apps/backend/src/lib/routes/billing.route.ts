@@ -5,20 +5,40 @@ import {
 } from "@/schemas/response";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
-const PlanSchema = z.object({
-  id: z.string(),
-  tier: z.string(),
-  name: z.string(),
-  monthlyPriceUsd: z.number(),
-  monthlyCredits: z.number(),
-  description: z.string().nullable(),
-  isActive: z.boolean(),
-});
+const PlanSchema = z
+  .object({
+    id: z.string(),
+    tier: z.string(),
+    name: z.string(),
+    monthlyPriceUsd: z.number(),
+    monthlyCredits: z.number(),
+    description: z.string().nullable(),
+    isActive: z.boolean(),
+  })
+  .openapi("Plan");
 
-const SubscriptionSchema = z.object({
-  subscription: z.any().nullable(),
-  balance: z.number(),
-});
+const SubscriptionSchema = z
+  .object({
+    subscription: z
+      .object({
+        id: z.string(),
+        status: z.string(),
+        currentPeriodEnd: z.string().or(z.date()),
+        plan: PlanSchema,
+      })
+      .nullable(),
+    balance: z.number(),
+  })
+  .openapi("SubscriptionInfo");
+
+const CreditWalletSchema = z
+  .object({
+    id: z.string(),
+    userId: z.string(),
+    balance: z.number(),
+    updatedAt: z.string().or(z.date()),
+  })
+  .openapi("CreditWallet");
 
 const getPlans = createRoute({
   method: "get",
@@ -33,6 +53,7 @@ const getPlans = createRoute({
       },
     },
   },
+  tags: ["Billing"],
 });
 
 const getMySubscription = createRoute({
@@ -52,6 +73,7 @@ const getMySubscription = createRoute({
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
+  tags: ["Billing"],
 });
 
 const topup = createRoute({
@@ -70,10 +92,10 @@ const topup = createRoute({
   },
   responses: {
     200: {
-      description: "Topup credits",
+      description: "Topup credits successful",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(z.any()),
+          schema: createSuccessResponseSchema(CreditWalletSchema),
         },
       },
     },
@@ -90,6 +112,7 @@ const topup = createRoute({
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
+  tags: ["Billing"],
 });
 
 const createCheckout = createRoute({
@@ -124,6 +147,7 @@ const createCheckout = createRoute({
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
+  tags: ["Billing"],
 });
 
 const customerPortal = createRoute({
@@ -147,6 +171,7 @@ const customerPortal = createRoute({
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
   },
+  tags: ["Billing"],
 });
 
 const app = new OpenAPIHono();

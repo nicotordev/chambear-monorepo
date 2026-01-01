@@ -4,11 +4,29 @@
  */
 
 export const Role = {
-  BUYER: "BUYER",
-  SELLER: "SELLER",
+  EMPLOYER: "EMPLOYER",
+  EMPLOYEE: "EMPLOYEE",
   ADMIN: "ADMIN",
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
+
+export const PlanTier = {
+  FREE: "FREE",
+  BASE: "BASE",
+  PRO: "PRO",
+  RESULT: "RESULT",
+} as const;
+export type PlanTier = (typeof PlanTier)[keyof typeof PlanTier];
+
+export const SubscriptionStatus = {
+  ACTIVE: "ACTIVE",
+  TRIALING: "TRIALING",
+  PAST_DUE: "PAST_DUE",
+  CANCELED: "CANCELED",
+  EXPIRED: "EXPIRED",
+} as const;
+export type SubscriptionStatus =
+  (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
 
 export const UrlKind = {
   JOB_LISTING: "JOB_LISTING",

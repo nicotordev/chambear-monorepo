@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { InterviewStatus } from "@/types/enums";
 
 export interface InterviewStatusBadgeProps {
@@ -26,7 +26,7 @@ export default function InterviewStatusBadge({
 
   return (
     <Badge variant="outline" className={cn("capitalize", className)}>
-      {status ? status.toLowerCase() : "Agendada"}
+      {status ? status.toLowerCase() : "Scheduled"}
     </Badge>
   );
 }

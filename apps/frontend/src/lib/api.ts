@@ -7,10 +7,13 @@ import type {
 import { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
+  CreditWallet,
   Document,
   InterviewSession,
   Job,
+  Plan,
   Reminder,
+  Subscription,
   User,
 } from "@/types";
 import axios, { AxiosInstance } from "axios";
@@ -228,6 +231,36 @@ class Api {
 
   public async createReminder(data: any): Promise<Reminder> {
     const res = await this.instance.post("/reminders", data);
+    return res.data.data;
+  }
+
+  // --- Billing ---
+
+  public async getPlans(): Promise<Plan[]> {
+    const res = await this.instance.get("/billing/plans");
+    return res.data.data;
+  }
+
+  public async getMySubscription(): Promise<{
+    subscription: Subscription | null;
+    balance: number;
+  }> {
+    const res = await this.instance.get("/billing/me");
+    return res.data.data;
+  }
+
+  public async topup(amount: number): Promise<CreditWallet> {
+    const res = await this.instance.post("/billing/topup", { amount });
+    return res.data.data;
+  }
+
+  public async createCheckout(tier: string): Promise<{ url: string }> {
+    const res = await this.instance.post("/billing/checkout", { tier });
+    return res.data.data;
+  }
+
+  public async customerPortal(): Promise<{ url: string }> {
+    const res = await this.instance.post("/billing/portal");
     return res.data.data;
   }
 }

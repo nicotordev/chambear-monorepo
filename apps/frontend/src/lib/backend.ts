@@ -1,16 +1,20 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
-import { headers } from "next/headers";
 import type { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
+  CreditWallet,
+  Document,
   InterviewSession,
   Job,
+  Plan,
   Reminder,
+  Subscription,
   User,
 } from "@/types";
+import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
+import { headers } from "next/headers";
 
-import "server-only";
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
+import "server-only";
 
 // 1. Instancia base
 const api: AxiosInstance = axios.create({
@@ -126,7 +130,7 @@ export const backend = {
 
     getById: (id: string): Promise<Job> => fetcher.get<Job>(`/jobs/${id}`),
 
-    scan: (body?: any, profileId?: string): Promise<void> =>
+    scan: (_body?: any, profileId?: string): Promise<void> =>
       fetcher.get<void>(`/jobs/scan?profileId=${profileId}`),
   },
 
@@ -156,7 +160,8 @@ export const backend = {
       });
       return data;
     },
-    completeOnboarding: (): Promise<User> => fetcher.post<User>("/user/complete-onboarding", null),
+    completeOnboarding: (): Promise<User> =>
+      fetcher.post<User>("/user/complete-onboarding", null),
   },
 
   documents: {
@@ -205,6 +210,27 @@ export const backend = {
       fetcher.patch<Reminder>(`/reminders/${id}`, data),
     delete: (id: string): Promise<{ success: boolean }> =>
       fetcher.delete<{ success: boolean }>(`/reminders/${id}`),
+  },
+
+  billing: {
+    getPlans: (): Promise<Plan[]> => fetcher.get<Plan[]>("/billing/plans"),
+
+    getMySubscription: (): Promise<{
+      subscription: Subscription | null;
+      balance: number;
+    }> =>
+      fetcher.get<{ subscription: Subscription | null; balance: number }>(
+        "/billing/me"
+      ),
+
+    topup: (amount: number): Promise<CreditWallet> =>
+      fetcher.post<CreditWallet>("/billing/topup", { amount }),
+
+    createCheckout: (tier: string): Promise<{ url: string }> =>
+      fetcher.post<{ url: string }>("/billing/checkout", { tier }),
+
+    customerPortal: (): Promise<{ url: string }> =>
+      fetcher.post<{ url: string }>("/billing/portal", {}),
   },
 };
 

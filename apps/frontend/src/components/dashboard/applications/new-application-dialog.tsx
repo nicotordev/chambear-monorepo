@@ -186,7 +186,7 @@ export default function NewApplicationDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [isSearchingJobs, setIsSearchingJobs] = useState(false);
+  const [, setIsSearchingJobs] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(combinedSchema),
@@ -796,7 +796,7 @@ export default function NewApplicationDialog({
                           name="mode"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Modalidad</FormLabel>
+                              <FormLabel>Mode</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 defaultValue={field.value}

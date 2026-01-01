@@ -175,6 +175,8 @@ export const billingService = {
       );
     }
 
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
     const session = await stripe.checkout.sessions.create({
       customer: user.stripeCustomerId || undefined,
       customer_email: user.stripeCustomerId ? undefined : user.email,
@@ -185,8 +187,8 @@ export const billingService = {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.FRONTEND_URL}/billing?success=true`,
-      cancel_url: `${process.env.FRONTEND_URL}/billing?canceled=true`,
+      success_url: `${frontendUrl}/dashboard/billing?success=true`,
+      cancel_url: `${frontendUrl}/dashboard/billing?canceled=true`,
       metadata: {
         userId,
         tier,
@@ -209,9 +211,11 @@ export const billingService = {
       throw new Error("User does not have a Stripe Customer ID");
     }
 
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.FRONTEND_URL}/billing`,
+      return_url: `${frontendUrl}/dashboard/billing`,
     });
 
     if (!session.url) {

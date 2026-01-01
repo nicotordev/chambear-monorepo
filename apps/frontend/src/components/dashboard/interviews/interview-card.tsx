@@ -1,24 +1,26 @@
-import { InterviewMode, type InterviewSession } from "@/types";
-import InterviewStatusBadge from "./interviews-status-badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
-import { Building2 } from "lucide-react";
-import { ExternalLink } from "lucide-react";
-import { Video } from "lucide-react";
-import { MapPin } from "lucide-react";
-import { Clock } from "lucide-react";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { InterviewMode, type InterviewSession } from "@/types";
+import {
+  Building2,
+  Clock,
+  ExternalLink,
+  MapPin,
+  MoreVertical,
+  Video,
+} from "lucide-react";
+import InterviewStatusBadge from "./interviews-status-badge";
 
 // --- Componente de Tarjeta Individual ---
 export interface InterviewCardProps {
@@ -28,16 +30,16 @@ export interface InterviewCardProps {
 export default function InterviewCard({ session }: InterviewCardProps) {
   const job = session.job;
   const companyName =
-    job?.company?.name ?? job?.companyName ?? "Empresa desconocida";
+    job?.company?.name ?? job?.companyName ?? "Unknown Company";
   const date = session.scheduledFor ? new Date(session.scheduledFor) : null;
 
   // Formateo de fecha
   const day = date ? date.getDate() : "--";
   const month = date
-    ? date.toLocaleDateString("es-CL", { month: "short" }).toUpperCase()
+    ? date.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
     : "---";
   const time = date
-    ? date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })
+    ? date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     : "--:--";
 
   return (
@@ -54,10 +56,10 @@ export default function InterviewCard({ session }: InterviewCardProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Editar detalles</DropdownMenuItem>
-            <DropdownMenuItem>Ver empleo</DropdownMenuItem>
+            <DropdownMenuItem>Edit details</DropdownMenuItem>
+            <DropdownMenuItem>View Job</DropdownMenuItem>
             <DropdownMenuItem className="text-destructive">
-              Cancelar entrevista
+              Cancel interview
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -66,7 +68,7 @@ export default function InterviewCard({ session }: InterviewCardProps) {
       <CardContent className="space-y-4 pt-4">
         {/* Bloque de Fecha y Título */}
         <div className="flex gap-4">
-          <div className="flex flex-col items-center justify-center rounded-lg border bg-secondary/30 px-3 py-2 text-center min-w-[60px]">
+          <div className="flex flex-col items-center justify-center rounded-lg border bg-secondary/30 px-3 py-2 text-center min-w-15">
             <span className="text-xs font-bold uppercase text-muted-foreground">
               {month}
             </span>
@@ -79,7 +81,7 @@ export default function InterviewCard({ session }: InterviewCardProps) {
               className="font-semibold leading-none truncate"
               title={job?.title}
             >
-              {job?.title ?? "Puesto sin título"}
+              {job?.title ?? "Untitled Position"}
             </h3>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" />
@@ -106,7 +108,7 @@ export default function InterviewCard({ session }: InterviewCardProps) {
               <Video className="h-4 w-4 text-primary/70" />
             )}
             <span className="capitalize">
-              {session.mode ? session.mode.toLowerCase() : "Remoto"}
+              {session.mode ? session.mode.toLowerCase() : "Remote"}
             </span>
           </div>
         </div>
@@ -120,12 +122,12 @@ export default function InterviewCard({ session }: InterviewCardProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Unirse a la llamada <ExternalLink className="h-3.5 w-3.5" />
+              Join call <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </Button>
         ) : (
           <Button variant="outline" className="w-full" disabled>
-            Enlace pendiente
+            Link pending
           </Button>
         )}
       </CardFooter>

@@ -1,11 +1,9 @@
 "use client";
 
-import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -13,7 +11,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import * as React from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -22,8 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
@@ -65,7 +64,7 @@ export function ApplicationsDataTable<TData, TValue>({
         <div className="relative max-w-sm w-full">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Filtrar por puesto..."
+            placeholder="Filter by position..."
             value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("title")?.setFilterValue(event.target.value)
@@ -124,7 +123,7 @@ export function ApplicationsDataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No se encontraron resultados.
+                  No results found.
                 </TableCell>
               </TableRow>
             )}
@@ -135,7 +134,7 @@ export function ApplicationsDataTable<TData, TValue>({
       {/* Paginación */}
       <div className="flex items-center justify-end space-x-2 py-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} postulación(es) listadas.
+          {table.getFilteredRowModel().rows.length} application(s) listed.
         </div>
         <div className="space-x-2">
           <Button
@@ -144,7 +143,7 @@ export function ApplicationsDataTable<TData, TValue>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Anterior
+            Previous
           </Button>
           <Button
             variant="outline"
@@ -152,7 +151,7 @@ export function ApplicationsDataTable<TData, TValue>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Siguiente
+            Next
           </Button>
         </div>
       </div>

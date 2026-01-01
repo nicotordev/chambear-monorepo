@@ -1,30 +1,44 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   Briefcase,
   Calendar,
+  ChevronsUpDown,
+  CreditCard,
+  FilePlus,
   FileText,
   LayoutDashboard,
   LifeBuoy,
+  LogOut,
   Send,
+  Settings,
   User,
   UserIcon,
   UserPlus,
-  ChevronsUpDown,
-  LogOut,
-  Settings,
-  Loader2,
-  UploadCloud,
-  FilePlus,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import * as React from "react";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -38,37 +52,21 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
-import api from "@/lib/api";
 import { useUser as useAppUser } from "@/contexts/user-context";
-import CreateDocumentForm from "./create-document-form";
+import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import CreateDocumentForm from "./create-document-form";
 
 // Secondary Navigation
 const navSecondary = [
   {
-    title: "Ayuda",
+    title: "Help",
     url: "#",
     icon: LifeBuoy,
   },
   {
-    title: "Enviar Comentarios",
+    title: "Send Feedback",
     url: "#",
     icon: Send,
   },
@@ -76,11 +74,7 @@ const navSecondary = [
 
 // --- Componente Principal ---
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {
-    currentProfile,
-    user: databaseUser,
-    switchProfile,
-  } = useAppUser();
+  const { currentProfile, user: databaseUser, switchProfile } = useAppUser();
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
@@ -98,34 +92,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navMain = [
     {
-      title: "Panel",
+      title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
       isActive: pathname === "/dashboard",
     },
     {
-      title: "Empleos",
+      title: "Jobs",
       url: "/dashboard/jobs",
       icon: Briefcase,
       isActive: pathname?.startsWith("/dashboard/jobs"),
     },
     {
-      title: "Postulaciones",
+      title: "Applications",
       url: "/dashboard/applications",
       icon: FileText,
       isActive: pathname?.startsWith("/dashboard/applications"),
     },
     {
-      title: "Entrevistas",
+      title: "Interviews",
       url: "/dashboard/interviews",
       icon: Calendar,
       isActive: pathname?.startsWith("/dashboard/interviews"),
     },
     {
-      title: "Recordatorios",
+      title: "Reminders",
       url: "/dashboard/reminders",
       icon: Bell,
       isActive: pathname?.startsWith("/dashboard/reminders"),
+    },
+    {
+      title: "Billing",
+      url: "/dashboard/billing",
+      icon: CreditCard,
+      isActive: pathname?.startsWith("/dashboard/billing"),
     },
   ];
 
@@ -153,7 +153,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* Platform Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
+          <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navMain.map((item) => (
@@ -172,7 +172,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Documents Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Mis Documentos</SidebarGroupLabel>
+          <SidebarGroupLabel>My Documents</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {(documents || []).length > 0 ? (
@@ -193,12 +193,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <DialogTrigger asChild>
                         <SidebarMenuButton className="text-muted-foreground border border-dashed border-border hover:bg-muted/50">
                           <UserPlus className="size-4" />
-                          <span>Nuevo documento</span>
+                          <span>New document</span>
                         </SidebarMenuButton>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Agregar Documento</DialogTitle>
+                          <DialogTitle>Add Document</DialogTitle>
                         </DialogHeader>
                         <CreateDocumentForm
                           onSuccess={() => setIsDialogOpen(false)}
@@ -213,9 +213,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuButton asChild disabled>
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <FileText className="size-4 opacity-50" />
-                        <span className="truncate text-xs">
-                          No hay documentos
-                        </span>
+                        <span className="truncate text-xs">No documents</span>
                       </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -224,14 +222,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <DialogTrigger asChild>
                         <SidebarMenuButton>
                           <FilePlus className="size-4" />
-                          <span className="truncate text-xs">
-                            Agregar Documento
-                          </span>
+                          <span className="truncate text-xs">Add Document</span>
                         </SidebarMenuButton>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Agregar Documento</DialogTitle>
+                          <DialogTitle>Add Document</DialogTitle>
                         </DialogHeader>
                         <CreateDocumentForm
                           onSuccess={() => setIsDialogOpen(false)}
@@ -274,7 +270,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {currentProfile?.avatar ? (
                     <Image
                       src={currentProfile?.avatar}
-                      alt={databaseUser?.name || "Usuario"}
+                      alt={databaseUser?.name || "User"}
                       className="size-4"
                       width={500}
                       height={500}
@@ -287,10 +283,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate text-xs text-muted-foreground">
-                    Sesión iniciada
+                    Logged in
                   </span>
                   <span className="truncate text-sm font-medium leading-none">
-                    {databaseUser?.name || "Usuario"}
+                    {databaseUser?.name || "User"}
                   </span>
                 </div>
               </div>
@@ -304,17 +300,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
             align="end"
           >
-            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
                 <User className="mr-2 size-4" />
-                <span>Perfil</span>
+                <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 size-4" />
-                <span>Configuración</span>
+                <span>Settings</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -325,7 +321,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   key={profile.id}
                   className={cn(
                     "cursor-pointer",
-                    profile.id === currentProfile?.id && "bg-primary",
+                    profile.id === currentProfile?.id && "bg-primary"
                   )}
                   onClick={() => switchProfile(profile.id)}
                 >
@@ -341,13 +337,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span>
                     {profile.headline
                       ? profile.headline + " " + (index + 1)
-                      : "Perfil " + (index + 1)}
+                      : "Profile " + (index + 1)}
                   </span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuItem className="cursor-pointer">
                 <UserPlus className="mr-2 size-4" />
-                <span>Crear perfil</span>
+                <span>Create profile</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -355,7 +351,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
               <LogOut className="mr-2 size-4" />
-              <span>Cerrar sesión</span>
+              <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

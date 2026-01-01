@@ -19,8 +19,10 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  ShieldCheck,
   User,
   Users,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -32,7 +34,7 @@ import { Button } from "../ui/button";
 export default function UserButton() {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useClerkUser();
   const { signOut, openUserProfile } = useClerk();
-  const { profiles, currentProfile, switchProfile } = useUser();
+  const { profiles, currentProfile, switchProfile, user } = useUser();
 
   if (!isClerkLoaded || !clerkUser) {
     return <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />;
@@ -78,6 +80,29 @@ export default function UserButton() {
             <p className="text-xs text-muted-foreground truncate leading-none">
               {clerkUser.emailAddresses[0]?.emailAddress}
             </p>
+          </div>
+        </div>
+
+        <DropdownMenuSeparator className="my-2" />
+
+        <div className="px-3 py-2 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Zap className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <span>Credits</span>
+            </div>
+            <span className="text-sm font-bold">
+              {user?.creditWallet?.balance ?? 0}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>Plan</span>
+            </div>
+            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">
+              {user?.subscription?.plan?.name || "Free"}
+            </span>
           </div>
         </div>
 

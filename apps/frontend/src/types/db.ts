@@ -26,6 +26,8 @@ export interface User {
   documents?: Document[];
   interviewSessions?: InterviewSession[];
   reminders?: Reminder[];
+  subscription?: Subscription | null;
+  creditWallet?: CreditWallet | null;
 }
 
 export interface Profile {
@@ -237,4 +239,39 @@ export interface Reminder {
   user?: User;
   job?: Job | null;
   application?: Application | null;
+}
+
+export interface Plan {
+  id: string;
+  tier: string;
+  name: string;
+  monthlyPriceUsd: number;
+  monthlyCredits: number;
+  description: string | null;
+  stripePriceId: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planId: string;
+  status: string;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  provider: string;
+  providerSubId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  plan?: Plan;
+}
+
+export interface CreditWallet {
+  id: string;
+  userId: string;
+  balance: number;
+  updatedAt: Date;
 }

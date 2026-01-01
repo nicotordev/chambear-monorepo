@@ -1,11 +1,11 @@
-import { Role } from "@/lib/generated";
+import { clerkClient } from "@/lib/clerk";
+import { CreditActionType, Role } from "@/lib/generated";
 import { uploadFileToR2 } from "@/lib/storage";
 import { CreateProfileSchema } from "@/schemas/user";
 import { prisma } from "../lib/prisma";
-import { clerkClient } from "@/lib/clerk";
 
-import { CreateProfileInput } from "@/schemas/user";
 import stripe from "@/lib/stripe";
+import { CreateProfileInput } from "@/schemas/user";
 
 type CreateProfileInputWithOptionalId = CreateProfileInput & {
   /** If true, missing items will be removed (replace-all behavior). Defaults to false (merge). */
@@ -32,18 +32,23 @@ const userService = {
    */
   async getMe(clerkId: string) {
     if (!clerkId) throw new Error("clerkId is required");
+    const commonInclude = {
+      profiles: {
+        include: {
+          experiences: { orderBy: { startDate: "desc" } as const },
+          educations: { orderBy: { startDate: "desc" } as const },
+          skills: { include: { skill: true } },
+        },
+      },
+      subscription: {
+        include: { plan: true },
+      },
+      creditWallet: true,
+    };
 
     let user = await prisma.user.findUnique({
       where: { clerkId },
-      include: {
-        profiles: {
-          include: {
-            experiences: { orderBy: { startDate: "desc" } },
-            educations: { orderBy: { startDate: "desc" } },
-            skills: { include: { skill: true } },
-          },
-        },
-      },
+      include: commonInclude,
     });
 
     if (!user) {
@@ -55,15 +60,21 @@ const userService = {
           name: clerkUserData.firstName,
           role: Role.EMPLOYEE,
         },
-        include: {
-          profiles: {
-            include: {
-              experiences: { orderBy: { startDate: "desc" } },
-              educations: { orderBy: { startDate: "desc" } },
-              skills: { include: { skill: true } },
-            },
-          },
+        include: commonInclude,
+      });
+    }
+
+    if (!user.creditWallet) {
+      await prisma.creditWallet.create({
+        data: {
+          userId: user.id,
+          balance: 0,
         },
+      });
+      // Re-fetch to include creditWallet
+      user = await prisma.user.findUniqueOrThrow({
+        where: { id: user.id },
+        include: commonInclude,
       });
     }
 
@@ -75,15 +86,7 @@ const userService = {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { stripeCustomerId: stripeCustomer.id },
-        include: {
-          profiles: {
-            include: {
-              experiences: { orderBy: { startDate: "desc" } },
-              educations: { orderBy: { startDate: "desc" } },
-              skills: { include: { skill: true } },
-            },
-          },
-        },
+        include: commonInclude,
       });
     }
 
@@ -361,7 +364,9 @@ const userService = {
       location: profile.location ?? null,
       avatar: profile.avatar ?? null,
       yearsExperience: profile.yearsExperience ?? null,
-      targetRolesCount: Array.isArray(profile.targetRoles) ? profile.targetRoles.length : 0,
+      targetRolesCount: Array.isArray(profile.targetRoles)
+        ? profile.targetRoles.length
+        : 0,
       experiencesCount: profile.experiences.length,
       educationsCount: profile.educations.length,
       skillsCount: profile.skills.length,
@@ -372,9 +377,37 @@ const userService = {
       throw new Error(`Profile incomplete. Missing: ${missing.join(", ")}`);
     }
 
-    await prisma.profile.update({
-      where: { id: profile.id },
-      data: { onboardingCompleted: true },
+    if (profile.onboardingCompleted) {
+      return { success: true };
+    }
+
+    const ONBOARDING_CREDITS = 10;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.profile.update({
+        where: { id: profile.id },
+        data: { onboardingCompleted: true },
+      });
+
+      const wallet = await tx.creditWallet.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          balance: ONBOARDING_CREDITS,
+        },
+        update: {
+          balance: { increment: ONBOARDING_CREDITS },
+        },
+      });
+
+      await tx.creditMovement.create({
+        data: {
+          walletId: wallet.id,
+          amount: ONBOARDING_CREDITS,
+          action: CreditActionType.OTHER,
+          meta: { reason: "onboarding_bonus" },
+        },
+      });
     });
 
     await clerkClient.users.updateUser(clerkId, {
@@ -390,9 +423,12 @@ const userService = {
  */
 function getMissingRequirements(snapshot: ProfileOnboardingSnapshot): string[] {
   const missing: string[] = [];
-  if (!snapshot.headline || snapshot.headline.length < 5) missing.push("Headline (min 5 chars)");
-  if (!snapshot.summary || snapshot.summary.length < 20) missing.push("Summary (min 20 chars)");
-  if (!snapshot.location || snapshot.location.length < 2) missing.push("Location");
+  if (!snapshot.headline || snapshot.headline.length < 5)
+    missing.push("Headline (min 5 chars)");
+  if (!snapshot.summary || snapshot.summary.length < 20)
+    missing.push("Summary (min 20 chars)");
+  if (!snapshot.location || snapshot.location.length < 2)
+    missing.push("Location");
   if (snapshot.yearsExperience === null || snapshot.yearsExperience < 0)
     missing.push("Years of Experience");
   if (snapshot.targetRolesCount < 1) missing.push("Target Roles");

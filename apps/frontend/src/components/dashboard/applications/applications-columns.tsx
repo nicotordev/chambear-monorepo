@@ -5,14 +5,14 @@ import {
   ArrowUpDown,
   Building2,
   Calendar,
-  MoreHorizontal,
   Copy,
-  Trash2,
   ExternalLink,
+  MoreHorizontal,
+  Trash2,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,9 +22,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { cn } from "@/lib/utils";
 import type { Application, Job } from "@/types";
 import { ApplicationStatus } from "@/types/enums";
-import { cn } from "@/lib/utils";
 
 // Type definition
 type Row = Application & { job?: Job };
@@ -49,7 +49,7 @@ const getStatusStyles = (status: ApplicationStatus) => {
 export const applicationColumns: ColumnDef<Row>[] = [
   {
     id: "title",
-    accessorFn: (row) => row.job?.title || "Sin título",
+    accessorFn: (row) => row.job?.title || "Untitled",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -57,15 +57,15 @@ export const applicationColumns: ColumnDef<Row>[] = [
         className="-ml-3 h-8 data-[state=open]:bg-accent"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        <span>Puesto / Empresa</span>
+        <span>Position / Company</span>
         <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
     ),
     cell: ({ row }) => {
       const job = row.original.job;
       const companyName =
-        job?.company?.name ?? job?.companyName ?? "Empresa Confidencial";
-      const title = job?.title ?? "Puesto desconocido";
+        job?.company?.name ?? job?.companyName ?? "Confidential Company";
+      const title = job?.title ?? "Unknown position";
 
       return (
         <div className="flex items-center gap-3 py-1">
@@ -96,7 +96,7 @@ export const applicationColumns: ColumnDef<Row>[] = [
 
   {
     accessorKey: "status",
-    header: "Estado",
+    header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
       return (
@@ -123,7 +123,7 @@ export const applicationColumns: ColumnDef<Row>[] = [
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         <Calendar className="mr-2 h-3.5 w-3.5" />
-        Fecha envío
+        Applied Date
         <ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
       </Button>
     ),
@@ -132,15 +132,13 @@ export const applicationColumns: ColumnDef<Row>[] = [
 
       if (!date) {
         return (
-          <span className="text-muted-foreground text-xs italic">
-            Pendiente
-          </span>
+          <span className="text-muted-foreground text-xs italic">Pending</span>
         );
       }
 
       return (
         <div className="text-sm font-medium tabular-nums text-foreground/80">
-          {new Intl.DateTimeFormat("es-CL", {
+          {new Intl.DateTimeFormat("en-US", {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -164,12 +162,12 @@ export const applicationColumns: ColumnDef<Row>[] = [
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                <span className="sr-only">Abrir menú</span>
+                <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-45">
-              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -177,19 +175,19 @@ export const applicationColumns: ColumnDef<Row>[] = [
                 className="cursor-pointer"
               >
                 <Copy className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                Copiar ID
+                Copy ID
               </DropdownMenuItem>
 
               <DropdownMenuItem className="cursor-pointer">
                 <ExternalLink className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                Ver detalles
+                View Details
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer focus:bg-destructive/10">
                 <Trash2 className="mr-2 h-3.5 w-3.5" />
-                Eliminar
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

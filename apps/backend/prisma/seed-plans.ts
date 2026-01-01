@@ -16,6 +16,7 @@ async function main() {
       monthlyPriceUsd: 1999,
       monthlyCredits: 50,
       description: "For serious job seekers.",
+      stripePriceId: "price_1SkrtkDF0iA5W9K8k49MJgH2",
     },
     {
       tier: PlanTier.PRO,
@@ -23,6 +24,7 @@ async function main() {
       monthlyPriceUsd: 4999,
       monthlyCredits: 200,
       description: "Advance your career with AI priority.",
+      stripePriceId: "price_1SkrtlDF0iA5W9K88v5avrxO",
     },
     {
       tier: PlanTier.RESULT,
@@ -30,6 +32,7 @@ async function main() {
       monthlyPriceUsd: 9999,
       monthlyCredits: 500,
       description: "The ultimate package for career acceleration.",
+      stripePriceId: "price_1SkrtlDF0iA5W9K82QF8XlL0",
     },
   ];
 
