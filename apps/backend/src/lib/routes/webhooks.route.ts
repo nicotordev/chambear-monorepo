@@ -1,9 +1,10 @@
 import stripe from "@/lib/stripe";
 import response from "@/lib/utils/response";
 import billingService from "@/services/billing.service";
+import { processScrapeQueue } from "@/workers/scrape.worker";
 import { Hono } from "hono";
-import { prisma } from "../prisma";
 import { PlanTier } from "../generated";
+import { prisma } from "../prisma";
 
 const app = new Hono();
 
@@ -69,6 +70,28 @@ app.post("/", async (c) => {
   } catch (err: any) {
     console.error(`❌ Webhook Error: ${err.message}`);
     return c.json(response.error(`Webhook Error: ${err.message}`), 400);
+  }
+});
+
+
+// search the queue and run the scrapper
+app.post("/scrappers/users", async (c) => {
+  const authHeader = c.req.header("Authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  // Simple security check
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return c.json(response.unauthorized("Invalid Cron Secret"), 401);
+  }
+
+  try {
+    console.log("Starting scheduled scrape processing...");
+    // This will run until queue is empty or timeout
+    await processScrapeQueue();
+    return c.json(response.success({ message: "Scrape batch processed" }), 200);
+  } catch (error: any) {
+    console.error("Scrape processing error:", error);
+    return c.json(response.error(error.message), 500);
   }
 });
 

@@ -45,7 +45,7 @@ export default function DashboardNotFound() {
       style={{ perspective: "1000px" }}
     >
       {/* Background Grid Pattern */}
-      <div className="absolute inset-x-0 top-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] opacity-20 pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] opacity-20 pointer-events-none" />
 
       <motion.div
         ref={containerRef}
@@ -104,7 +104,7 @@ export default function DashboardNotFound() {
 
               <motion.p
                 style={{ translateZ: "20px" }}
-                className="text-sm text-muted-foreground max-w-[280px] leading-relaxed"
+                className="text-sm text-muted-foreground max-w-70 leading-relaxed"
               >
                 Has intentado acceder a un endpoint o vista que no existe en
                 este sector del dashboard.

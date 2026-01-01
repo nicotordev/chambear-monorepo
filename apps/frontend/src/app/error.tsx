@@ -175,7 +175,7 @@ export default function RootError({
               )}
             </CardContent>
 
-            <div className="absolute top-0 left-0 h-[2px] w-full bg-linear-to-r from-transparent via-destructive/30 to-transparent" />
+            <div className="absolute top-0 left-0 h-0.5 w-full bg-linear-to-r from-transparent via-destructive/30 to-transparent" />
           </Card>
 
           {/* Glitch Shadow */}

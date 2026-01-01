@@ -96,7 +96,7 @@ export default function DashboardError({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-[-10px] border border-dashed border-destructive/20 rounded-full"
+                className="absolute -inset-2.5 border border-dashed border-destructive/20 rounded-full"
               />
             </motion.div>
 

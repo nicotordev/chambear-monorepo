@@ -1,3 +1,4 @@
+import { scrapeQueue } from "@/lib/queue";
 import response from "@/lib/utils/response";
 import billingService from "@/services/billing.service";
 import jobsService from "@/services/jobs.service";
@@ -58,12 +59,16 @@ const jobsController = {
       );
     }
 
-    const jobs = await jobsService.scanJobs(profileId);
+    // Add to Queue
+    await scrapeQueue.add("scan-jobs", {
+      profileId,
+      userId,
+    });
 
-    // Consume credit per scan
+    // Consume credit per scan request
     await billingService.consumeCredits(userId, "JOB_SCAN");
 
-    return c.json(response.success([...jobs]), 200);
+    return c.json(response.success({ message: "Scan scheduled" }), 200);
   },
 
   async applyJob(c: Context) {

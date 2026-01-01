@@ -64,7 +64,7 @@ import {
   Video,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
@@ -309,7 +309,7 @@ export default function NewApplicationDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children ? (
-        <DialogTrigger>{children}</DialogTrigger>
+        <DialogTrigger asChild>{children}</DialogTrigger>
       ) : (
         <DialogTrigger asChild>
           <Button
@@ -396,9 +396,7 @@ export default function NewApplicationDialog({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              Create new job manually
-                            </FormLabel>
+                            <FormLabel>Create new job manually</FormLabel>
                             <DialogDescription>
                               If you don't find the job in the list, you can
                               create it here.
@@ -446,9 +444,7 @@ export default function NewApplicationDialog({
                                 <Command>
                                   <CommandInput placeholder="Search by title or company..." />
                                   <CommandList>
-                                    <CommandEmpty>
-                                      No jobs found.
-                                    </CommandEmpty>
+                                    <CommandEmpty>No jobs found.</CommandEmpty>
                                     <CommandGroup>
                                       {jobs.map((job) => (
                                         <CommandItem
@@ -710,7 +706,9 @@ export default function NewApplicationDialog({
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "PPP", { locale: enUS })
+                                      format(field.value, "PPP", {
+                                        locale: enUS,
+                                      })
                                     ) : (
                                       <span>Select date</span>
                                     )}
@@ -812,12 +810,8 @@ export default function NewApplicationDialog({
                                   <SelectItem value="VIRTUAL">
                                     Virtual (Meet/Zoom)
                                   </SelectItem>
-                                  <SelectItem value="ONSITE">
-                                    Onsite
-                                  </SelectItem>
-                                  <SelectItem value="HYBRID">
-                                    Hybrid
-                                  </SelectItem>
+                                  <SelectItem value="ONSITE">Onsite</SelectItem>
+                                  <SelectItem value="HYBRID">Hybrid</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
@@ -859,9 +853,7 @@ export default function NewApplicationDialog({
                           name="meetLink"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>
-                                Meeting Link (Optional)
-                              </FormLabel>
+                              <FormLabel>Meeting Link (Optional)</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="https://meet.google.com/..."

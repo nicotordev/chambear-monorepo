@@ -1,0 +1,17 @@
+{
+  "name": "chambear-cronjobs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:trigger-scrape": "tsup src/scripts/trigger-scrape.ts --format cjs --clean",
+    "start:trigger-scrape": "node dist/scripts/trigger-scrape.cjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prisma": "^7.2.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
