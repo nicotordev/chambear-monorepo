@@ -180,16 +180,12 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
             </div>
             <CardTitle className="text-2xl">Analysis Pending</CardTitle>
             <CardDescription className="text-base">
-              We haven't calculated the fit score for this position yet.
-              Run the AI analysis to get personalized insights.
+              We haven't calculated the fit score for this position yet. Run the
+              AI analysis to get personalized insights.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pt-4">
-            <JobAiActions
-              jobId={jobId}
-              profileId={profileId}
-              variant="default"
-            />
+            <JobAiActions jobId={jobId} profileId={profileId} />
             <Button asChild variant="ghost" className="w-full">
               <Link href={`/dashboard/jobs/${job.id}`}>
                 <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
