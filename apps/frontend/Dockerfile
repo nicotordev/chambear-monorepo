@@ -40,9 +40,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/public ./apps/front
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8080
 
-ENV PORT=3000
+ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "apps/frontend/server.js"]

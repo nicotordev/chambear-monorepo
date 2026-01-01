@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "node .next/standalone/apps/frontend/server.js",
+    "start": "if [ -f server.js ]; then node server.js; else node .next/standalone/apps/frontend/server.js; fi",
     "lint": "biome check",
     "format": "biome format --write"
   },
