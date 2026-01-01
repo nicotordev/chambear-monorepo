@@ -6,8 +6,9 @@ import { DashboardRecommendedJobs } from "@/components/dashboard/dashboard-recom
 import { DashboardReminders } from "@/components/dashboard/dashboard-reminders";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import backend from "@/lib/backend";
+import { auth } from "@clerk/nextjs/server";
 
-// Optimizaciones de Next.js
+// Next.js Optimizations
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -27,22 +28,19 @@ async function getDashboardData() {
 export default async function DashboardPage() {
   const { user, jobs } = await getDashboardData();
 
+  const { redirectToSignIn } = await auth();
+
   if (!user) {
-    // Manejo básico de error de carga/autenticación
-    return (
-      <div className="flex h-screen items-center justify-center p-8 text-center text-muted-foreground">
-        Error cargando el panel. Por favor recarga la página.
-      </div>
-    );
+    return redirectToSignIn();
   }
 
-  // Extracción de datos con Fallbacks seguros
+  // Data extraction with safe Fallbacks
   const currentProfile = user.profiles?.[0];
   const myApplications = user.applications ?? [];
   const myInterviews = user.interviewSessions ?? [];
   const myReminders = user.reminders ?? [];
 
-  // Cálculo de completitud del perfil
+  // Profile completion calculation
   let profileCompletion = 0;
   if (currentProfile) {
     if (currentProfile?.headline) profileCompletion += 20;
@@ -54,7 +52,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
-      {/* 1. Header Fijo Superior */}
+      {/* 1. Fixed Top Header */}
       <DashboardHeader
         currentUser={user}
         currentProfile={currentProfile}
@@ -62,13 +60,13 @@ export default async function DashboardPage() {
         hasInterview={myInterviews.length > 0}
       />
 
-      {/* 2. Área Principal con Scroll */}
+      {/* 2. Main Area with Scroll */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {/* Container del Grid */}
+        {/* Grid Container */}
         <div className="min-h-full w-full bg-border/50">
-          {/* Grid Layout Principal (Bento Box Style) */}
+          {/* Main Grid Layout (Bento Box Style) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border">
-            {/* Fila 1: Estadísticas (Ancho completo) */}
+            {/* Row 1: Stats (Full Width) */}
             <DashboardStats
               applicationsCount={myApplications.length}
               interviewsCount={myInterviews.length}
@@ -76,31 +74,35 @@ export default async function DashboardPage() {
               profileCompletion={profileCompletion}
             />
 
-            {/* Fila 2: Contenido Principal (Columna Izquierda ancha) */}
+            {/* Row 2: Main Content (Wide Left Column) */}
             <div className="lg:col-span-8 bg-background flex flex-col gap-px border-r border-border pb-12">
-              {/* Bloque 1: Recomendaciones */}
+              {/* Block 1: Recommendations */}
               <DashboardRecommendedJobs jobs={jobs} />
 
-              {/* Bloque 2: Postulaciones Activas */}
+              {/* Block 2: Active Applications */}
               <DashboardActiveApplications
                 applications={myApplications}
                 jobs={jobs}
               />
             </div>
 
-            {/* Fila 2: Sidebar Widgets (Columna Derecha estrecha) */}
+            {/* Row 2: Sidebar Widgets (Narrow Right Column) */}
             <div className="lg:col-span-4 bg-background flex flex-col gap-px pb-16">
-              {/* Widget 1: Próxima Entrevista (Prioridad Alta) */}
+              {/* Widget 1: Next Interview (High Priority) */}
               <div className="bg-background">
-                <DashboardNextInterview interviews={myInterviews} jobs={jobs} profileId={currentProfile?.id} />
+                <DashboardNextInterview
+                  interviews={myInterviews}
+                  jobs={jobs}
+                  profileId={currentProfile?.id}
+                />
               </div>
 
-              {/* Widget 2: Recordatorios */}
+              {/* Widget 2: Reminders */}
               <div className="bg-background">
                 <DashboardReminders reminders={myReminders} />
               </div>
 
-              {/* Widget 3: Documentos */}
+              {/* Widget 3: Documents */}
               <div className="bg-background">
                 <DashboardDocuments />
               </div>

@@ -21,42 +21,42 @@ export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProp
   const { uploadFile, createDocument, isLoading } = useDocuments();
   const [file, setFile] = React.useState<File | null>(null);
   const [label, setLabel] = React.useState("");
-  const [type, setType] = React.useState<string>("RESUME"); // Valor por defecto
+  const [type, setType] = React.useState<string>("RESUME"); // Default value
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !label) return;
 
     try {
-      // 1. Subir el archivo
+      // 1. Upload the file
       const uploadResponse = await uploadFile(file);
-      // Asumiendo que uploadFile retorna { url: string } o el string directo.
-      // Ajusta esto según lo que retorne tu api.uploadFile
+      // Assuming uploadFile returns { url: string } or the string directly.
+      // Adjust this according to what your api.uploadFile returns
       const fileUrl = uploadResponse;
 
-      // 2. Crear el registro en la BD
+      // 2. Create the record in the DB
       await createDocument({
         label,
-        type: type as any, // Ajustar tipo según tu enum
+        type: type as any, // Adjust type according to your enum
         url: fileUrl,
-        content: "Contenido pendiente de procesar", // Opcional, depende de tu backend
+        content: "Content pending processing", // Optional, depends on your backend
       });
 
       onSuccess();
       setLabel("");
       setFile(null);
     } catch (error) {
-      console.error("Error en el flujo de creación:", error);
+      console.error("Error in creation flow:", error);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="doc-name">Nombre del documento</Label>
+        <Label htmlFor="doc-name">Document Name</Label>
         <Input
           id="doc-name"
-          placeholder="Ej: CV Full Stack 2024"
+          placeholder="Ex: Full Stack CV 2024"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           required
@@ -64,21 +64,21 @@ export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProp
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="doc-type">Tipo</Label>
+        <Label htmlFor="doc-type">Type</Label>
         <Select value={type} onValueChange={setType}>
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona un tipo" />
+            <SelectValue placeholder="Select a type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="RESUME">Currículum (CV)</SelectItem>
-            <SelectItem value="COVER_LETTER">Carta de Presentación</SelectItem>
-            <SelectItem value="OTHER">Otro</SelectItem>
+            <SelectItem value="RESUME">Resume (CV)</SelectItem>
+            <SelectItem value="COVER_LETTER">Cover Letter</SelectItem>
+            <SelectItem value="OTHER">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="doc-file">Archivo (PDF, DOCX)</Label>
+        <Label htmlFor="doc-file">File (PDF, DOCX)</Label>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Input
             id="doc-file"
@@ -96,12 +96,12 @@ export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProp
           {isLoading ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />
-              Guardando...
+              Saving...
             </>
           ) : (
             <>
               <UploadCloud className="mr-2 size-4" />
-              Subir Documento
+              Upload Document
             </>
           )}
         </Button>

@@ -1,14 +1,15 @@
 "use client";
 
+import { useProfile } from "@/contexts/user-context";
 import api from "@/lib/api";
 import { CreateProfileInput, CreateProfileSchema } from "@/schemas/user";
+import { SkillLevel } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SkillLevel } from "@/types";
 
 export const useOnboarding = () => {
   const pathname = usePathname();
@@ -20,16 +21,12 @@ export const useOnboarding = () => {
   );
   const totalSteps = 4;
 
-  const userDetails = useQuery({
-    queryKey: ["user"],
-    queryFn: () => api.getUser(),
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 60 * 24,
-  });
+  const { user, profiles, isLoading: isUserLoading } = useProfile();
 
   const form = useForm<CreateProfileInput>({
     resolver: zodResolver(CreateProfileSchema) as Resolver<CreateProfileInput>,
     defaultValues: {
+      name: "",
       headline: "",
       avatar: "",
       summary: "",
@@ -40,11 +37,12 @@ export const useOnboarding = () => {
       educations: [],
       experiences: [],
     },
+    shouldUnregister: false,
   });
 
   useEffect(() => {
-    if (userDetails.isSuccess && userDetails.data) {
-      const p = userDetails.data.profiles || [];
+    if (user) {
+      const p = profiles || [];
 
       // If no profiles, set to new
       if (p.length === 0 && selectedProfileId !== "new") {
@@ -62,13 +60,14 @@ export const useOnboarding = () => {
         setSelectedProfileId(sorted[0].id);
       }
     }
-  }, [userDetails.isSuccess, userDetails.data, selectedProfileId]);
+  }, [user, profiles, selectedProfileId]);
 
   useEffect(() => {
-    if (!userDetails.data) return;
+    if (!user) return;
 
     if (selectedProfileId === "new") {
       form.reset({
+        name: user?.name ?? "",
         headline: "",
         avatar: "",
         summary: "",
@@ -82,25 +81,26 @@ export const useOnboarding = () => {
       return;
     }
 
-    const currentProfile = userDetails.data.profiles?.find(
+    const currentProfileData = profiles?.find(
       (p) => p.id === selectedProfileId
     );
 
-    if (currentProfile) {
+    if (currentProfileData) {
       form.reset({
-        headline: currentProfile.headline ?? "",
-        avatar: currentProfile.avatar ?? "",
-        summary: currentProfile.summary ?? "",
-        location: currentProfile.location ?? "",
-        yearsExperience: currentProfile.yearsExperience ?? 0,
-        targetRoles: currentProfile.targetRoles ?? [],
+        name: user?.name ?? "",
+        headline: currentProfileData.headline ?? "",
+        avatar: currentProfileData.avatar ?? "",
+        summary: currentProfileData.summary ?? "",
+        location: currentProfileData.location ?? "",
+        yearsExperience: currentProfileData.yearsExperience ?? 0,
+        targetRoles: currentProfileData.targetRoles ?? [],
         skills:
-          currentProfile.skills?.map((skill: any) => ({
+          currentProfileData.skills?.map((skill: any) => ({
             skillName: skill.skill?.name ?? skill.skillName ?? "",
             level: (skill.level as any) ?? SkillLevel.BEGINNER,
           })) ?? [],
         educations:
-          currentProfile.educations?.map((education: any) => ({
+          currentProfileData.educations?.map((education: any) => ({
             school: education.school ?? "",
             degree: education.degree ?? "",
             field: education.field ?? "",
@@ -113,7 +113,7 @@ export const useOnboarding = () => {
             description: education.description ?? "",
           })) ?? [],
         experiences:
-          currentProfile.experiences?.map((experience: any) => ({
+          currentProfileData.experiences?.map((experience: any) => ({
             title: experience.title ?? "",
             company: experience.company ?? "",
             startDate: experience.startDate
@@ -129,8 +129,7 @@ export const useOnboarding = () => {
           })) ?? [],
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProfileId, userDetails.data]);
+  }, [selectedProfileId, user, profiles, form.reset]);
 
   const mutation = useMutation({
     mutationFn: (data: CreateProfileInput) => {
@@ -140,7 +139,10 @@ export const useOnboarding = () => {
           : data;
       return api.upsertUser(payload);
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (selectedProfileId === "new" && data?.id) {
+        setSelectedProfileId(data.id);
+      }
       toast.success("Profile updated successfully");
       queryClient.invalidateQueries({ queryKey: ["user"] });
       router.refresh();
@@ -148,6 +150,21 @@ export const useOnboarding = () => {
     onError: (error) => {
       console.error(error);
       toast.error("Failed to update profile");
+    },
+  });
+
+  const completeOnboardingMutation = useMutation({
+    mutationFn: () => api.completeOnboarding(),
+    onSuccess: () => {
+      toast.success("Onboarding completed!");
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      router.refresh();
+    },
+    onError: (error: any) => {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to complete onboarding"
+      );
     },
   });
 
@@ -168,16 +185,17 @@ export const useOnboarding = () => {
   };
 
   return {
-    userDetails,
+    userDetails: { data: user, isLoading: isUserLoading },
     form,
     onSubmit: form.handleSubmit(onSubmit),
-    isPending: mutation.isPending,
+    completeOnboarding: completeOnboardingMutation.mutateAsync,
+    isPending: mutation.isPending || completeOnboardingMutation.isPending,
     currentStep,
     handleStep,
     totalSteps,
-    profiles: userDetails.data?.profiles || [],
+    profiles: profiles || [],
     selectedProfileId,
     selectProfile: setSelectedProfileId,
-    isLoading: userDetails.isLoading,
+    isLoading: isUserLoading,
   };
 };

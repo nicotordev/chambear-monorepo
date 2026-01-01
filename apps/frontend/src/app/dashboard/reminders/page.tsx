@@ -7,8 +7,8 @@ import ReminderCard from "@/components/dashboard/reviews/reminder-card";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Recordatorios | Chambear.ai",
-  description: "Gestiona tus recordatorios con Chambear.ai",
+  title: "Reminders | Chambear.ai",
+  description: "Manage your reminders with Chambear.ai",
 };
 
 export default async function RemindersPage() {
@@ -17,48 +17,48 @@ export default async function RemindersPage() {
   if (!user) {
     return (
       <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
-        Error cargando recordatorios. Intenta recargar.
+        Error loading reminders. Try reloading.
       </div>
     );
   }
 
   const allReminders = user.reminders ?? [];
 
-  // Separar pendientes de completados
+  // Separate pending from completed
   const pendingReminders = allReminders
     .filter((r) => !r.completedAt)
-    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()); // Más urgentes primero
+    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()); // Most urgent first
 
   const completedReminders = allReminders
     .filter((r) => r.completedAt)
     .sort(
       (a, b) =>
         new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()
-    ); // Más recientes primero
+    ); // Most recent first
 
   return (
     <div className="flex h-full flex-col space-y-8 p-8 md:flex bg-background animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Recordatorios</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Reminders</h2>
           <p className="text-muted-foreground">
-            No pierdas de vista tus seguimientos y tareas importantes.
+            Keep track of your follow-ups and important tasks.
           </p>
         </div>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Nuevo Recordatorio
+          New Reminder
         </Button>
       </div>
 
-      {/* Tabs para Pendientes vs Historial */}
+      {/* Tabs for Pending vs History */}
       <Tabs defaultValue="pending" className="w-full">
         <TabsList className="grid w-full max-w-100 grid-cols-2">
           <TabsTrigger value="pending">
-            Pendientes ({pendingReminders.length})
+            Pending ({pendingReminders.length})
           </TabsTrigger>
-          <TabsTrigger value="history">Historial</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -71,7 +71,7 @@ export default async function RemindersPage() {
               </div>
             ) : (
               <ReminderEmptyState
-                message="¡Estás al día! No tienes tareas pendientes."
+                message="You're up to date! You have no pending tasks."
                 icon={CheckCircle2}
               />
             )}
@@ -86,7 +86,7 @@ export default async function RemindersPage() {
               </div>
             ) : (
               <ReminderEmptyState
-                message="Aún no has completado ningún recordatorio."
+                message="You haven't completed any reminders yet."
                 icon={Clock}
               />
             )}

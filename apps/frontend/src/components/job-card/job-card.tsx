@@ -56,7 +56,7 @@ export default function JobCard({ job }: JobCardProps) {
           {job.description}
         </p>
       </CardContent>
-      <CardFooter className="flex flex-wrap gap-2">
+      <CardFooter className="flex flex-col gap-2 w-full">
         <JobCardDetailButton job={job} />
         <JobCardDetailCVButton job={job} />
       </CardFooter>

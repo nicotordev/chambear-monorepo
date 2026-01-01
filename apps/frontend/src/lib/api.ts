@@ -99,6 +99,11 @@ class Api {
     return res.data.data;
   }
 
+  public async completeOnboarding(): Promise<{ message: string }> {
+    const res = await this.instance.post("/user/complete-onboarding");
+    return res.data.data;
+  }
+
   public async uploadAvatar(file: File): Promise<{ url: string }> {
     const formData = new FormData();
     formData.append("file", file);

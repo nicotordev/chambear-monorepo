@@ -25,22 +25,22 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
-// Helper para formatear fechas de experiencia/educación
+// Helper to format experience/education dates
 const formatDateRange = (
   start: Date | null,
   end: Date | null,
   current?: boolean
 ) => {
   if (!start) return "";
-  const startDate = format(new Date(start), "MMM yyyy", { locale: es });
-  if (current) return `${startDate} - Actualidad`;
+  const startDate = format(new Date(start), "MMM yyyy", { locale: enUS });
+  if (current) return `${startDate} - Present`;
   if (!end) return startDate;
-  return `${startDate} - ${format(new Date(end), "MMM yyyy", { locale: es })}`;
+  return `${startDate} - ${format(new Date(end), "MMM yyyy", { locale: enUS })}`;
 };
 
-// Helper para obtener iniciales
+// Helper to get initials
 const getInitials = (name: string) => {
   return name
     .split(" ")
@@ -54,13 +54,13 @@ export default async function ProfilePage() {
   const user = await backend.user.getMe();
 
   if (!user) {
-    return <div>Error cargando usuario</div>;
+    return <div>Error loading user</div>;
   }
 
-  // Tomamos el primer perfil disponible o undefined
+  // Take the first available profile or undefined
   const profile = user.profiles?.[0];
 
-  // --- ESTADO VACÍO: Usuario sin perfil ---
+  // --- EMPTY STATE: User without profile ---
   if (!profile) {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center gap-6 text-center">
@@ -69,26 +69,24 @@ export default async function ProfilePage() {
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Crea tu Perfil Profesional
+            Create your Professional Profile
           </h1>
           <p className="text-muted-foreground max-w-125">
-            Para que nuestra IA pueda encontrarte los mejores trabajos y
-            prepararte para entrevistas, necesitamos conocer tu experiencia y
-            habilidades.
+            So that our AI can find you the best jobs and prepare you for interviews, we need to know your experience and skills.
           </p>
         </div>
         <Button size="lg">
           <Plus className="mr-2 h-4 w-4" />
-          Crear Perfil Ahora
+          Create Profile Now
         </Button>
       </div>
     );
   }
 
-  // --- LAYOUT CON PERFIL ---
+  // --- PROFILE LAYOUT ---
   return (
     <div className="flex flex-col space-y-6 p-8 pb-16 animate-in fade-in duration-500">
-      {/* 1. HEADER DEL PERFIL */}
+      {/* 1. PROFILE HEADER */}
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between rounded-xl border bg-card p-6 shadow-sm">
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
           <Avatar className="h-24 w-24 border-4 border-background shadow-md">
@@ -101,7 +99,7 @@ export default async function ProfilePage() {
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">{user.name}</h1>
             <p className="text-lg font-medium text-primary">
-              {profile.headline || "Sin titular profesional"}
+              {profile.headline || "No professional headline"}
             </p>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground pt-1">
@@ -118,7 +116,7 @@ export default async function ProfilePage() {
               {profile.yearsExperience !== null && (
                 <div className="flex items-center gap-1">
                   <Briefcase className="h-4 w-4" />
-                  {profile.yearsExperience} años de exp.
+                  {profile.yearsExperience} years exp.
                 </div>
               )}
             </div>
@@ -127,18 +125,18 @@ export default async function ProfilePage() {
 
         <Button variant="outline" className="shrink-0 gap-2">
           <Pencil className="h-4 w-4" />
-          Editar Perfil
+          Edit Profile
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* --- COLUMNA IZQUIERDA (Principal) --- */}
+        {/* --- LEFT COLUMN (Main) --- */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Extracto / Summary */}
+          {/* Summary */}
           {profile.summary && (
             <Card>
               <CardHeader>
-                <CardTitle>Acerca de mí</CardTitle>
+                <CardTitle>About me</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -148,12 +146,12 @@ export default async function ProfilePage() {
             </Card>
           )}
 
-          {/* Experiencia */}
+          {/* Experience */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
-                Experiencia
+                Experience
               </CardTitle>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Plus className="h-4 w-4" />
@@ -163,7 +161,7 @@ export default async function ProfilePage() {
               {profile.experiences && profile.experiences.length > 0 ? (
                 profile.experiences.map((exp, index) => (
                   <div key={exp.id} className="relative pl-2">
-                    {/* Conector visual simple si no es el último */}
+                    {/* Simple visual connector if not the last */}
                     {index !== profile.experiences!.length - 1 && (
                       <div className="absolute left-0.75 top-2 h-full w-0.5 bg-border ml-1.5 mt-2" />
                     )}
@@ -207,18 +205,18 @@ export default async function ProfilePage() {
                 ))
               ) : (
                 <div className="text-center py-6 text-muted-foreground text-sm">
-                  No has añadido experiencia laboral.
+                  You have not added work experience.
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Educación */}
+          {/* Education */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-primary" />
-                Educación
+                Education
               </CardTitle>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Plus className="h-4 w-4" />
@@ -234,7 +232,7 @@ export default async function ProfilePage() {
                           {edu.school}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {edu.degree} {edu.field ? `en ${edu.field}` : ""}
+                          {edu.degree} {edu.field ? `in ${edu.field}` : ""}
                         </p>
                       </div>
                       <span className="text-xs text-muted-foreground">
@@ -253,16 +251,16 @@ export default async function ProfilePage() {
                 ))
               ) : (
                 <div className="text-center py-6 text-muted-foreground text-sm">
-                  No has añadido educación.
+                  You have not added education.
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* --- COLUMNA DERECHA (Sidebar) --- */}
+        {/* --- RIGHT COLUMN (Sidebar) --- */}
         <div className="space-y-6">
-          {/* Habilidades */}
+          {/* Skills */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -293,19 +291,19 @@ export default async function ProfilePage() {
                   ))
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    Sin habilidades registradas.
+                    No skills registered.
                   </span>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Roles Objetivo */}
+          {/* Target Roles */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Target className="h-4 w-4" /> Roles Objetivo
+                  <Target className="h-4 w-4" /> Target Roles
                 </CardTitle>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
                   <Pencil className="h-3 w-3" />
@@ -323,19 +321,19 @@ export default async function ProfilePage() {
                   ))
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    No has definido roles objetivo.
+                    You have not defined target roles.
                   </span>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Documentos Rápidos */}
+          {/* Documents */}
           <Card className="bg-muted/30 border-dashed">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Documentos</CardTitle>
+              <CardTitle className="text-base">Documents</CardTitle>
               <CardDescription className="text-xs">
-                CVs y Cartas visibles en tu perfil
+                CVs and Letters visible on your profile
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
@@ -347,7 +345,7 @@ export default async function ProfilePage() {
                   className="flex items-center gap-2 text-sm p-2 rounded-md hover:bg-background border border-transparent hover:border-border transition-all"
                 >
                   <div className="p-1.5 bg-background border rounded-md">
-                    {/* Icono pequeño basado en tipo */}
+                    {/* Small icon based on type */}
                     <span className="text-xs font-bold text-primary">
                       {doc.type === "RESUME" ? "CV" : "DOC"}
                     </span>
@@ -356,7 +354,7 @@ export default async function ProfilePage() {
                 </Link>
               ))}
               <Button variant="outline" size="sm" className="w-full mt-2">
-                Gestionar Documentos
+                Manage Documents
               </Button>
             </CardContent>
           </Card>

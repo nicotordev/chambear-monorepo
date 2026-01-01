@@ -16,19 +16,19 @@ export function DashboardNextInterview({
   jobs,
   profileId,
 }: DashboardNextInterviewProps) {
-  // Aseguramos obtener la entrevista más próxima real (ordenar por fecha si es necesario)
+  // Ensure we get the actual next interview (sort by date if necessary)
   const nextInterview =
     interviews && interviews.length > 0 ? interviews[0] : null;
 
-  // Helpers para formateo de fechas
+  // Helpers for date formatting
   const getInterviewDateDetails = (dateString?: string | Date) => {
     if (!dateString) return { day: "--", month: "---", time: "--:--" };
     const date = new Date(dateString);
 
     return {
       day: date.getDate(),
-      month: date.toLocaleDateString("es-CL", { month: "short" }).toUpperCase(), // ENE, FEB...
-      time: date.toLocaleTimeString("es-CL", {
+      month: date.toLocaleDateString("en-US", { month: "short" }).toUpperCase(), // JAN, FEB...
+      time: date.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       }),
@@ -47,7 +47,7 @@ export function DashboardNextInterview({
     <div
       className={cn(
         "flex flex-col justify-between overflow-hidden p-6 transition-all",
-        // Si hay entrevista, usamos un fondo destacado (Primary suave), si no, un fondo neutro
+        // If there is an interview, use a highlighted background (soft Primary), otherwise a neutral background
         nextInterview
           ? "bg-primary/5 border-primary/20"
           : "bg-card border-border"
@@ -62,7 +62,7 @@ export function DashboardNextInterview({
           )}
         >
           <Clock className="size-4" />
-          {nextInterview ? "Próxima Entrevista" : "Agenda"}
+          {nextInterview ? "Next Interview" : "Schedule"}
         </h3>
         <div className="flex items-center gap-2">
           {nextInterview && (
@@ -70,7 +70,7 @@ export function DashboardNextInterview({
               variant={isToday ? "destructive" : "secondary"}
               className="animate-pulse"
             >
-              {isToday ? "Es hoy" : "Programada"}
+              {isToday ? "Today" : "Scheduled"}
             </Badge>
           )}
           <DashboardInterviewCreation jobs={jobs} profileId={profileId}>
@@ -99,10 +99,10 @@ export function DashboardNextInterview({
                 {job.title}
               </h4>
               <p className="text-muted-foreground font-medium flex items-center gap-2">
-                {job.company?.name || "Empresa Confidencial"}
+                {job.company?.name || "Confidential Company"}
               </p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                <Clock className="size-3" /> {time} hrs
+                <Clock className="size-3" /> {time}
               </div>
             </div>
           </div>
@@ -121,16 +121,16 @@ export function DashboardNextInterview({
                   rel="noopener noreferrer"
                 >
                   <Video className="size-4" />
-                  Unirse a la llamada
+                  Join call
                 </a>
               </Button>
             ) : (
               <Button className="w-full" variant="outline" disabled>
-                Enlace pendiente
+                Link pending
               </Button>
             )}
             <p className="text-[10px] text-center text-muted-foreground mt-2 opacity-70">
-              Asegúrate de estar en un lugar silencioso 5 min antes.
+              Make sure to be in a quiet place 5 min before.
             </p>
           </div>
         </div>
@@ -141,12 +141,12 @@ export function DashboardNextInterview({
             <Calendar className="size-8 text-muted-foreground/50" />
           </div>
           <p className="text-sm font-medium text-foreground">
-            No tienes entrevistas agendadas
+            You have no scheduled interviews
           </p>
           <div className="mt-4">
             <DashboardInterviewCreation jobs={jobs} profileId={profileId}>
               <Button variant="outline" size="sm">
-                Agendar Entrevista
+                Schedule Interview
               </Button>
             </DashboardInterviewCreation>
           </div>

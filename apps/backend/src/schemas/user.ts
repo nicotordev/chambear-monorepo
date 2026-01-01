@@ -17,6 +17,7 @@ export const EducationSchema = z.object({
   school: z.string().min(1),
   degree: z.string().optional(),
   fieldOfStudy: z.string().optional(),
+  field: z.string().optional(), // Added to match frontend
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   current: z.boolean().default(false),
@@ -31,6 +32,7 @@ export const ProfileSkillSchema = z.object({
 
 export const CreateProfileSchema = z.object({
   id: z.string().optional(),
+  name: z.string().optional(), // Added to match frontend
   headline: z.string().optional(),
   avatar: z.string().optional(),
   summary: z.string().optional(),

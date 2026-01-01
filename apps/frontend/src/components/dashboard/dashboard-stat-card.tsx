@@ -34,7 +34,7 @@ export default function DashboardStatCard({
   return (
     <Link
       href={href || "#"}
-      className="group relative flex flex-col justify-between bg-background p-6 transition-colors hover:bg-secondary/20"
+      className="group relative flex flex-col justify-between bg-background p-6 transition-colors hover:bg-secondary/20 rounded-none w-full"
     >
       <div className="flex items-start justify-between">
         <div>

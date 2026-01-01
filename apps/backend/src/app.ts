@@ -1,8 +1,10 @@
 import applicationsRoute from "@/lib/routes/applications.route";
+import billingRoute from "@/lib/routes/billing.route";
 import documentRoute from "@/lib/routes/documents.route";
 import jobsRoute from "@/lib/routes/jobs.route";
 import remindersRoute from "@/lib/routes/reminders.route";
 import userRoute from "@/lib/routes/user.route";
+import webhooksRoute from "@/lib/routes/webhooks.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -42,5 +44,7 @@ app.route("/api/v1", applicationsRoute);
 app.route("/api/v1", userRoute);
 app.route("/api/v1", documentRoute);
 app.route("/api/v1", remindersRoute);
+app.route("/api/v1/billing", billingRoute);
+app.route("/api/v1/webhooks", webhooksRoute);
 
 export default app;

@@ -32,7 +32,7 @@ export default function OnboardingFlowStep1({
         <FormField
           control={form.control}
           name="avatar"
-          render={({ field }) => (
+          render={({}) => (
             <FormItem className="flex flex-col items-center">
               <FormControl>
                 <div
@@ -74,13 +74,11 @@ export default function OnboardingFlowStep1({
           control={form.control}
           name="location"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="San Francisco, CA" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <Input
+              placeholder="San Francisco, CA"
+              {...field}
+              value={field.value ?? ""}
+            />
           )}
         />
         <FormField
@@ -94,6 +92,7 @@ export default function OnboardingFlowStep1({
                   type="number"
                   min="0"
                   {...field}
+                  value={field.value ?? 0}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
@@ -110,7 +109,11 @@ export default function OnboardingFlowStep1({
           <FormItem>
             <FormLabel>Professional Headline</FormLabel>
             <FormControl>
-              <Input placeholder="Senior Full Stack Developer" {...field} />
+              <Input
+                placeholder="Senior Full Stack Developer"
+                {...field}
+                value={field.value ?? ""}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -128,6 +131,7 @@ export default function OnboardingFlowStep1({
                 placeholder="Brief professional summary..."
                 className="min-h-32"
                 {...field}
+                value={field.value ?? ""}
               />
             </FormControl>
             <FormMessage />

@@ -53,6 +53,7 @@
     "embla-carousel-react": "^8.6.0",
     "flowbite": "^4.0.1",
     "flowbite-react": "^0.12.15",
+    "framer-motion": "^12.23.26",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.561.0",
     "next": "16.0.10",

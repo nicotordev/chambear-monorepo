@@ -60,9 +60,9 @@ export default clerkMiddleware(async (auth, req) => {
   const profilesLength = Number(profiles?.length);
   const currentProfileId = await getCookie("chambear_current_profile_id", {
     req,
-  });
+  })
   const currentProfile =
-    profilesLength > 0
+    profilesLength > 0 && currentProfileId
       ? profiles?.find((profile) => profile.id === currentProfileId)
       : profilesLength > 0
       ? profiles?.[0]
@@ -77,7 +77,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   // CASE A: User is logged in but trying to access Auth pages (Sign In/Up)
   if (isAuthRoute(req)) {
-    const target = isOnboarded ? "/dashboard" : "/onboarding";
+    const target = isOnboarded ? "/dashboard" : "/onboarding-v2";
     console.info(
       `[Middleware] Auth route accessed by logged in user. Redirecting to ${target}`
     );
@@ -87,7 +87,7 @@ export default clerkMiddleware(async (auth, req) => {
   // CASE B: User is Onboarded
   if (isOnboarded) {
     // If they try to go to onboarding again, kick them to dashboard
-    if (path.startsWith("/onboarding")) {
+    if (path.startsWith("/onboarding-v2")) {
       console.info(`[Middleware] Already onboarded. Redirecting to dashboard.`);
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
@@ -98,13 +98,13 @@ export default clerkMiddleware(async (auth, req) => {
   // CASE C: User is NOT Onboarded
   if (!isOnboarded) {
     // If they are NOT on the onboarding page, force them there
-    if (!path.startsWith("/onboarding")) {
+    if (!path.startsWith("/onboarding-v2")) {
       console.info(
-        `[Middleware] Onboarding incomplete. Redirecting to /onboarding.`
+        `[Middleware] Onboarding incomplete. Redirecting to /onboarding-v2.`
       );
-      return NextResponse.redirect(new URL("/onboarding", req.url));
+      return NextResponse.redirect(new URL("/onboarding-v2", req.url));
     }
-    // If they are already on /onboarding, allow access
+    // If they are already on /onboarding-v2, allow access
     return NextResponse.next();
   }
 

@@ -116,7 +116,7 @@ export function DashboardDocuments() {
     }
   }
 
-  // Helper para asignar colores e iconos según el tipo de archivo
+  // Helper to assign colors and icons based on file type
   const getFileIconProps = (docType: string) => {
     switch (docType) {
       case DocumentType.RESUME:
@@ -148,7 +148,7 @@ export function DashboardDocuments() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          <FolderOpen className="size-3.5" /> Mis Documentos
+          <FolderOpen className="size-3.5" /> My Documents
         </h3>
 
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
@@ -165,19 +165,19 @@ export function DashboardDocuments() {
               </DialogTrigger>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Subir nuevo documento</p>
+              <p className="text-xs">Upload new document</p>
             </TooltipContent>
           </Tooltip>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Subir Documento</DialogTitle>
+              <DialogTitle>Upload Document</DialogTitle>
               <DialogDescription>
-                Sube tu CV, carta de presentación u otros documentos.
+                Upload your CV, cover letter, or other documents.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="file">Archivo</Label>
+                <Label htmlFor="file">File</Label>
                 <Input
                   id="file"
                   type="file"
@@ -186,24 +186,24 @@ export function DashboardDocuments() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="label">Nombre (Etiqueta)</Label>
+                <Label htmlFor="label">Name (Label)</Label>
                 <Input
                   id="label"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder="Ej. CV 2024"
+                  placeholder="Ex. CV 2024"
                   disabled={isUploading}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="type">Tipo</Label>
+                <Label htmlFor="type">Type</Label>
                 <Select
                   value={type}
                   onValueChange={(val) => setType(val as DocumentType)}
                   disabled={isUploading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el tipo" />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.values(DocumentType).map((t) => (
@@ -217,11 +217,11 @@ export function DashboardDocuments() {
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setIsUploadOpen(false)} disabled={isUploading}>
-                    Cancelar
+                    Cancel
                 </Button>
                 <Button onClick={handleUpload} disabled={!file || !label || isUploading}>
                     {isUploading && <Loader2 className="mr-2 size-4 animate-spin" />}
-                    Subir
+                    Upload
                 </Button>
             </DialogFooter>
           </DialogContent>
@@ -267,7 +267,7 @@ export function DashboardDocuments() {
 
                   {/* Hover Actions */}
                   <div className="flex shrink-0 items-center text-muted-foreground gap-2">
-                    {/* Icono de descarga visible solo al hover */}
+                    {/* Download icon visible only on hover */}
                     <Download className="size-4 opacity-0 transition-opacity group-hover:opacity-100" />
                      <Button
                         variant="ghost"
@@ -292,17 +292,17 @@ export function DashboardDocuments() {
               <FileIcon className="size-6 text-muted-foreground/60" />
             </div>
             <p className="text-sm font-medium text-foreground">
-              Tu portafolio está vacío
+              Your portfolio is empty
             </p>
             <p className="mt-1 max-w-45 text-xs text-muted-foreground">
-              Sube tu CV o Portafolio para aplicar más rápido. 
+              Upload your CV or Portfolio to apply faster. 
             </p>
             <Button
               variant="ghost"
               size="sm"
               className="mt-2 text-xs text-primary group-hover:underline"
             >
-              Subir archivo
+              Upload file
             </Button>
           </div>
         )}

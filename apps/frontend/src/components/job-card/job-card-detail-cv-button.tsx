@@ -12,7 +12,7 @@ export default function JobCardDetailCVButton({
 }: JobCardDetailCVButtonProps) {
   return (
     <Button className="cursor-pointer" asChild>
-      <Link href={`/dashboard/jobs/${job.id}`} className="flex flex-1">
+      <Link href={`/dashboard/jobs/${job.id}`} className="flex flex-1 w-full">
         <Notebook className="mr-2 size-4" />
         Ir a la oferta
       </Link>

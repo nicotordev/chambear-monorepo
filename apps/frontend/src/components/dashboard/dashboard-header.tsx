@@ -16,35 +16,35 @@ export function DashboardHeader({
   activeApplicationsCount,
   hasInterview,
 }: DashboardHeaderProps) {
-  const firstName = currentUser.name?.split(" ")[0] || "Usuario";
+  const firstName = currentUser.name?.split(" ")[0] || "User";
 
   return (
     <div className="px-8 py-10 border-b border-border bg-card/30 backdrop-blur-sm shrink-0">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-            Hola,{" "}
+            Hello,{" "}
             <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-chart-2">
               {firstName}
             </span>
             ! 👋
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl text-pretty leading-relaxed">
-            Tu panel de carrera está actualizado. Tienes{" "}
+            Your career dashboard is up to date. You have{" "}
             <span className="text-foreground font-semibold">
-              {activeApplicationsCount} postulaciones activas
+              {activeApplicationsCount} active applications
             </span>
             {hasInterview ? (
               <>
                 {" "}
-                y una{" "}
+                and an{" "}
                 <span className="text-foreground font-semibold">
-                  entrevista programada
+                  interview scheduled
                 </span>{" "}
-                próximamente.
+                soon.
               </>
             ) : (
-              ". Sigue buscando oportunidades."
+              ". Keep looking for opportunities."
             )}
           </p>
         </div>
@@ -66,7 +66,7 @@ export function DashboardHeader({
               <Button asChild variant="outline">
                 <Link href="/dashboard/profile">
                   <Sparkles className="size-3.5" />
-                  Completa tu perfil
+                  Complete your profile
                 </Link>
               </Button>
             </>

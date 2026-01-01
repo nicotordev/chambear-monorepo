@@ -11,20 +11,20 @@ export default function useJobActions() {
   const handleScan = async () => {
     if (!currentProfile?.id) {
       if (profiles.length === 0) {
-        toast.error("Debes crear un perfil primero");
+        toast.error("You must create a profile first");
         router.push("/onboarding");
         return;
       }
-      toast.error("Selecciona un perfil para iniciar el escaneo");
+      toast.error("Select a profile to start scanning");
       return;
     }
     setIsLoading(true);
     try {
       await api.scanJobs(currentProfile?.id);
-      toast.success("Escaneo iniciado correctamente");
+      toast.success("Scan started successfully");
     } catch (error) {
       console.error("Scan error:", error);
-      toast.error("Error al iniciar el escaneo");
+      toast.error("Error starting scan");
     } finally {
       setIsLoading(false);
     }

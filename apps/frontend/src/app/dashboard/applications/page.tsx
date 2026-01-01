@@ -12,28 +12,28 @@ export default async function ApplicationsPage() {
   if (!user) {
     return (
       <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
-        Error cargando aplicaciones. Intenta recargar.
+        Error loading applications. Try reloading.
       </div>
     );
   }
 
-  // Aseguramos que sea un array
+  // Ensure it is an array
   const applications = user.applications ?? [];
 
   return (
     <div className="flex h-full flex-col space-y-8 px-8 pt-8 md:flex bg-background animate-in fade-in duration-500">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Postulaciones</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Applications</h2>
           <p className="text-muted-foreground">
-            Gestiona y rastrea el estado de tus candidaturas (
+            Manage and track the status of your applications (
             {applications.length}).
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva Postulación
+            New Application
           </Button>
         </div>
       </div>

@@ -20,12 +20,12 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
   const setSelectedJobId = useJobsPageStore((s) => s.setSelectedJobId);
   const setJobs = useJobsPageStore((s) => s.setJobs);
 
-  // Sincronizar datos del servidor al store
+  // Sync server data to store
   useEffect(() => {
     if (ssrJobs.length > 0) setJobs(ssrJobs);
   }, [ssrJobs, setJobs]);
 
-  // Autoseleccionar el primero si no hay selección
+  // Auto-select first if no selection
   useEffect(() => {
     if (!selectedJobId && jobs.length > 0) {
       setSelectedJobId(jobs[0].id);
@@ -37,14 +37,14 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
     [jobs, selectedJobId]
   );
 
-  // ESTADO VACÍO DEL PANEL DERECHO (Si no hay selección)
+  // RIGHT PANEL EMPTY STATE (If no selection)
   if (!selectedJob) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 animate-in fade-in">
         <MousePointerClick className="w-16 h-16 mb-4 opacity-20" />
-        <p className="text-lg font-medium">Selecciona una oferta</p>
+        <p className="text-lg font-medium">Select an offer</p>
         <p className="text-sm">
-          Haz clic en una tarjeta de la izquierda para ver los detalles.
+          Click on a card on the left to see details.
         </p>
       </div>
     );
@@ -60,8 +60,8 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
           {selectedJob?.title}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {selectedJob?.company?.name ?? "Empresa Confidencial"} ·{" "}
-          {selectedJob?.location ?? "Remoto"}
+          {selectedJob?.company?.name ?? "Confidential Company"} ·{" "}
+          {selectedJob?.location ?? "Remote"}
         </p>
       </div>
 
@@ -69,16 +69,16 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
       <div className="space-y-4 rounded-xl border p-5 bg-card/40 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-foreground/80">
-            Compatibilidad con tu perfil
+            Compatibility with your profile
           </span>
           <Badge variant={isReadyToApply ? "default" : "secondary"}>
-            {isReadyToApply ? "Listo para aplicar" : "Requiere optimización"}
+            {isReadyToApply ? "Ready to apply" : "Requires optimization"}
           </Badge>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Fit estimado</span>
+            <span>Estimated Fit</span>
             <span className="font-medium text-foreground">
               {selectedJob?.fit ?? 0}%
             </span>
@@ -89,16 +89,16 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
         {/* SINGLE PRIMARY ACTION */}
         <Button asChild size="lg" className="w-full font-semibold">
           <Link href={`/dashboard/jobs/${selectedJob?.id}`}>
-            Ver oferta completa
+            View full offer
           </Link>
         </Button>
       </div>
 
       {/* Context */}
       <div className="space-y-4">
-        <h3 className="font-medium text-lg">Descripción</h3>
+        <h3 className="font-medium text-lg">Description</h3>
         <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-          {selectedJob?.description ?? "Sin descripción disponible."}
+          {selectedJob?.description ?? "No description available."}
         </p>
 
         {selectedJob?.tags && selectedJob?.tags.length > 0 && (
@@ -131,7 +131,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
             target="_blank"
             rel="noreferrer"
           >
-            Ver en fuente original
+            View original source
             <ExternalLink className="ml-2 h-3 w-3" />
           </Link>
         </Button>

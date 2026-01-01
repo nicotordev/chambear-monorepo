@@ -1,4 +1,5 @@
 import response from "@/lib/utils/response";
+import billingService from "@/services/billing.service";
 import jobsService from "@/services/jobs.service";
 import { getAuth } from "@hono/clerk-auth";
 import type { Context } from "hono";
@@ -6,6 +7,12 @@ import type { Context } from "hono";
 const jobsController = {
   async getPublicJobs(c: Context) {
     const jobs = await jobsService.getPublicJobs();
+
+    return c.json(response.success(jobs), 200);
+  },
+
+  async getFreeJobs(c: Context) {
+    const jobs = await jobsService.getFreeJobs();
 
     return c.json(response.success(jobs), 200);
   },
@@ -43,7 +50,18 @@ const jobsController = {
       return c.json(response.badRequest("Profile ID is required"), 400);
     }
 
+    const canScan = await billingService.canUserAction(userId, "JOB_SCAN");
+    if (!canScan) {
+      return c.json(
+        response.badRequest("Insufficient credits or no active subscription"),
+        402
+      );
+    }
+
     const jobs = await jobsService.scanJobs(profileId);
+
+    // Consume credit per scan
+    await billingService.consumeCredits(userId, "JOB_SCAN");
 
     return c.json(response.success([...jobs]), 200);
   },

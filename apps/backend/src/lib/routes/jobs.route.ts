@@ -30,6 +30,29 @@ const getPublicJobs = createRoute({
   },
 });
 
+const getFreeJobs = createRoute({
+  method: "get",
+  path: "/jobs/free",
+  responses: {
+    200: {
+      description: "Get free jobs",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(z.array(JobSchema)),
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 const scanJobs = createRoute({
   method: "get",
   path: "/jobs/scan",
@@ -57,6 +80,14 @@ const scanJobs = createRoute({
     },
     400: {
       description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    402: {
+      description: "Payment Required",
       content: {
         "application/json": {
           schema: ErrorResponseSchema,
@@ -175,6 +206,7 @@ const upsertJob = createRoute({
 const app = new OpenAPIHono();
 
 app.openapi(getPublicJobs, jobsController.getPublicJobs);
+app.openapi(getFreeJobs, jobsController.getFreeJobs);
 app.openapi(scanJobs, jobsController.scanJobs);
 app.openapi(getJobById, jobsController.getJobById);
 app.openapi(applyJob, jobsController.applyJob);

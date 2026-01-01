@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import { Job } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import {
   Briefcase,
   Building2,
@@ -76,7 +76,7 @@ const jobSelectionBaseSchema = z.object({
   // New Job Fields
   title: z.string().optional(),
   companyName: z.string().optional(),
-  externalUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  externalUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   location: z.string().optional(),
   employmentType: z
     .enum([
@@ -116,7 +116,7 @@ const interviewBaseSchema = z.object({
     .default("PLANNING"),
   scheduledFor: z.date().optional(),
   durationMinutes: z.coerce.number().min(15).default(45),
-  meetLink: z.string().url("URL inválida").optional().or(z.literal("")),
+  meetLink: z.string().url("Invalid URL").optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -129,14 +129,14 @@ const combinedSchema = jobSelectionBaseSchema
       if (!data.title) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Título requerido",
+          message: "Title required",
           path: ["title"],
         });
       }
       if (!data.companyName) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Empresa requerida",
+          message: "Company required",
           path: ["companyName"],
         });
       }
@@ -144,7 +144,7 @@ const combinedSchema = jobSelectionBaseSchema
       if (!data.jobId) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Debes seleccionar un empleo",
+          message: "You must select a job",
           path: ["jobId"],
         });
       }
@@ -158,7 +158,7 @@ const combinedSchema = jobSelectionBaseSchema
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Fecha requerida para entrevistas agendadas",
+        message: "Date required for scheduled interviews",
         path: ["scheduledFor"],
       });
     }
@@ -172,9 +172,9 @@ interface NewApplicationDialogProps {
 }
 
 const STEPS = [
-  { id: 1, title: "Empleo", icon: Briefcase },
-  { id: 2, title: "Detalles", icon: CheckCircle2 },
-  { id: 3, title: "Entrevista", icon: Video },
+  { id: 1, title: "Job", icon: Briefcase },
+  { id: 2, title: "Details", icon: CheckCircle2 },
+  { id: 3, title: "Interview", icon: Video },
 ];
 
 export default function NewApplicationDialog({
@@ -218,7 +218,7 @@ export default function NewApplicationDialog({
       setJobs(data);
     } catch (error) {
       console.error(error);
-      toast.error("Error al cargar empleos");
+      toast.error("Error loading jobs");
     } finally {
       setIsSearchingJobs(false);
     }
@@ -293,13 +293,13 @@ export default function NewApplicationDialog({
         });
       }
 
-      toast.success("Postulación registrada exitosamente");
+      toast.success("Application registered successfully");
       form.reset();
       setStep(1);
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      toast.error("Error al registrar postulación");
+      toast.error("Error registering application");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -317,7 +317,7 @@ export default function NewApplicationDialog({
             className="gap-2 shadow-lg hover:shadow-xl transition-all"
           >
             <PlusCircle className="h-4 w-4" />
-            Nueva Postulación
+            New Application
           </Button>
         </DialogTrigger>
       )}
@@ -325,9 +325,9 @@ export default function NewApplicationDialog({
         {/* Header with Progress */}
         <div className="bg-muted/30 border-b border-border/50 px-6 py-4">
           <DialogHeader className="mb-4">
-            <DialogTitle>Registrar Postulación</DialogTitle>
+            <DialogTitle>Register Application</DialogTitle>
             <DialogDescription>
-              Gestiona tus procesos de selección
+              Manage your selection processes
             </DialogDescription>
           </DialogHeader>
 
@@ -397,11 +397,11 @@ export default function NewApplicationDialog({
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>
-                              Crear nuevo empleo manualmente
+                              Create new job manually
                             </FormLabel>
                             <DialogDescription>
-                              Si no encuentras el empleo en la lista, puedes
-                              crearlo aquí.
+                              If you don't find the job in the list, you can
+                              create it here.
                             </DialogDescription>
                           </div>
                         </FormItem>
@@ -414,7 +414,7 @@ export default function NewApplicationDialog({
                         name="jobId"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel>Buscar Empleo Existente</FormLabel>
+                            <FormLabel>Search Existing Job</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
@@ -434,7 +434,7 @@ export default function NewApplicationDialog({
                                         jobs.find(
                                           (job) => job.id === field.value
                                         )?.companyName
-                                      : "Seleccionar empleo..."}
+                                      : "Select job..."}
                                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </Button>
                                 </FormControl>
@@ -444,10 +444,10 @@ export default function NewApplicationDialog({
                                 align="start"
                               >
                                 <Command>
-                                  <CommandInput placeholder="Buscar por título o empresa..." />
+                                  <CommandInput placeholder="Search by title or company..." />
                                   <CommandList>
                                     <CommandEmpty>
-                                      No se encontraron empleos.
+                                      No jobs found.
                                     </CommandEmpty>
                                     <CommandGroup>
                                       {jobs.map((job) => (
@@ -496,14 +496,14 @@ export default function NewApplicationDialog({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  Cargo / Título{" "}
+                                  Role / Title{" "}
                                   <span className="text-red-500">*</span>
                                 </FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                      placeholder="Ej: Frontend Developer"
+                                      placeholder="Ex: Frontend Developer"
                                       className="pl-9"
                                       {...field}
                                     />
@@ -519,14 +519,14 @@ export default function NewApplicationDialog({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  Empresa{" "}
+                                  Company{" "}
                                   <span className="text-red-500">*</span>
                                 </FormLabel>
                                 <FormControl>
                                   <div className="relative">
                                     <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                      placeholder="Ej: Acme Corp"
+                                      placeholder="Ex: Acme Corp"
                                       className="pl-9"
                                       {...field}
                                     />
@@ -543,7 +543,7 @@ export default function NewApplicationDialog({
                           name="externalUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>URL de la Oferta</FormLabel>
+                              <FormLabel>Offer URL</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -566,25 +566,25 @@ export default function NewApplicationDialog({
                             name="workMode"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Modalidad</FormLabel>
+                                <FormLabel>Work Mode</FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Selecciona..." />
+                                      <SelectValue placeholder="Select..." />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="REMOTE">
-                                      Remoto
+                                      Remote
                                     </SelectItem>
                                     <SelectItem value="HYBRID">
-                                      Híbrido
+                                      Hybrid
                                     </SelectItem>
                                     <SelectItem value="ONSITE">
-                                      Presencial
+                                      Onsite
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -597,14 +597,14 @@ export default function NewApplicationDialog({
                             name="employmentType"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Tipo de Contrato</FormLabel>
+                                <FormLabel>Contract Type</FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Selecciona..." />
+                                      <SelectValue placeholder="Select..." />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
@@ -615,13 +615,13 @@ export default function NewApplicationDialog({
                                       Part Time
                                     </SelectItem>
                                     <SelectItem value="CONTRACT">
-                                      Contrato
+                                      Contract
                                     </SelectItem>
                                     <SelectItem value="FREELANCE">
                                       Freelance
                                     </SelectItem>
                                     <SelectItem value="INTERN">
-                                      Pasantía
+                                      Internship
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -635,12 +635,12 @@ export default function NewApplicationDialog({
                           name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Ubicación</FormLabel>
+                              <FormLabel>Location</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                   <Input
-                                    placeholder="Ej: Santiago, Chile"
+                                    placeholder="Ex: Santiago, Chile"
                                     className="pl-9"
                                     {...field}
                                   />
@@ -664,28 +664,28 @@ export default function NewApplicationDialog({
                         name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Estado de la Postulación</FormLabel>
+                            <FormLabel>Application Status</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Selecciona estado" />
+                                  <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="SAVED">Guardado</SelectItem>
-                                <SelectItem value="APPLIED">Enviada</SelectItem>
+                                <SelectItem value="SAVED">Saved</SelectItem>
+                                <SelectItem value="APPLIED">Sent</SelectItem>
                                 <SelectItem value="INTERVIEW">
-                                  Entrevista (General)
+                                  Interview (General)
                                 </SelectItem>
                                 <SelectItem value="INTERVIEWING">
-                                  En Proceso de Entrevistas
+                                  Interviewing
                                 </SelectItem>
-                                <SelectItem value="OFFER">Oferta</SelectItem>
+                                <SelectItem value="OFFER">Offer</SelectItem>
                                 <SelectItem value="REJECTED">
-                                  Rechazada
+                                  Rejected
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -698,7 +698,7 @@ export default function NewApplicationDialog({
                         name="appliedAt"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel>Fecha de Envío</FormLabel>
+                            <FormLabel>Sent Date</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
@@ -710,9 +710,9 @@ export default function NewApplicationDialog({
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "PPP", { locale: es })
+                                      format(field.value, "PPP", { locale: enUS })
                                     ) : (
-                                      <span>Seleccionar fecha</span>
+                                      <span>Select date</span>
                                     )}
                                     <Calendar className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
@@ -723,7 +723,7 @@ export default function NewApplicationDialog({
                                 align="start"
                               >
                                 <div className="p-2 border-b border-border/50 text-xs text-muted-foreground text-center">
-                                  Calendario de Postulación
+                                  Application Calendar
                                 </div>
                                 {/* Note: In a real app we'd integrate a Calendar component here, sticking to standard input for now or assume a date picker exists.
                                         Since standard input type="date" is easiest for now without Calendar component import setup: */}
@@ -752,10 +752,10 @@ export default function NewApplicationDialog({
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Notas Personales</FormLabel>
+                          <FormLabel>Personal Notes</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Notas sobre la postulación, salario esperado, etc."
+                              placeholder="Notes about the application, expected salary, etc."
                               className="resize-none h-32"
                               {...field}
                             />
@@ -782,9 +782,9 @@ export default function NewApplicationDialog({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Agendar Entrevista</FormLabel>
+                            <FormLabel>Schedule Interview</FormLabel>
                             <DialogDescription>
-                              ¿Quieres programar una entrevista inicial ahora?
+                              Do you want to schedule an initial interview now?
                             </DialogDescription>
                           </div>
                         </FormItem>
@@ -805,7 +805,7 @@ export default function NewApplicationDialog({
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Selecciona..." />
+                                    <SelectValue placeholder="Select..." />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -813,10 +813,10 @@ export default function NewApplicationDialog({
                                     Virtual (Meet/Zoom)
                                   </SelectItem>
                                   <SelectItem value="ONSITE">
-                                    Presencial
+                                    Onsite
                                   </SelectItem>
                                   <SelectItem value="HYBRID">
-                                    Híbrido
+                                    Hybrid
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
@@ -826,7 +826,7 @@ export default function NewApplicationDialog({
 
                         <div className="grid grid-cols-2 gap-4">
                           <FormItem className="flex flex-col">
-                            <FormLabel>Fecha y Hora</FormLabel>
+                            <FormLabel>Date and Time</FormLabel>
                             <FormControl>
                               <Input
                                 type="datetime-local"
@@ -845,7 +845,7 @@ export default function NewApplicationDialog({
                             name="durationMinutes"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Duración (min)</FormLabel>
+                                <FormLabel>Duration (min)</FormLabel>
                                 <FormControl>
                                   <Input type="number" {...field} />
                                 </FormControl>
@@ -860,7 +860,7 @@ export default function NewApplicationDialog({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                Link de la Reunión (Opcional)
+                                Meeting Link (Optional)
                               </FormLabel>
                               <FormControl>
                                 <Input
@@ -888,7 +888,7 @@ export default function NewApplicationDialog({
                   onClick={prevStep}
                   disabled={isLoading}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" /> Atrás
+                  <ChevronLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
               ) : (
                 <Button
@@ -897,13 +897,13 @@ export default function NewApplicationDialog({
                   onClick={() => setOpen(false)}
                   disabled={isLoading}
                 >
-                  Cancelar
+                  Cancel
                 </Button>
               )}
 
               {step < 3 ? (
                 <Button type="button" onClick={nextStep} disabled={isLoading}>
-                  Siguiente <ChevronRight className="w-4 h-4 ml-2" />
+                  Next <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
                 <Button type="submit" disabled={isLoading}>
@@ -912,7 +912,7 @@ export default function NewApplicationDialog({
                   ) : (
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                   )}
-                  Finalizar
+                  Finish
                 </Button>
               )}
             </DialogFooter>

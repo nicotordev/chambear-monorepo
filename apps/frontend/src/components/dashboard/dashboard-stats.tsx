@@ -25,44 +25,44 @@ export function DashboardStats({
 }: DashboardStatsProps) {
   return (
     <div className="lg:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-px bg-border">
-      {/* 1. Postulaciones */}
+      {/* 1. Applications */}
       <DashboardStatCard
-        title="Postulaciones"
+        title="Applications"
         value={applicationsCount}
         icon={Briefcase}
-        description="En procesos activos"
+        description="Active processes"
         color="blue"
         href="/dashboard/applications"
       />
 
-      {/* 2. Entrevistas */}
+      {/* 2. Interviews */}
       <DashboardStatCard
-        title="Entrevistas"
+        title="Interviews"
         value={interviewsCount}
         icon={Users}
-        description={interviewsCount > 0 ? "¡Prepárate bien!" : "Sin agendar"}
+        description={interviewsCount > 0 ? "Prepare well!" : "None scheduled"}
         color="purple"
         highlight={interviewsCount > 0}
         href="/dashboard/interviews"
       />
 
-      {/* 3. Recordatorios */}
+      {/* 3. Reminders */}
       <DashboardStatCard
-        title="Recordatorios"
+        title="Reminders"
         value={remindersCount}
         icon={Bell}
-        description="Tareas pendientes"
+        description="Pending tasks"
         color="amber"
         highlight={remindersCount > 0}
         href="/dashboard/reminders"
       />
 
-      {/* 4. Perfil (Tarjeta Custom con Gráfico Circular) */}
+      {/* 4. Profile (Custom Card with Circular Graph) */}
       <div className="group relative flex flex-col justify-between overflow-hidden bg-background p-6 transition-colors hover:bg-secondary/20">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Nivel de Perfil
+              Profile Level
             </p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-bold tracking-tight">
@@ -71,10 +71,10 @@ export function DashboardStats({
             </div>
           </div>
 
-          {/* Gráfico Circular SVG Puro */}
+          {/* Pure SVG Circular Graph */}
           <div className="relative size-12">
             <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-              {/* Fondo del círculo */}
+              {/* Circle background */}
               <path
                 className="text-muted/20"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -82,7 +82,7 @@ export function DashboardStats({
                 stroke="currentColor"
                 strokeWidth="4"
               />
-              {/* Progreso */}
+              {/* Progress */}
               <path
                 className={cn(
                   "transition-all duration-1000 ease-out",
@@ -106,14 +106,14 @@ export function DashboardStats({
           {profileCompletion === 100 ? (
             <span className="flex items-center text-green-600 font-medium">
               <TrendingUp className="mr-1 size-3" />
-              ¡Estelar!
+              Stellar!
             </span>
           ) : (
             <Link
               href="/onboarding"
               className="flex items-center group-hover:text-primary transition-colors cursor-pointer"
             >
-              Completar datos <ChevronRight className="ml-1 size-3" />
+              Complete data <ChevronRight className="ml-1 size-3" />
             </Link>
           )}
         </div>

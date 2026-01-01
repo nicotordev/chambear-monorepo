@@ -35,24 +35,46 @@ export const ProfileSkillSchema = z.object({
 
 export const CreateProfileSchema = z.object({
   id: z.string().optional(),
-  headline: z.string().min(10, "Headline must be at least 10 characters"),
-  avatar: z.url("Invalid avatar URL"),
-  summary: z.string().min(50, "Profile summary must be at least 50 characters"),
-  location: z.string().min(2, "Location is required"),
+  name: z
+    .string()
+    .min(2, "Name is required")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  headline: z
+    .string()
+    .min(2, "Headline is too short")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  avatar: z
+    .string()
+    .url("Invalid avatar URL")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  summary: z
+    .string()
+    .min(10, "Summary is too short")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  location: z
+    .string()
+    .min(2, "Location is required")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   yearsExperience: z
     .number()
     .int()
-    .min(0, "Years of experience cannot be negative"),
-  targetRoles: z
-    .array(z.string().min(2))
-    .min(1, "At least one target role is required"),
-  experiences: z
-    .array(ExperienceSchema)
-    .min(1, "At least one experience is required"),
-  educations: z
-    .array(EducationSchema)
-    .min(1, "At least one education is required"),
-  skills: z.array(ProfileSkillSchema).min(3, "Please add at least 3 skills"),
+    .min(0, "Years of experience cannot be negative")
+    .optional()
+    .nullable(),
+  targetRoles: z.array(z.string().min(2)).optional().default([]),
+  experiences: z.array(ExperienceSchema).optional().default([]),
+  educations: z.array(EducationSchema).optional().default([]),
+  skills: z.array(ProfileSkillSchema).optional().default([]),
 });
 
 export type CreateProfileInput = z.infer<typeof CreateProfileSchema>;

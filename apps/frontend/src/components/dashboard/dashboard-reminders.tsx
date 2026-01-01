@@ -7,7 +7,7 @@ import DashboardReminderCreation from "./dashboard-reminder-creation";
 
 interface DashboardRemindersProps {
   reminders: Reminder[];
-  onComplete?: (id: string) => void; // Callback para completar
+  onComplete?: (id: string) => void; // Callback to complete
 }
 
 export function DashboardReminders({
@@ -16,7 +16,7 @@ export function DashboardReminders({
 }: DashboardRemindersProps) {
   const hasReminders = reminders && reminders.length > 0;
 
-  // Helper para determinar el estado de urgencia
+  // Helper to determine urgency state
   const getUrgencyStyles = (date: Date) => {
     const now = new Date();
     const isPast = date < now;
@@ -33,7 +33,7 @@ export function DashboardReminders({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            <Bell className="size-3.5" /> Recordatorios
+            <Bell className="size-3.5" /> Reminders
           </h3>
           {hasReminders && (
             <Badge
@@ -78,14 +78,14 @@ export function DashboardReminders({
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                       <Clock className="size-3" />
                       <span>
-                        {reminder.dueAt.toLocaleDateString("es-CL", {
+                        {reminder.dueAt.toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "short",
                         })}
                       </span>
                       <span>•</span>
                       <span>
-                        {reminder.dueAt.toLocaleTimeString("es-CL", {
+                        {reminder.dueAt.toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -99,7 +99,7 @@ export function DashboardReminders({
                     variant="ghost"
                     className="size-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2 h-6 w-6 rounded-full hover:bg-green-500/10 hover:text-green-600"
                     onClick={() => onComplete?.(reminder.id)}
-                    title="Marcar como completado"
+                    title="Mark as completed"
                   >
                     <Check className="size-3.5" />
                   </Button>
@@ -113,9 +113,9 @@ export function DashboardReminders({
             <div className="mb-3 rounded-full bg-muted/50 p-3">
               <BellOff className="size-5 text-muted-foreground" />
             </div>
-            <p className="text-sm font-medium text-foreground">Todo al día</p>
+            <p className="text-sm font-medium text-foreground">All caught up</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-37.5">
-              No tienes recordatorios pendientes. ¡Buen trabajo!
+              You have no pending reminders. Good job!
             </p>
           </div>
         )}

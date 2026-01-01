@@ -6,11 +6,11 @@ import type {
 } from "../../types/brightdata";
 
 /**
- * SDK viejo:
- * - method permitido: "GET" | "POST" | undefined
- * - dataFormat permitido: "html" | "markdown" | "screenshot" | undefined
+ * Old SDK:
+ * - allowed method: "GET" | "POST" | undefined
+ * - allowed dataFormat: "html" | "markdown" | "screenshot" | undefined
  *
- * Así que adaptamos tu request a eso.
+ * So we adapt your request to that.
  */
 type SdkMethod = "GET" | "POST";
 type SdkDataFormat = "html" | "markdown" | "screenshot";
@@ -51,14 +51,14 @@ const coerceSdkMethod = (
   m: UnlockerSyncRequest["method"] | undefined
 ): SdkMethod | undefined => {
   if (!m) return undefined;
-  // SDK viejo solo acepta GET/POST :contentReference[oaicite:2]{index=2}
+  // Old SDK only accepts GET/POST :contentReference[oaicite:2]{index=2}
   return m === "POST" ? "POST" : "GET";
 };
 
 const coerceSdkDataFormat = (
   df: UnlockerSyncRequest["data_format"] | undefined
 ): SdkDataFormat | undefined => {
-  // SDK viejo NO acepta parsed_light/parsed :contentReference[oaicite:3]{index=3}
+  // Old SDK does NOT accept parsed_light/parsed :contentReference[oaicite:3]{index=3}
   if (df === "markdown") return "markdown";
   if (df === "html") return "html";
   if (df === "screenshot") return "screenshot";
@@ -95,14 +95,14 @@ class BrightDataClient {
   private readonly client: bdclient;
 
   constructor() {
-    // OJO: tu snippet usaba BRIGHTDATA_API_KEY; lo mantenemos
+    // NOTE: your snippet used BRIGHTDATA_API_KEY; we keep it
     const apiToken = ensureNonEmpty(
       process.env.BRIGHTDATA_API_KEY,
       "BRIGHTDATA_API_KEY"
     );
 
-    // El SDK viejo a veces usa api_token en el constructor; pero como no tenemos certeza
-    // del shape exacto, lo pasamos como objeto y dejamos que el SDK lo consuma.
+    // The old SDK sometimes uses api_token in the constructor; but since we are not certain
+    // of the exact shape, we pass it as an object and let the SDK consume it.
     this.client = new bdclient({
       api_token: apiToken,
     } as unknown as BdClientOptions);
@@ -121,9 +121,9 @@ class BrightDataClient {
     const method = coerceSdkMethod(req.method);
     const dataFormat = coerceSdkDataFormat(req.data_format);
 
-    // NOTA: req.data_format puede traer "parsed_light"/"parsed" en tu código,
-    // pero el SDK viejo no lo soporta. Aquí simplemente lo ignoramos (undefined),
-    // y luego parseamos nosotros el body si hace falta. :contentReference[oaicite:4]{index=4}
+    // NOTE: req.data_format can bring "parsed_light"/"parsed" in your code,
+    // but the old SDK does not support it. Here we simply ignore it (undefined),
+    // and then we parse the body ourselves if necessary. :contentReference[oaicite:4]{index=4}
     const common = {
       zone: req.zone,
       format,
@@ -168,8 +168,8 @@ class BrightDataClient {
   ): Promise<string[]> {
     void customer;
 
-    // Con SDK viejo, a veces scrape(urls[]) existe pero el tipo no calza.
-    // Para mantener strict y compat, hacemos N single scrapes y devolvemos IDs sintéticos.
+    // With old SDK, sometimes scrape(urls[]) exists but the type doesn't fit.
+    // To maintain strict and compat, we do N single scrapes and return synthetic IDs.
     await Promise.all(
       urls.map((u) =>
         this.runSync({
@@ -185,7 +185,7 @@ class BrightDataClient {
   }
 
   /**
-   * SERP helper: intenta parsear resultados desde body JSON (si el SERP zone devuelve JSON).
+   * SERP helper: tries to parse results from JSON body (if the SERP zone returns JSON).
    */
   public async triggerSyncSerpSearch(
     q: string,
@@ -214,7 +214,7 @@ class BrightDataClient {
 
       const parsed = safeJsonParse(bodyStr);
 
-      // Soporta payload { results: [...] } o { organic: [...] } (dependiendo del SERP output)
+      // Supports payload { results: [...] } or { organic: [...] } (depending on SERP output)
       if (isRecord(parsed) && Array.isArray(parsed.results)) {
         for (const r of parsed.results) {
           if (!isRecord(r)) continue;
@@ -236,7 +236,7 @@ class BrightDataClient {
       }
     }
 
-    // Dedup por URL
+    // Dedup by URL
     const seen = new Set<string>();
     const deduped: SerpParsedResult[] = [];
     for (const r of out) {
@@ -252,10 +252,10 @@ class BrightDataClient {
     query: string | string[],
     opt: SearchOptionsCompat
   ): Promise<unknown> {
-    // El SDK viejo limita method/dataFormat, ya los coercionamos.
-    // No tipamos el retorno porque el SDK viejo a veces devuelve string | object, etc. :contentReference[oaicite:6]{index=6}
+    // The old SDK limits method/dataFormat, we already coerced them.
+    // We don't type the return because the old SDK sometimes returns string | object, etc. :contentReference[oaicite:6]{index=6}
 
-    // overload: search(string) o search(string[])
+    // overload: search(string) or search(string[])
     if (Array.isArray(query)) {
       return this.client.search(query, {
         zone: opt.zone,
@@ -294,12 +294,12 @@ class BrightDataClient {
     res: unknown,
     format: OutputFormat
   ): UnlockerSyncResponse {
-    // compat: si viene BRDError, lo propagamos
+    // compat: if BRDError comes, we propagate it
     if (res instanceof BRDError) throw res;
 
-    // Si format json, intentamos devolver algo "json-like"
+    // If json format, we try to return something "json-like"
     if (format === "json") {
-      // Si el SDK devuelve string, intentamos parsear
+      // If the SDK returns string, we try to parse
       if (typeof res === "string") {
         const parsed = safeJsonParse(res);
         return {
@@ -310,7 +310,7 @@ class BrightDataClient {
         };
       }
 
-      // Si tiene body string, parseamos body
+      // If it has body string, we parse body
       if (hasBodyString(res)) {
         const parsed = safeJsonParse(res.body);
         return {

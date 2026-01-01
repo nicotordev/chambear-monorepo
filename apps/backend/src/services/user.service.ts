@@ -1,8 +1,8 @@
 import { Role } from "@/lib/generated";
 import { uploadFileToR2 } from "@/lib/storage";
 import { CreateProfileSchema } from "@/schemas/user";
-import { createClerkClient } from "@clerk/backend";
 import { prisma } from "../lib/prisma";
+import { clerkClient } from "@/lib/clerk";
 
 import { CreateProfileInput } from "@/schemas/user";
 import stripe from "@/lib/stripe";
@@ -47,10 +47,6 @@ const userService = {
     });
 
     if (!user) {
-      const clerkClient = createClerkClient({
-        secretKey: process.env.CLERK_SECRET_KEY,
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-      });
       const clerkUserData = await clerkClient.users.getUser(clerkId);
       user = await prisma.user.create({
         data: {
@@ -110,6 +106,14 @@ const userService = {
     const replaceSkills = true;
 
     const result = await prisma.$transaction(async (tx) => {
+      // Update user name if provided
+      if (validated.name) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { name: validated.name },
+        });
+      }
+
       // Use upsert to handle both create and update scenarios safely regarding the unique userId constraint
       const profile = await tx.profile.upsert({
         where: { userId: user.id },
@@ -188,7 +192,7 @@ const userService = {
               profileId: profile.id,
               school: edu.school,
               degree: edu.degree,
-              fieldOfStudy: edu.fieldOfStudy,
+              fieldOfStudy: edu.field || edu.fieldOfStudy,
               startDate: edu.startDate,
               endDate: edu.current ? null : edu.endDate,
               current: edu.current,
@@ -202,7 +206,7 @@ const userService = {
               profileId: profile.id,
               school: edu.school,
               degree: edu.degree,
-              fieldOfStudy: edu.fieldOfStudy,
+              fieldOfStudy: edu.field || edu.fieldOfStudy,
               startDate: edu.startDate,
               endDate: edu.current ? null : edu.endDate,
               current: edu.current,
@@ -268,41 +272,8 @@ const userService = {
         });
       }
 
-      // ---------- Onboarding readiness ----------
-      // Decide readiness based on current DB state (post-upserts).
-      const [experiencesCount, educationsCount, skillsCount] =
-        await Promise.all([
-          tx.experience.count({ where: { profileId: profile.id } }),
-          tx.education.count({ where: { profileId: profile.id } }),
-          tx.profileSkill.count({ where: { profileId: profile.id } }),
-        ]);
-
-      const snapshot: ProfileOnboardingSnapshot = {
-        headline: profile.headline ?? null,
-        summary: profile.summary ?? null,
-        location: profile.location ?? null,
-        avatar: profile.avatar ?? null,
-        yearsExperience: profile.yearsExperience ?? null,
-        targetRolesCount: Array.isArray(profile.targetRoles)
-          ? profile.targetRoles.length
-          : 0,
-        experiencesCount,
-        educationsCount,
-        skillsCount,
-      };
-
-      const onboardingReady = isOnboardingReady(snapshot);
-
-      if (onboardingReady) {
-        await tx.profile.update({
-          where: { id: profile.id },
-          data: { onboardingCompleted: onboardingReady },
-        });
-      }
-
       return {
         profileId: profile.id,
-        onboardingJustCompleted: onboardingReady,
       };
     });
 
@@ -315,24 +286,16 @@ const userService = {
       },
     });
 
-    // Update Clerk metadata OUTSIDE the transaction.
-    if (result.onboardingJustCompleted) {
-      const secretKey = process.env.CLERK_SECRET_KEY;
-      const publishableKey = process.env.CLERK_PUBLISHABLE_KEY;
-
-      if (!secretKey || !publishableKey) {
-        throw new Error("Missing CLERK_SECRET_KEY or CLERK_PUBLISHABLE_KEY");
-      }
-
-      const clerkClient = createClerkClient({
-        secretKey,
-        publishableKey,
-      });
-
-      await clerkClient.users.updateUserMetadata(clerkId, {
-        privateMetadata: { onboardingCompleted: true },
-      });
-    }
+    // Update Clerk user object with profile data and metadata
+    await clerkClient.users.updateUser(clerkId, {
+      firstName: validated.name || undefined,
+      publicMetadata: {
+        headline: validated.headline,
+        location: validated.location,
+        avatar: validated.avatar,
+        yearsExperience: validated.yearsExperience,
+      },
+    });
 
     return fullProfile;
   },
@@ -373,24 +336,71 @@ const userService = {
     // Return URL only, do not update DB
     return url;
   },
+
+  async completeOnboarding(clerkId: string) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      include: {
+        profiles: {
+          include: {
+            experiences: true,
+            educations: true,
+            skills: { include: { skill: true } },
+          },
+        },
+      },
+    });
+
+    if (!user) throw new Error("User not found");
+    const profile = user.profiles[0]; // Assuming one profile for now
+    if (!profile) throw new Error("Profile not found");
+
+    const snapshot: ProfileOnboardingSnapshot = {
+      headline: profile.headline ?? null,
+      summary: profile.summary ?? null,
+      location: profile.location ?? null,
+      avatar: profile.avatar ?? null,
+      yearsExperience: profile.yearsExperience ?? null,
+      targetRolesCount: Array.isArray(profile.targetRoles) ? profile.targetRoles.length : 0,
+      experiencesCount: profile.experiences.length,
+      educationsCount: profile.educations.length,
+      skillsCount: profile.skills.length,
+    };
+
+    const missing = getMissingRequirements(snapshot);
+    if (missing.length > 0) {
+      throw new Error(`Profile incomplete. Missing: ${missing.join(", ")}`);
+    }
+
+    await prisma.profile.update({
+      where: { id: profile.id },
+      data: { onboardingCompleted: true },
+    });
+
+    await clerkClient.users.updateUser(clerkId, {
+      privateMetadata: { onboardingCompleted: true },
+    });
+
+    return { success: true };
+  },
 };
 
 /**
  * Check if the profile snapshot meets all criteria to be considered "Onboarding Completed".
  */
-function isOnboardingReady(snapshot: ProfileOnboardingSnapshot): boolean {
-  // Relaxed "mostly complete" criteria
-  if (!snapshot.headline || snapshot.headline.length < 5) return false;
-  if (!snapshot.summary || snapshot.summary.length < 20) return false;
-  if (!snapshot.location || snapshot.location.length < 2) return false;
+function getMissingRequirements(snapshot: ProfileOnboardingSnapshot): string[] {
+  const missing: string[] = [];
+  if (!snapshot.headline || snapshot.headline.length < 5) missing.push("Headline (min 5 chars)");
+  if (!snapshot.summary || snapshot.summary.length < 20) missing.push("Summary (min 20 chars)");
+  if (!snapshot.location || snapshot.location.length < 2) missing.push("Location");
   if (snapshot.yearsExperience === null || snapshot.yearsExperience < 0)
-    return false;
-  if (snapshot.targetRolesCount < 1) return false;
-  if (snapshot.experiencesCount < 1) return false;
-  if (snapshot.educationsCount < 1) return false;
-  if (snapshot.skillsCount < 1) return false;
+    missing.push("Years of Experience");
+  if (snapshot.targetRolesCount < 1) missing.push("Target Roles");
+  if (snapshot.experiencesCount < 1) missing.push("Experiences");
+  if (snapshot.educationsCount < 1) missing.push("Education");
+  if (snapshot.skillsCount < 1) missing.push("Skills");
 
-  return true;
+  return missing;
 }
 
 export default userService;

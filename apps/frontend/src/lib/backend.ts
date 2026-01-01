@@ -1,7 +1,13 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
 import type { CreateProfileInput } from "@/schemas/user";
-import type { Application, InterviewSession, Job, Reminder, User } from "@/types";
+import type {
+  Application,
+  InterviewSession,
+  Job,
+  Reminder,
+  User,
+} from "@/types";
 
 import "server-only";
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
@@ -17,7 +23,7 @@ const api: AxiosInstance = axios.create({
 // Logging Interceptors
 api.interceptors.request.use((config) => {
   console.log(
-    `[Backend Request] ${config.method?.toUpperCase()} ${config.url}`,
+    `[Backend Request] ${config.method?.toUpperCase()} ${config.url}`
   );
   return config;
 });
@@ -27,7 +33,7 @@ api.interceptors.response.use(
     console.log(
       `[Backend Response] ${response.config.method?.toUpperCase()} ${
         response.config.url
-      } - Status: ${response.status}`,
+      } - Status: ${response.status}`
     );
     return response;
   },
@@ -36,10 +42,10 @@ api.interceptors.response.use(
       `[Backend Error] ${error.config?.method?.toUpperCase()} ${
         error.config?.url
       } -`,
-      error.response?.data || error.message,
+      error.response?.data || error.message
     );
     return Promise.reject(error);
-  },
+  }
 );
 
 // 2. Helper privado para inyectar headers automáticamente
@@ -125,14 +131,20 @@ export const backend = {
   },
 
   user: {
-    getMe: (token?: string): Promise<User> => fetcher.get<User>("/user/me", token ? {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    } : undefined),
+    getMe: (token?: string): Promise<User> =>
+      fetcher.get<User>(
+        "/user/me",
+        token
+          ? {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          : undefined
+      ),
 
     upsertProfile: (data: CreateProfileInput): Promise<User> =>
-      fetcher.put<User>("/user/me", data),
+      fetcher.post<User>("/user/me", data),
 
     uploadAvatar: async (file: File): Promise<string> => {
       const formData = new FormData();
@@ -144,6 +156,7 @@ export const backend = {
       });
       return data;
     },
+    completeOnboarding: (): Promise<User> => fetcher.post<User>("/user/complete-onboarding", null),
   },
 
   documents: {
@@ -169,16 +182,16 @@ export const backend = {
       fetcher.post<Application>(`/applications?profileId=${profileId}`, data),
     delete: (id: string, profileId: string): Promise<{ success: boolean }> =>
       fetcher.delete<{ success: boolean }>(
-        `/applications/${id}?profileId=${profileId}`,
+        `/applications/${id}?profileId=${profileId}`
       ),
     createInterview: (
       id: string,
       data: any,
-      profileId: string,
+      profileId: string
     ): Promise<InterviewSession> =>
       fetcher.post<InterviewSession>(
         `/applications/${id}/interview?profileId=${profileId}`,
-        data,
+        data
       ),
   },
 
@@ -194,6 +207,5 @@ export const backend = {
       fetcher.delete<{ success: boolean }>(`/reminders/${id}`),
   },
 };
-
 
 export default backend;

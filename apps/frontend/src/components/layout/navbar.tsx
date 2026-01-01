@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   ArrowRight,
   BarChart,
@@ -19,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+import UserButton from "./user-button";
 
 import {
   Accordion,
@@ -195,13 +190,7 @@ export default function Navbar() {
                     </SignedOut>
                     <SignedIn>
                       <div className="flex items-center gap-4 py-2">
-                        <UserButton
-                          appearance={{
-                            elements: {
-                              avatarBox: "h-9 w-9",
-                            },
-                          }}
-                        />
+                        <UserButton />
                         <span className="text-sm font-semibold text-muted-foreground">
                           Manage Account
                         </span>
@@ -319,13 +308,7 @@ export default function Navbar() {
         {/* LOGIN */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           <SignedIn>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "h-10 w-10",
-                },
-              }}
-            />
+            <UserButton />
           </SignedIn>
           <SignedOut>
             <div className="flex items-center gap-4">

@@ -33,7 +33,7 @@ export default async function InterviewsPage() {
   if (!user) {
     return (
       <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
-        Error cargando entrevistas. Intenta recargar.
+        Error loading interviews. Try reloading.
       </div>
     );
   }
@@ -45,15 +45,15 @@ export default async function InterviewsPage() {
       {/* Header */}
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Entrevistas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Interviews</h2>
           <p className="text-muted-foreground">
-            Gestiona tu calendario y prepárate para tus reuniones (
+            Manage your calendar and prepare for your meetings (
             {interviewSessions.length}).
           </p>
         </div>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Agendar Entrevista
+          Schedule Interview
         </Button>
       </div>
 
@@ -72,13 +72,13 @@ export default async function InterviewsPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold">
-              Sin entrevistas programadas
+              No interviews scheduled
             </h3>
             <p className="text-sm text-muted-foreground">
-              Aún no tienes entrevistas en tu calendario.
+              You have no interviews in your calendar yet.
             </p>
           </div>
-          <Button variant="outline">Programar manualmente</Button>
+          <Button variant="outline">Schedule manually</Button>
         </div>
       )}
     </div>

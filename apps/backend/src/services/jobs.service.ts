@@ -149,6 +149,23 @@ const jobsService = {
     });
   },
 
+  async getFreeJobs() {
+    return await prisma.job.findMany({
+      take: 10,
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        company: true,
+        jobSkills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+  },
+
   async applyJob(jobId: string, userId: string) {
     const application = await prisma.application.create({
       data: {

@@ -21,7 +21,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
   const urgency = getUrgencyState(reminder.dueAt);
   const TypeIcon = typeConfig.icon;
 
-  // Datos contextuales (si el recordatorio está atado a un Job o App)
+  // Contextual data (if the reminder is tied to a Job or App)
   const contextTitle = reminder.job?.title || reminder.job?.companyName;
   const contextCompany = reminder.job?.companyName;
 
@@ -54,7 +54,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Mensaje Principal */}
+        {/* Main Message */}
         <div>
           <h3
             className={cn(
@@ -62,11 +62,11 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
               reminder.completedAt && "line-through text-muted-foreground"
             )}
           >
-            {reminder.message || "Sin descripción"}
+            {reminder.message || "No description"}
           </h3>
         </div>
 
-        {/* Contexto (Job/Application) */}
+        {/* Context (Job/Application) */}
         {(contextTitle || contextCompany) && (
           <div className="flex items-center gap-2 rounded-md bg-secondary/50 p-2 text-xs text-muted-foreground">
             <Briefcase className="h-3.5 w-3.5 shrink-0" />
@@ -81,12 +81,12 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
           </div>
         )}
 
-        {/* Fecha */}
+        {/* Date */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
           <span>
-            {reminder.completedAt ? "Completado el " : "Vence el "}
-            {new Intl.DateTimeFormat("es-CL", {
+            {reminder.completedAt ? "Completed on " : "Due on "}
+            {new Intl.DateTimeFormat("en-US", {
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -105,7 +105,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
             className="w-full gap-2 hover:bg-green-50 hover:text-green-700 hover:border-green-200 dark:hover:bg-green-900/20"
           >
             <CheckCircle2 className="h-4 w-4" />
-            Marcar completado
+            Mark as completed
           </Button>
         </CardFooter>
       )}

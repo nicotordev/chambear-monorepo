@@ -16,7 +16,7 @@ export default function JobCardDetailButton({ job }: JobCardDetailButtonProps) {
   return (
     <Button
       variant="outline"
-      className="cursor-pointer flex flex-1"
+      className="cursor-pointer flex flex-1 w-full"
       onClick={() => setSelectedJobDetail(job)}
     >
       <Briefcase className="mr-2 size-4" />

@@ -7,7 +7,7 @@ import { CreateProfileSchema } from "@/schemas/user";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
 const upsertProfile = createRoute({
-  method: "put",
+  method: "post",
   path: "/user/me",
   request: {
     body: {
@@ -93,11 +93,13 @@ const avatarUpload = createRoute({
   request: {
     body: {
       content: {
-        "application/json": {
-          schema: CreateProfileSchema,
+        "multipart/form-data": {
+          schema: z.object({
+            file: z.instanceof(File),
+          }),
         },
       },
-      description: "Profile data to upsert",
+      description: "Avatar image file",
       required: true,
     },
   },
@@ -137,10 +139,52 @@ const avatarUpload = createRoute({
   },
 });
 
+const completeOnboarding = createRoute({
+  method: "post",
+  path: "/user/complete-onboarding",
+  responses: {
+    200: {
+      description: "Onboarding completed successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(
+            z.object({ message: z.string() })
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Bad request (profile incomplete)",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 const app = new OpenAPIHono();
 
 app.openapi(upsertProfile, userController.upsertProfile);
 app.openapi(getMe, userController.getMe);
 app.openapi(avatarUpload, userController.uploadAvatar);
+app.openapi(completeOnboarding, userController.completeOnboarding);
 
 export default app;

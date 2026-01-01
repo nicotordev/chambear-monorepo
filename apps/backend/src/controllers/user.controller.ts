@@ -69,6 +69,23 @@ const userController = {
       return c.json(response.error("Failed to upload avatar"), 500);
     }
   },
+
+  async completeOnboarding(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    try {
+      await userService.completeOnboarding(userId);
+      return c.json(response.success({ message: "Onboarding completed" }), 200);
+    } catch (error: any) {
+      console.error(error);
+      return c.json(response.badRequest(error.message || "Failed to complete onboarding"), 400);
+    }
+  },
 };
 
 export default userController;

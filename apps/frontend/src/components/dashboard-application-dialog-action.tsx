@@ -17,7 +17,7 @@ export default function DashboardApplicationDialogAction() {
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          <p className="text-xs">Agregar postulación manual</p>
+          <p className="text-xs">Add manual application</p>
         </TooltipContent>
       </Tooltip>
     </NewApplicationDialog>
