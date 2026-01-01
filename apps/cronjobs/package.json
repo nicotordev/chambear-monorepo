@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:trigger-scrape": "tsup src/scripts/trigger-scrape.ts --format cjs --clean",
+    "dev:trigger-scrape": "tsx src/scripts/trigger-scrape.ts",
+    "build:trigger-scrape": "tsup src/scripts/trigger-scrape.ts --format cjs --clean --out-dir dist/scripts",
     "start:trigger-scrape": "node dist/scripts/trigger-scrape.cjs"
   },
   "devDependencies": {
