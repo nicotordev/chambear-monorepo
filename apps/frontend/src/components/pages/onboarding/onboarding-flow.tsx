@@ -3,9 +3,11 @@
 import Logo from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useProfile } from "@/contexts/user-context";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -28,8 +30,6 @@ import OnboardingFlowStep1 from "./onboarding-flow-step-1";
 import OnboardingFlowStep2 from "./onboarding-flow-step-2";
 import OnboardingFlowStep3 from "./onboarding-flow-step-3";
 import OnboardingFlowStep4 from "./onboarding-flow-step-4";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProfile } from "@/contexts/user-context";
 
 const STEPS = [
   { id: 1, label: "Profile", icon: User, description: "Basic Info" },
@@ -194,7 +194,7 @@ export default function OnboardingFlow() {
                 <Avatar className="h-16 w-16 md:h-20 md:w-20">
                   <AvatarImage
                     src={p.avatar || undefined}
-                    className="object-cover"
+                    className="object-cover border-2border-foreground"
                   />
                   <AvatarFallback className="text-xl">
                     {p.headline?.[0] || "P"}

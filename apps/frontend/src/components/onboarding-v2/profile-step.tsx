@@ -85,7 +85,7 @@ export function ProfileStep() {
               onClick={() => fileInputRef.current?.click()}
             >
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-colors" />
-              <Avatar className="w-32 h-32 border-4 border-background shadow-2xl relative z-10">
+              <Avatar className="w-32 h-32 border-2border-background shadow-2xl relative z-10">
                 <AvatarImage
                   src={avatar || undefined}
                   className="object-cover"

@@ -89,7 +89,7 @@ export default async function ProfilePage() {
       {/* 1. PROFILE HEADER */}
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between rounded-xl border bg-card p-6 shadow-sm">
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
-          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+          <Avatar className="h-24 w-24 border-2 border-foreground shadow-md">
             <AvatarImage src={profile.avatar || ""} alt={user.name || ""} />
             <AvatarFallback className="text-2xl bg-primary/10 text-primary">
               {getInitials(user.name || "U")}

@@ -39,7 +39,7 @@ export default function OnboardingFlowStep1({
                   className="relative group cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Avatar className="w-32 h-32 border-4 border-muted group-hover:border-primary transition-colors">
+                  <Avatar className="w-32 h-32 border-2border-muted group-hover:border-primary transition-colors">
                     <AvatarImage
                       src={profilePic || "/avatar.png"}
                       className="object-cover"

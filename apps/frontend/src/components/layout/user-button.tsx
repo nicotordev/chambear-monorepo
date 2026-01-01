@@ -47,7 +47,7 @@ export default function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button asChild variant="default" size="icon" className="rounded-full">
-          <Avatar>
+          <Avatar className="border-2border-foreground">
             <AvatarImage
               src={currentProfile?.avatar || clerkUser.imageUrl}
               alt={clerkUser.fullName || "User Avatar"}
