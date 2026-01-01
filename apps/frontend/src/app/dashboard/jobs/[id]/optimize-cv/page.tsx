@@ -219,7 +219,7 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
           <div className="space-y-3">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-balance">
               Optimize{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-chart-2">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-chart-2">
                 CV
               </span>
             </h1>
@@ -493,7 +493,7 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
 
           {/* Right Column (Widgets) */}
           <div className="lg:col-span-4 space-y-6">
-            <Card className="bg-gradient-to-br from-card to-muted/50">
+            <Card className="bg-linear-to-br from-card to-muted/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-primary" />
