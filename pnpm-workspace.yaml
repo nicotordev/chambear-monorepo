@@ -5,6 +5,7 @@ onlyBuiltDependencies:
   - '@clerk/shared'
   - '@prisma/engines'
   - esbuild
+  - msgpackr-extract
   - prisma
   - puppeteer
   - sharp

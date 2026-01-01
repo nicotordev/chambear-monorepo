@@ -34,7 +34,7 @@ importers:
         version: 0.5.3(hono@4.11.3)
       '@hono/zod-openapi':
         specifier: ^1.2.0
-        version: 1.2.0(hono@4.11.3)(zod@4.3.2)
+        version: 1.2.0(hono@4.11.3)(zod@4.3.4)
       '@pinecone-database/pinecone':
         specifier: ^6.1.3
         version: 6.1.3
@@ -79,7 +79,7 @@ importers:
         version: 5.8.2
       openai:
         specifier: ^6.15.0
-        version: 6.15.0(ws@8.18.3)(zod@4.3.2)
+        version: 6.15.0(ws@8.18.3)(zod@4.3.4)
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -94,7 +94,7 @@ importers:
         version: 20.1.0(@types/node@25.0.3)
       zod:
         specifier: ^4.3.2
-        version: 4.3.2
+        version: 4.3.4
     devDependencies:
       '@types/cheerio':
         specifier: ^1.0.0
@@ -327,7 +327,7 @@ importers:
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       zod:
         specifier: ^4.2.1
-        version: 4.3.2
+        version: 4.3.4
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.7)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1))
@@ -4394,8 +4394,8 @@ packages:
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  tabbable@6.3.0:
-    resolution: {integrity: sha512-EIHvdY5bPLuWForiR/AN2Bxngzpuwn1is4asboytXtpTgsArc+WmSJKVLlhdh71u7jFcryDqB2A8lQvj78MkyQ==}
+  tabbable@6.4.0:
+    resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
 
   tailwind-merge@2.6.0:
     resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
@@ -4658,8 +4658,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.2:
-    resolution: {integrity: sha512-b8L8yn4rIVfiXyHAmnr52/ZEpDumlT0bmxiq3Ws1ybrinhflGpt12Hvv54kYnEsGPRs6o/Ka3/ppA2OWY21IVg==}
+  zod@4.3.4:
+    resolution: {integrity: sha512-Zw/uYiiyF6pUT1qmKbZziChgNPRu+ZRneAsMUDU6IwmXdWt5JwcUfy2bvLOCUtz5UniaN/Zx5aFttZYbYc7O/A==}
 
   zustand@5.0.9:
     resolution: {integrity: sha512-ALBtUj0AfjJt3uNRQoL1tL2tMvj6Gp/6e39dnfT6uzpelGru8v1tPOGBzayOWbPJvujM8JojDk3E1LxeFisBNg==}
@@ -4683,10 +4683,10 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@asteasolutions/zod-to-openapi@8.2.0(zod@4.3.2)':
+  '@asteasolutions/zod-to-openapi@8.2.0(zod@4.3.4)':
     dependencies:
       openapi3-ts: 4.5.0
-      zod: 4.3.2
+      zod: 4.3.4
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -5229,7 +5229,7 @@ snapshots:
     dependencies:
       '@supercharge/promise-pool': 3.2.0
       undici: 7.16.0
-      zod: 4.3.2
+      zod: 4.3.4
 
   '@chevrotain/cst-dts-gen@10.5.0':
     dependencies:
@@ -5427,7 +5427,7 @@ snapshots:
       '@floating-ui/utils': 0.2.10
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
-      tabbable: 6.3.0
+      tabbable: 6.4.0
 
   '@floating-ui/utils@0.2.10': {}
 
@@ -5452,18 +5452,18 @@ snapshots:
     dependencies:
       hono: 4.11.3
 
-  '@hono/zod-openapi@1.2.0(hono@4.11.3)(zod@4.3.2)':
+  '@hono/zod-openapi@1.2.0(hono@4.11.3)(zod@4.3.4)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 8.2.0(zod@4.3.2)
-      '@hono/zod-validator': 0.7.6(hono@4.11.3)(zod@4.3.2)
+      '@asteasolutions/zod-to-openapi': 8.2.0(zod@4.3.4)
+      '@hono/zod-validator': 0.7.6(hono@4.11.3)(zod@4.3.4)
       hono: 4.11.3
       openapi3-ts: 4.5.0
-      zod: 4.3.2
+      zod: 4.3.4
 
-  '@hono/zod-validator@0.7.6(hono@4.11.3)(zod@4.3.2)':
+  '@hono/zod-validator@0.7.6(hono@4.11.3)(zod@4.3.4)':
     dependencies:
       hono: 4.11.3
-      zod: 4.3.2
+      zod: 4.3.4
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.69.0(react@19.2.1))':
     dependencies:
@@ -8404,10 +8404,10 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  openai@6.15.0(ws@8.18.3)(zod@4.3.2):
+  openai@6.15.0(ws@8.18.3)(zod@4.3.4):
     optionalDependencies:
       ws: 8.18.3
-      zod: 4.3.2
+      zod: 4.3.4
 
   openapi3-ts@4.5.0:
     dependencies:
@@ -9129,7 +9129,7 @@ snapshots:
       react: 19.2.1
       use-sync-external-store: 1.6.0(react@19.2.1)
 
-  tabbable@6.3.0: {}
+  tabbable@6.4.0: {}
 
   tailwind-merge@2.6.0: {}
 
@@ -9382,7 +9382,7 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.3.2: {}
+  zod@4.3.4: {}
 
   zustand@5.0.9(@types/react@19.2.7)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1)):
     optionalDependencies:
