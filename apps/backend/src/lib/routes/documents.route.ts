@@ -1,4 +1,5 @@
 import documentsController from "@/controllers/documents.controller";
+import { DocumentType } from "@/lib/generated";
 import {
   CreateDocumentSchema,
   DocumentSchema,
@@ -104,6 +105,8 @@ const uploadDocument = createRoute({
             file: z
               .instanceof(File)
               .openapi({ type: "string", format: "binary" }),
+            type: z.nativeEnum(DocumentType).optional(),
+            label: z.string().optional(),
           }),
         },
       },
@@ -114,7 +117,7 @@ const uploadDocument = createRoute({
       description: "Upload document",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(z.string()),
+          schema: createSuccessResponseSchema(DocumentSchema),
         },
       },
     },

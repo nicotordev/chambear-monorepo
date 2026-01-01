@@ -1,3 +1,4 @@
+import type { DocumentType } from "@/lib/generated";
 import response from "@/lib/utils/response";
 import { CreateDocumentSchema } from "@/schemas/document";
 import documentService from "@/services/documents.service";
@@ -40,7 +41,7 @@ const documentsController = {
 
     try {
       const publicDocuments = await documentService.getProfileDocuments(
-        profileId,
+        profileId
       );
 
       return c.json(
@@ -90,7 +91,7 @@ const documentsController = {
     try {
       const document = await documentService.getDocumentById(
         profileId,
-        documentId,
+        documentId
       );
 
       return c.json(
@@ -196,7 +197,7 @@ const documentsController = {
       const document = await documentService.updateDocument(
         profileId,
         documentId,
-        body,
+        body
       );
 
       return c.json(
@@ -238,7 +239,7 @@ const documentsController = {
     try {
       const document = await documentService.deleteDocument(
         profileId,
-        documentId,
+        documentId
       );
 
       return c.json(
@@ -278,6 +279,8 @@ const documentsController = {
     const data = await c.req.parseBody();
 
     const file = data.file;
+    const type = data.type as DocumentType | undefined;
+    const label = data.label as string | undefined;
 
     const profileId = c.req.query("profileId");
 
@@ -290,8 +293,13 @@ const documentsController = {
     }
 
     try {
-      const finalURL = await documentService.uploadDocument(profileId, file);
-      return c.json(response.success(finalURL), 200);
+      const uploadResult = await documentService.uploadDocument(
+        profileId,
+        file,
+        type,
+        label
+      );
+      return c.json(response.success(uploadResult), 200);
     } catch (error) {
       console.error(error);
       return c.json(response.error("Failed to upload document"), 500);

@@ -1,6 +1,6 @@
 import jobsController from "@/controllers/jobs.controller";
 import { ApplicationSchema } from "@/schemas/application";
-import { JobSchema, JobUpsertSchema, RankedJobSchema } from "@/schemas/job";
+import { JobSchema, JobUpsertSchema } from "@/schemas/job";
 import {
   createSuccessResponseSchema,
   ErrorResponseSchema,
@@ -66,7 +66,9 @@ const scanJobs = createRoute({
       description: "Get job recommendations",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(z.array(RankedJobSchema)),
+          schema: createSuccessResponseSchema(
+            z.object({ message: z.string() })
+          ),
         },
       },
     },

@@ -13,15 +13,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { UploadCloud } from "lucide-react";
+import { DocumentType } from "@/types";
 
 export interface CreateDocumentFormProps {
   onSuccess: () => void;
 }
-export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProps) {
+export default function CreateDocumentForm({
+  onSuccess,
+}: CreateDocumentFormProps) {
   const { uploadFile, createDocument, isLoading } = useDocuments();
   const [file, setFile] = React.useState<File | null>(null);
   const [label, setLabel] = React.useState("");
-  const [type, setType] = React.useState<string>("RESUME"); // Default value
+  const [type, setType] = React.useState<DocumentType>(DocumentType.RESUME); // Default value
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +40,7 @@ export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProp
       // 2. Create the record in the DB
       await createDocument({
         label,
-        type: type as any, // Adjust type according to your enum
+        type: type, // Adjust type according to your enum
         url: fileUrl,
         content: "Content pending processing", // Optional, depends on your backend
       });
@@ -65,14 +68,19 @@ export default function CreateDocumentForm({ onSuccess }: CreateDocumentFormProp
 
       <div className="space-y-2">
         <Label htmlFor="doc-type">Type</Label>
-        <Select value={type} onValueChange={setType}>
+        <Select
+          value={type}
+          onValueChange={(value) => setType(value as DocumentType)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select a type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="RESUME">Resume (CV)</SelectItem>
-            <SelectItem value="COVER_LETTER">Cover Letter</SelectItem>
-            <SelectItem value="OTHER">Other</SelectItem>
+            {Object.values(DocumentType).map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
