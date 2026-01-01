@@ -22,7 +22,7 @@ export interface User {
   updatedAt: Date;
   profiles?: Profile[];
   applications?: Application[];
-  fitScores?: FitScore[];
+
   documents?: Document[];
   interviewSessions?: InterviewSession[];
   reminders?: Reminder[];
@@ -46,6 +46,7 @@ export interface Profile {
   experiences?: Experience[];
   educations?: Education[];
   skills?: ProfileSkill[];
+  fitScores?: FitScore[];
 }
 
 export interface Experience {
@@ -134,12 +135,12 @@ export type JSONValue =
 
 export interface FitScore {
   id: string;
-  userId: string;
+  profileId: string;
   jobId: string;
   score: number;
   rationale: JSONValue | null;
   createdAt: Date;
-  user?: User;
+  profile?: Profile;
   job?: Job;
 }
 
@@ -161,7 +162,7 @@ export interface JobSkill {
 
 export interface Application {
   id: string;
-  userId: string;
+  profileId: string;
   jobId: string;
   status: ApplicationStatus;
   appliedAt: Date | null;
@@ -180,7 +181,7 @@ export interface Application {
 
 export interface Document {
   id: string;
-  userId: string;
+  profileId: string;
   url: string;
   jobId: string | null;
   type: DocumentType;
@@ -196,21 +197,10 @@ export interface Document {
   applicationCoverLetter?: Application[];
 }
 
-export interface FitScore {
-  id: string;
-  userId: string;
-  jobId: string;
-  score: number;
-  rationale: JSONValue | null;
-  createdAt: Date;
-  user?: User;
-  job?: Job;
-}
-
 export interface InterviewSession {
   id: string;
   meetLink: string;
-  userId: string;
+  profileId: string;
   jobId: string;
   mode: InterviewMode;
   status: InterviewStatus;

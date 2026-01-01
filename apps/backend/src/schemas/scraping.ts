@@ -1,4 +1,4 @@
-      import { z } from 'zod';
+import { z } from "zod";
 /* =========================
  * Zod schemas for strict parsing
  * ========================= */
@@ -71,7 +71,11 @@ export const ExtractJobsResponseSchema = z.object({
 export const RankedJobSchema = z.object({
   job: JobPostingSchema,
   fitScore: z.number().min(0).max(100),
-  rationale: z.string().min(1),
+  rationale: z.object({
+    match: z.array(z.string()),
+    missing: z.array(z.string()),
+    reason: z.string().optional(),
+  }),
   reject: z.boolean().optional(),
 });
 

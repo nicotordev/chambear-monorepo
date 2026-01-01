@@ -98,10 +98,16 @@ export type RankJobsInput = Readonly<{
   topK?: number; // default 10
 }>;
 
+export type Rationale = Readonly<{
+  match: readonly string[];
+  missing: readonly string[];
+  reason?: string;
+}>;
+
 export type RankedJob = Readonly<{
   job: JobPosting;
   fitScore: number; // 0..100
-  rationale: string;
+  rationale: Rationale | string;
 }>;
 
 export type RankJobsOutput = Readonly<{

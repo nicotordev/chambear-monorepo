@@ -263,6 +263,38 @@ class Api {
     const res = await this.instance.post("/billing/portal");
     return res.data.data;
   }
+
+  // --- AI Actions ---
+
+  public async optimizeCv(jobId: string, profileId: string): Promise<Document> {
+    const res = await this.instance.post(
+      "/ai/optimize-cv",
+      { jobId },
+      { params: { profileId } }
+    );
+    return res.data.data;
+  }
+
+  public async generateCoverLetter(
+    jobId: string,
+    profileId: string
+  ): Promise<Document> {
+    const res = await this.instance.post(
+      "/ai/generate-cover-letter",
+      { jobId },
+      { params: { profileId } }
+    );
+    return res.data.data;
+  }
+
+  public async calculateFit(jobId: string, profileId: string): Promise<any> {
+    const res = await this.instance.post(
+      "/ai/calculate-fit",
+      { jobId },
+      { params: { profileId } }
+    );
+    return res.data.data;
+  }
 }
 
 export default Api.getInstance();

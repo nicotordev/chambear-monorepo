@@ -1,10 +1,15 @@
-import DashboardCard from "@/components/dashboard-card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
   ClipboardCopy,
-  LetterText,
   Sparkles,
   Target,
   Zap,
@@ -12,6 +17,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { JobAiActions } from "@/components/dashboard/jobs/job-ai-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,19 +26,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import backend from "@/lib/backend";
 import type { Job } from "@/types";
 
-type PageProps = {
-  params: Promise<{ id: string }>;
-};
-
 type Rationale = {
   match?: string[];
   missing?: string[];
+  reason?: string;
 };
 
 type FitModel = {
   score: number; // 0..100
   match: string[];
   missing: string[];
+  reason?: string;
 };
 
 function assertNonEmpty(value: string, name: string): string {
@@ -61,7 +65,9 @@ function parseRationale(rationale: unknown): Rationale {
     ? r.missing.filter((x): x is string => typeof x === "string")
     : [];
 
-  return { match, missing };
+  const reason = typeof r.reason === "string" ? r.reason : undefined;
+
+  return { match, missing, reason };
 }
 
 async function getJobById(jobId: string): Promise<Job | null> {
@@ -74,53 +80,80 @@ async function getJobById(jobId: string): Promise<Job | null> {
 }
 
 function pickDecision(score: number): {
-  label: "Aplicar hoy" | "Iterar 15 min";
+  label: "Apply Today" | "Iterate 15 min";
   hint: string;
 } {
   if (score >= 80) {
     return {
-      label: "Aplicar hoy",
-      hint: "Estás bien posicionado. Genera CV + carta y manda.",
+      label: "Apply Today",
+      hint: "You are well positioned. Generate CV + cover letter and apply.",
     };
   }
   if (score >= 60) {
     return {
-      label: "Iterar 15 min",
-      hint: "Te falta poco. Haz quick wins y re-genera.",
+      label: "Iterate 15 min",
+      hint: "Close. Do the quick wins and re-generate.",
     };
   }
   return {
-    label: "Iterar 15 min",
-    hint: "Hay gaps claros. Ajusta keywords y experiencia relevante.",
+    label: "Iterate 15 min",
+    hint: "Clear gaps. Adjust keywords and relevant experience.",
   };
 }
 
-function buildQuickWins(tags: string[], missing: string[]): string[] {
+function buildQuickWins(
+  match: string[],
+  missing: string[],
+  jobTags: string[]
+): string[] {
   const wins: string[] = [];
-  if (missing.length > 0)
-    wins.push(
-      `Agregar evidencia explícita de: ${missing.slice(0, 3).join(", ")}`
-    );
-  if (tags.length > 0)
-    wins.push(
-      `Alinear “Skills” del CV con tags: ${tags.slice(0, 4).join(", ")}`
-    );
-  wins.push("Reescribir bullets con impacto: métrica + acción + resultado");
-  wins.push("Reordenar experiencia: lo más relevante arriba");
+
+  // If we have missing critical skills, that's the #1 quick win
+  if (missing.length > 0) {
+    wins.push(`Highlight experience in: ${missing.slice(0, 3).join(", ")}`);
+  }
+
+  // If we have matches, we should reinforce them
+  if (match.length > 0) {
+    wins.push(`Quantify achievements using: ${match.slice(0, 2).join(", ")}`);
+  }
+
+  // Generic but high-impact advice
+  wins.push("Tailor professional summary to include job keywords");
+  wins.push("Ensure the first 3 bullets use strong action verbs");
+
   return wins;
 }
 
 function buildAtsRisks(score: number, missing: string[]): string[] {
   const risks: string[] = [];
-  if (missing.length > 0)
+
+  if (missing.length > 3) {
     risks.push(
-      "Keywords faltantes (ATS): podrías quedar abajo en ranking automático"
+      `Critical gaps: Missing ${missing.length} key keywords detected by ATS`
     );
-  if (score < 60)
-    risks.push("Fit bajo: tu resumen y bullets no reflejan match con el rol");
-  risks.push("Formato: evita tablas/columnas raras si vas a aplicar por ATS");
+  } else if (missing.length > 0) {
+    risks.push(
+      "Missing keywords: The ATS might filter your profile due to lack of technical terms"
+    );
+  }
+
+  if (score < 70) {
+    risks.push(
+      "Low Fit Score: Your current profile doesn't stand out enough for this role"
+    );
+  }
+
+  risks.push(
+    "Format: Verify there are no tables or charts that confuse the ATS reader"
+  );
+
   return risks;
 }
+
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
 
 export default async function OptimizeCVforJob({ params }: PageProps) {
   const { id } = await params;
@@ -129,338 +162,384 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
   const job = await getJobById(jobId);
   if (!job) notFound();
 
-  // Extract fit score from the job relationship if available
-  // Assuming the API returns a job with fitScores included
-  const fitScore = job.fitScores?.[0]; // Taking the first score as current logic implies 1:1 or most recent
+  const user = await backend.user.getMe().catch(() => null);
+  const profileId =
+    user?.profiles?.[0]?.id || job.applications?.[0]?.profileId || "";
 
-  const parsedRationale = parseRationale(fitScore?.rationale);
+  // Extract fit score for the current profile
+  const fitScore = job.fitScores?.find((fs) => fs.profileId === profileId);
+
+  // If no fit score, we should show a prompt to calculate it
+  if (!fitScore) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 md:p-8 animate-in fade-in duration-500">
+        <Card className="w-full max-w-lg border-2 border-dashed">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto size-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="size-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Analysis Pending</CardTitle>
+            <CardDescription className="text-base">
+              We haven't calculated the fit score for this position yet.
+              Run the AI analysis to get personalized insights.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 pt-4">
+            <JobAiActions
+              jobId={jobId}
+              profileId={profileId}
+              variant="default"
+            />
+            <Button asChild variant="ghost" className="w-full">
+              <Link href={`/dashboard/jobs/${job.id}`}>
+                <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+                Back to Job Details
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const parsedRationale = parseRationale(fitScore.rationale);
 
   const fit: FitModel = {
-    score: clampScore(fitScore?.score ?? job.fit ?? 0),
+    score: clampScore(fitScore.score ?? 0),
     match: parsedRationale.match ?? [],
     missing: parsedRationale.missing ?? [],
+    reason: parsedRationale.reason,
   };
 
   const decision = pickDecision(fit.score);
-  const quickWins = buildQuickWins(job.tags, fit.missing);
+  const quickWins = buildQuickWins(fit.match, fit.missing, job.tags);
   const atsRisks = buildAtsRisks(fit.score, fit.missing);
 
   return (
-    <div className="h-full flex flex-col space-y-0 bg-background animate-in fade-in duration-500">
+    <div className="h-full flex flex-col space-y-6 bg-background animate-in fade-in duration-500 overflow-y-auto">
       {/* Header */}
-      <div className="px-8 py-10 border-b border-border bg-card/30 backdrop-blur-sm shrink-0">
+      <div className="px-8 pt-8 pb-0 shrink-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">
-              Optimizar{" "}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-chart-2">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-balance">
+              Optimize{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-chart-2">
                 CV
               </span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl text-pretty leading-relaxed">
-              {job.title} en{" "}
+            <p className="text-muted-foreground text-lg max-w-2xl text-pretty">
+              {job.title} at{" "}
               <span className="text-foreground font-semibold">
                 {job.company?.name ?? job.companyName}
               </span>
               {job.location ? ` · ${job.location}` : ""}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               asChild
-              variant="secondary"
+              variant="outline"
+              size="sm"
               className="rounded-full shadow-sm"
             >
               <Link href={`/dashboard/jobs/${job.id}`}>
-                <ArrowRight className="mr-2 h-4 w-4 rotate-180" /> Volver
+                <ArrowRight className="mr-2 h-4 w-4 rotate-180" /> Back
               </Link>
             </Button>
-            <Button asChild className="rounded-full shadow-sm">
+            <Button asChild size="sm" className="rounded-full shadow-sm">
               <Link href={`/dashboard/jobs/${job.id}/apply`}>
-                Aplicar <ArrowRight className="ml-2 h-4 w-4" />
+                Apply <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Immersive Grid */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-px bg-border border-b border-border">
-            {/* Fit Score Stat (spanning all) */}
-            <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 bg-background">
-              <div className="p-8 flex flex-col justify-between hover:bg-muted/30 transition-colors group cursor-default border-r border-border">
-                <div className="flex items-center justify-between mb-6">
-                  <Target className="size-5 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Fit Score
-                  </span>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold tracking-tighter">
-                    {fit.score}%
-                  </div>
-                  <div className="mt-2">
-                    <Progress value={fit.score} className="h-2" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    {decision.hint}
-                  </p>
-                </div>
-              </div>
+      <div className="flex-1 px-8 pb-8 space-y-6">
+        {/* Top Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Fit Score</CardTitle>
+              <Target className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{fit.score}%</div>
+              <Progress value={fit.score} className="h-2 mt-2" />
+              <p className="text-xs text-muted-foreground mt-2">
+                {fit.reason || decision.hint}
+              </p>
+            </CardContent>
+          </Card>
 
-              <div className="p-8 flex flex-col justify-between hover:bg-muted/30 transition-colors group cursor-default border-r border-border">
-                <div className="flex items-center justify-between mb-6">
-                  <Zap className="size-5 text-chart-2" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Decisión
-                  </span>
-                </div>
-                <div>
-                  <Badge
-                    variant={
-                      fit.score >= 80
-                        ? "default"
-                        : fit.score >= 60
-                        ? "secondary"
-                        : "destructive"
-                    }
-                    className="text-lg px-4 py-1"
-                  >
-                    {decision.label}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Basado en el análisis de IA
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-8 flex flex-col justify-between hover:bg-muted/30 transition-colors group cursor-default">
-                <div className="flex items-center justify-between mb-6">
-                  <Sparkles className="size-5 text-chart-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Sugerencias
-                  </span>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold tracking-tighter">
-                    {quickWins.length} Quick Wins
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Para mejorar tu perfil hoy
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="lg:col-span-8 bg-background p-0 md:border-r border-border">
-              <div className="divide-y divide-border">
-                <DashboardCard
-                  title="Análisis Detallado"
-                  description="Ajustes recomendados para pasar los filtros de selección."
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Decision</CardTitle>
+              <Zap className="h-4 w-4 text-chart-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold mb-2">
+                <Badge
+                  variant={
+                    fit.score >= 80
+                      ? "default"
+                      : fit.score >= 60
+                      ? "secondary"
+                      : "destructive"
+                  }
+                  className="px-3 py-1 text-base"
                 >
-                  <Tabs defaultValue="quickwins" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-6">
-                      <TabsTrigger value="quickwins">Quick wins</TabsTrigger>
-                      <TabsTrigger value="ats">Riesgos ATS</TabsTrigger>
-                      <TabsTrigger value="job">Puesto</TabsTrigger>
-                    </TabsList>
+                  {decision.label}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Based on AI analysis of your profile match.
+              </p>
+            </CardContent>
+          </Card>
 
-                    <TabsContent value="quickwins" className="space-y-6">
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium">
-                          Iteración rápida (15 min)
-                        </h4>
-                        <ul className="grid gap-3">
-                          {quickWins.map((w) => (
-                            <li
-                              key={w}
-                              className="flex items-start gap-3 text-sm text-muted-foreground"
-                            >
-                              <CheckCircle2 className="h-5 w-5 text-chart-2 shrink-0" />
-                              {w}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-4">
-                        <Button variant="secondary" size="sm">
-                          Recalcular Fit Score
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Ver CV anterior
-                        </Button>
-                      </div>
-                    </TabsContent>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Suggestions</CardTitle>
+              <Sparkles className="h-4 w-4 text-chart-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{quickWins.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Quick wins identified to improve your chances.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-                    <TabsContent value="ats" className="space-y-6">
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-destructive" />
-                          Riesgos detectados
-                        </h4>
-                        <ul className="grid gap-3">
-                          {atsRisks.map((r) => (
-                            <li
-                              key={r}
-                              className="flex items-start gap-3 text-sm text-muted-foreground"
-                            >
-                              <div className="h-1.5 w-1.5 rounded-full bg-destructive mt-1.5 shrink-0" />
-                              {r}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column (Main Analysis) */}
+          <div className="lg:col-span-8 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Detailed Analysis</CardTitle>
+                <CardDescription>
+                  Review and optimize your profile based on these insights.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="quickwins" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsTrigger value="quickwins">Quick Wins</TabsTrigger>
+                    <TabsTrigger value="ats">ATS Risks</TabsTrigger>
+                    <TabsTrigger value="job">Job Role</TabsTrigger>
+                  </TabsList>
 
-                      {fit.missing.length > 0 && (
-                        <div className="rounded-xl border bg-muted/30 p-4">
-                          <div className="text-sm font-medium mb-3">
-                            Keywords sugeridas (ATS)
-                          </div>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {fit.missing.slice(0, 12).map((k) => (
-                              <Badge
-                                key={k}
-                                variant="outline"
-                                className="bg-background"
-                              >
-                                {k}
-                              </Badge>
-                            ))}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full bg-background"
+                  <TabsContent value="quickwins" className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Sparkles className="h-4 w-4" />
+                        <span>High Impact Changes (15 min)</span>
+                      </div>
+                      <ul className="grid gap-3">
+                        {quickWins.map((w) => (
+                          <li
+                            key={w}
+                            className="flex items-start gap-3 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg border border-border/50"
                           >
-                            Copiar lista{" "}
-                            <ClipboardCopy className="ml-2 h-4 w-4" />
+                            <CheckCircle2 className="h-5 w-5 text-chart-2 shrink-0 mt-0.5" />
+                            <span>{w}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Separator />
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Ready to apply changes?
+                      </p>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          View Original CV
+                        </Button>
+                        <JobAiActions
+                          jobId={jobId}
+                          profileId={profileId}
+                          variant="minimal"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="ats" className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>Critical Issues Detected</span>
+                      </div>
+                      <ul className="grid gap-3">
+                        {atsRisks.map((r) => (
+                          <li
+                            key={r}
+                            className="flex items-start gap-3 text-sm text-muted-foreground bg-destructive/5 p-3 rounded-lg border border-destructive/10"
+                          >
+                            <div className="h-2 w-2 rounded-full bg-destructive mt-1.5 shrink-0" />
+                            <span>{r}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {fit.missing.length > 0 && (
+                      <div className="rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium">
+                            Missing Keywords
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Copy list"
+                          >
+                            <ClipboardCopy className="h-4 w-4" />
                           </Button>
                         </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="job" className="space-y-6">
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium">
-                          Keywords del Puesto
-                        </h4>
                         <div className="flex flex-wrap gap-2">
-                          {job.tags.map((t) => (
-                            <Badge key={`tag-${t}`} variant="secondary">
-                              {t}
+                          {fit.missing.slice(0, 15).map((k) => (
+                            <Badge
+                              key={k}
+                              variant="secondary"
+                              className="bg-muted hover:bg-muted/80"
+                            >
+                              {k}
                             </Badge>
                           ))}
                         </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Descripción</h4>
-                          <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">
-                            {job.description ?? "Sin descripción disponible."}
-                          </p>
-                        </div>
                       </div>
-                    </TabsContent>
-                  </Tabs>
-                </DashboardCard>
+                    )}
+                  </TabsContent>
 
-                <DashboardCard
-                  title="Match de Skills"
-                  description="Comparativa entre tu perfil y los requerimientos."
-                >
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-chart-2" />
-                        Match
-                      </div>
+                  <TabsContent value="job" className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium">Role Keywords</h4>
                       <div className="flex flex-wrap gap-2">
-                        {(fit.match.length > 0
-                          ? fit.match
-                          : job.tags.slice(0, 5)
-                        ).map((t) => (
-                          <Badge
-                            key={`match-${t}`}
-                            variant="outline"
-                            className="border-chart-2/50 text-chart-2 bg-chart-2/5"
-                          >
+                        {job.tags.map((t) => (
+                          <Badge key={`tag-${t}`} variant="outline">
                             {t}
                           </Badge>
                         ))}
                       </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium">Job Description</h4>
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-muted/30 p-4 rounded-lg max-h-96 overflow-y-auto">
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {job.description ?? "No description available."}
+                          </p>
+                        </div>
+                      </div>
                     </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-                    <div className="space-y-3">
-                      <div className="text-sm font-medium flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-destructive" />
-                        Faltantes
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {fit.missing.length === 0 ? (
-                          <Badge variant="secondary">
-                            Nada crítico detectado
-                          </Badge>
-                        ) : (
-                          fit.missing.slice(0, 6).map((t) => (
-                            <Badge key={`miss-${t}`} variant="destructive">
-                              {t}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills Match</CardTitle>
+                <CardDescription>
+                  Comparison between your profile and the requirements.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-8 sm:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-chart-2" />
+                      Matched Skills
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(fit.match.length > 0
+                        ? fit.match
+                        : job.tags.slice(0, 5)
+                      ).map((t) => (
+                        <Badge
+                          key={`match-${t}`}
+                          variant="outline"
+                          className="border-chart-2/50 text-chart-2 bg-chart-2/5"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
-                </DashboardCard>
-              </div>
-            </div>
 
-            {/* Sidebar Widgets Column */}
-            <div className="lg:col-span-4 bg-background flex flex-col divide-y divide-border">
-              <DashboardCard
-                title="Acciones IA"
-                description="Herramientas para potenciar tu postulación."
-              >
-                <div className="space-y-3">
-                  <Button className="w-full rounded-xl h-12">
-                    Optimizar CV <Sparkles className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="w-full rounded-xl h-12"
-                  >
-                    Generar Carta <LetterText className="ml-2 h-4 w-4" />
-                  </Button>
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-destructive" />
+                      Missing Skills
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {fit.missing.length === 0 ? (
+                        <Badge variant="secondary">
+                          No critical gaps detected
+                        </Badge>
+                      ) : (
+                        fit.missing.slice(0, 10).map((t) => (
+                          <Badge key={`miss-${t}`} variant="destructive">
+                            {t}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </DashboardCard>
+              </CardContent>
+            </Card>
+          </div>
 
-              <DashboardCard
-                title="Checklist de Salida"
-                description="Asegúrate de tener todo listo."
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+          {/* Right Column (Widgets) */}
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="bg-gradient-to-br from-card to-muted/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  AI Actions
+                </CardTitle>
+                <CardDescription>
+                  Tools to boost your application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <JobAiActions jobId={jobId} profileId={profileId} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Exit Checklist</CardTitle>
+                <CardDescription>Ensure you are ready.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors cursor-pointer">
                     <CheckCircle2 className="h-5 w-5 text-chart-1" />
                     <span className="text-sm font-medium">
-                      CV optimizado (PDF)
+                      Optimized CV (PDF)
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 opacity-50">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed hover:border-solid hover:bg-muted/50 transition-all cursor-pointer opacity-70 hover:opacity-100">
                     <div className="h-5 w-5 rounded-full border-2 border-muted shrink-0" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      Carta lista (opcional)
+                      Cover Letter (Optional)
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 opacity-50">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed hover:border-solid hover:bg-muted/50 transition-all cursor-pointer opacity-70 hover:opacity-100">
                     <div className="h-5 w-5 rounded-full border-2 border-muted shrink-0" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      Preguntas de entrevista
+                      Interview Questions
                     </span>
                   </div>
                 </div>
-              </DashboardCard>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

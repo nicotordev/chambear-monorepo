@@ -59,9 +59,7 @@ export default async function JobsPage() {
 
         {/* RIGHT: Job detail */}
         <div className="flex-1 overflow-y-auto bg-background/50">
-          <Suspense fallback={<div className="p-8">Loading details...</div>}>
-            <SelectedJob ssrJobs={jobs} />
-          </Suspense>
+          <SelectedJob ssrJobs={jobs} />
         </div>
       </div>
     </div>

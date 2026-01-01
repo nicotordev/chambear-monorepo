@@ -77,6 +77,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { currentProfile, user: databaseUser, switchProfile } = useAppUser();
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const profiles = databaseUser?.profiles || [];
   const profileId = currentProfile?.id;
@@ -175,7 +180,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>My Documents</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {(documents || []).length > 0 ? (
+              {isMounted && (documents || []).length > 0 ? (
                 <>
                   {(documents || []).map((item) => (
                     <SidebarMenuItem key={item.id}>

@@ -5,6 +5,7 @@ import jobsRoute from "@/lib/routes/jobs.route";
 import remindersRoute from "@/lib/routes/reminders.route";
 import userRoute from "@/lib/routes/user.route";
 import webhooksRoute from "@/lib/routes/webhooks.route";
+import aiActionRoute from "@/lib/routes/ai-action.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -46,5 +47,6 @@ app.route("/api/v1", documentRoute);
 app.route("/api/v1", remindersRoute);
 app.route("/api/v1/billing", billingRoute);
 app.route("/api/v1/webhooks", webhooksRoute);
+app.route("/api/v1", aiActionRoute);
 
 export default app;

@@ -1,8 +1,10 @@
+import "server-only";
 import type { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
   CreditWallet,
   Document,
+  FitScore,
   InterviewSession,
   Job,
   Plan,
@@ -14,7 +16,6 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
 
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
-import "server-only";
 
 // 1. Instancia base
 const api: AxiosInstance = axios.create({
@@ -231,6 +232,25 @@ export const backend = {
 
     customerPortal: (): Promise<{ url: string }> =>
       fetcher.post<{ url: string }>("/billing/portal", {}),
+  },
+
+  ai: {
+    optimizeCv: (jobId: string, profileId: string): Promise<Document> =>
+      fetcher.post<Document>(`/ai/optimize-cv?profileId=${profileId}`, {
+        jobId,
+      }),
+    generateCoverLetter: (
+      jobId: string,
+      profileId: string
+    ): Promise<Document> =>
+      fetcher.post<Document>(
+        `/ai/generate-cover-letter?profileId=${profileId}`,
+        { jobId }
+      ),
+    calculateFit: (jobId: string, profileId: string): Promise<FitScore> =>
+      fetcher.post<FitScore>(`/ai/calculate-fit?profileId=${profileId}`, {
+        jobId,
+      }),
   },
 };
 

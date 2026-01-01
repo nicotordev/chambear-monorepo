@@ -29,6 +29,7 @@
         "group": "postgres",
         "connectString": "postgresql://postgres:postgres@localhost:5432/chambear"
       }
-    ]
+    ],
+    "typescript.tsdk": "Root/node_modules/typescript/lib"
   }
 }

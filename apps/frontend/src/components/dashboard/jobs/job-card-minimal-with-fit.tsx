@@ -34,9 +34,9 @@ export default function JobCardMinimalWithFit({
       <CardContent className="space-y-2">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Fit</span>
-          <span className="font-medium">10%</span>
+          <span className="font-medium">{job.fit}%</span>
         </div>
-        <Progress value={10} />
+        <Progress value={job.fit} />
 
         <div className="flex flex-wrap gap-1">
           {job.tags.slice(0, 3).map((tag) => (

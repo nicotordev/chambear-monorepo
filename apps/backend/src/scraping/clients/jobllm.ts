@@ -159,11 +159,13 @@ Hard negatives (always <= 10):
 
     if (!userContext || userContext.trim().length === 0) return base;
 
-    return `${base}
-
+    return (
+      `${base}` +
+      `
 User context (optional; use only as a mild prior):
 ${userContext.trim()}
-`.trim();
+`.trim()
+    );
   }
 
   public async scoreUrls(input: ScoreUrlsInput): Promise<ScoreUrlsOutput> {
@@ -308,16 +310,25 @@ ${userContext.trim()}
         : "Extraction mode: SELECTIVE (capture only clear postings).";
 
     if (!userContext || userContext.trim().length === 0) {
-      return `${base}\n\n${mode}`.trim();
+      return (
+        `${base}` +
+        `
+
+${mode}`.trim()
+      );
     }
 
-    return `${base}
+    return (
+      `${base}` +
+      `
 
-${mode}
+${mode}` +
+      `
 
 User context (optional; DO NOT invent facts to match it):
 ${userContext.trim()}
-`.trim();
+`.trim()
+    );
   }
 
   public async extractJobsFromMarkdown(
@@ -372,7 +383,11 @@ ${userContext.trim()}
       {
         "job": { ... },
         "fitScore": 0-100,
-        "rationale": "short",
+        "rationale": {
+          "match": ["matched_skill_1", "matched_skill_2"],
+          "missing": ["missing_critical_skill_1"],
+          "reason": "Short explanation (max 20 words)"
+        },
         "reject": false
       }
     ]
@@ -384,12 +399,12 @@ ${userContext.trim()}
     - Non-software roles (legal/counsel/hr/sales/marketing/accounting/etc.)
     - Location restriction incompatible with the user (e.g. "US only" when user is not US)
     - Requires onsite in a different country and no remote/hybrid option
-  - If reject=true, still include the item but set fitScore <= 10 and rationale = a short reject reason.
+  - If reject=true, still include the item but set fitScore <= 10.
   - Prefer jobs whose title + skills overlap with the user's stated stack and role.
+  - Populate "match" with skills/requirements the user has.
+  - Populate "missing" with critical skills/requirements the user clearly lacks.
   - Penalize "junior" if the user signals mid/senior, and penalize "senior/principal" if the user signals junior.
-  - Keep rationale under 20 words.
-
-  Output exactly topK items AFTER sorting by fitScore descending (but include rejected items only if not enough remain).
+  - Output exactly topK items AFTER sorting by fitScore descending (but include rejected items only if not enough remain).
   `.trim();
   }
 
@@ -499,7 +514,7 @@ ${userContext.trim()}
     (contract OR contractor OR freelance)
 
   ### LOCALIZATION & LANGUAGE
-  - If target is local to a country, add site:.<tld> (e.g., site:.cl).
+  - If target is local to a country, add site:.tld (e.g., site:.cl).
   - If role is global/remote, keep English role tokens.
   - Keep queries under ~32 terms.
 
@@ -756,5 +771,89 @@ Return JSON ONLY:
       userContext: params.userContext,
       topK: params.finalTopK ?? 10,
     });
+  }
+
+  public async optimizeCv(
+    userContext: string,
+    jobDescription: string
+  ): Promise<string> {
+    const system = `
+    You are an expert Resume Optimizer (ATS-proof).
+    Your goal is to rewrite the user's resume content to better match the target job description.
+
+    Rules:
+    - Keep the output in Markdown format.
+    - Focus on highlighting relevant skills and experiences.
+    - Use strong action verbs.
+    - Mirror the language and keywords from the job description (without sounding robotic).
+    - Maintain truthfulness (do not invent experiences).
+
+    Return ONLY the optimized resume content in Markdown.
+    `.trim();
+
+    const user = {
+      userContext,
+      jobDescription,
+    };
+
+    const run = async (): Promise<string> => {
+      const res = await this.openai.chat.completions.create({
+        model: this.model,
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: JSON.stringify(user) },
+        ],
+      });
+
+      const out = res.choices[0]?.message?.content?.trim() ?? "";
+      if (out.length === 0) throw new Error("OpenAI returned empty output");
+      return out;
+    };
+
+    return withRetry(run, this.retry);
+  }
+
+  public async generateCoverLetter(
+    userContext: string,
+    jobDescription: string
+  ): Promise<string> {
+    const system = `
+    You are an expert Cover Letter Writer.
+    Your goal is to write a compelling, personalized cover letter for the user targeting a specific job.
+
+    Rules:
+    - Keep the output in Markdown format.
+    - Tone: Professional, enthusiastic, and confident.
+    - Structure:
+        - Hook: Why you are interested.
+        - Body: Connect your skills/experience to their needs.
+        - Closing: Call to action.
+    - Use specific details from the user context and job description.
+
+    Return ONLY the cover letter content in Markdown.
+    `.trim();
+
+    const user = {
+      userContext,
+      jobDescription,
+    };
+
+    const run = async (): Promise<string> => {
+      const res = await this.openai.chat.completions.create({
+        model: this.model,
+        temperature: 0.4,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: JSON.stringify(user) },
+        ],
+      });
+
+      const out = res.choices[0]?.message?.content?.trim() ?? "";
+      if (out.length === 0) throw new Error("OpenAI returned empty output");
+      return out;
+    };
+
+    return withRetry(run, this.retry);
   }
 }
