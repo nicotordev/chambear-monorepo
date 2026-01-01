@@ -57,6 +57,7 @@ import { useUser as useAppUser } from "@/contexts/user-context";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import CreateDocumentForm from "./create-document-form";
+import AppSidebarJobSearcher from "./app-sidebar-job-searcher";
 
 // Secondary Navigation
 const navSecondary = [
@@ -159,6 +160,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Platform Section */}
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <div className="px-4 py-2">
+            <AppSidebarJobSearcher />
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {navMain.map((item) => (

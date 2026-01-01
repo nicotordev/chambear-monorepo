@@ -65,8 +65,10 @@ class Api {
     return this.axiosInstance;
   }
 
-  public async getJobs(): Promise<Job[]> {
-    const res = await this.instance.get("/jobs");
+  public async getJobs(query?: string): Promise<Job[]> {
+    const res = await this.instance.get("/jobs", {
+      params: { search: query },
+    });
     return res.data.data;
   }
 

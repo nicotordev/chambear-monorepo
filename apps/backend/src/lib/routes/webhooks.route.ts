@@ -5,6 +5,7 @@ import { processScrapeQueue } from "@/workers/scrape.worker";
 import { Hono } from "hono";
 import { PlanTier } from "../generated";
 import { prisma } from "../prisma";
+import algoliaClient from "../algolia";
 
 const app = new Hono();
 
@@ -73,7 +74,6 @@ app.post("/", async (c) => {
   }
 });
 
-
 // search the queue and run the scrapper
 app.post("/scrappers/users", async (c) => {
   const authHeader = c.req.header("Authorization");
@@ -89,6 +89,45 @@ app.post("/scrappers/users", async (c) => {
     // This will run until queue is empty or timeout
     await processScrapeQueue();
     return c.json(response.success({ message: "Scrape batch processed" }), 200);
+  } catch (error: any) {
+    console.error("Scrape processing error:", error);
+    return c.json(response.error(error.message), 500);
+  }
+});
+
+app.post("/sync/algolia", async (c) => {
+  const authHeader = c.req.header("Authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  // Simple security check
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return c.json(response.unauthorized("Invalid Cron Secret"), 401);
+  }
+
+  try {
+    let created = 0;
+    const jobs = await prisma.job.findMany({
+      where: {
+        algoliaId: null,
+      },
+    });
+    const thousandsBatches = [];
+
+    for (let i = 0; i < jobs.length; i += 1000) {
+      thousandsBatches.push(jobs.slice(i, i + 1000));
+    }
+
+    for (const batch of thousandsBatches) {
+      const jobsBatch = await algoliaClient.saveObjects({
+        indexName: "jobs",
+        objects: batch,
+      });
+      created += jobsBatch.length;
+    }
+    return c.json(
+      response.success({ message: "Jobs synced to Algolia", created }),
+      200
+    );
   } catch (error: any) {
     console.error("Scrape processing error:", error);
     return c.json(response.error(error.message), 500);

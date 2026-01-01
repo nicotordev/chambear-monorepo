@@ -7,7 +7,8 @@ import type { Context } from "hono";
 
 const jobsController = {
   async getPublicJobs(c: Context) {
-    const jobs = await jobsService.getPublicJobs();
+    const search = c.req.query("search");
+    const jobs = await jobsService.getPublicJobs(search);
 
     return c.json(response.success(jobs), 200);
   },

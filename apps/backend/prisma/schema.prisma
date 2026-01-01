@@ -243,6 +243,7 @@ model Job {
   rawData        Json?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  algoliaId      String?
 
   applications Application[]
   fitScores    FitScore[]

@@ -133,8 +133,17 @@ const jobsService = {
     return recommendationService.scanJobs(profileId);
   },
 
-  async getPublicJobs() {
+  async getPublicJobs(query?: string) {
     return await prisma.job.findMany({
+      where: query
+        ? {
+            OR: [
+              { title: { contains: query, mode: "insensitive" } },
+              { companyName: { contains: query, mode: "insensitive" } },
+              { description: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
       orderBy: {
         createdAt: "desc",
       },

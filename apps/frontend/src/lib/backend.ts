@@ -124,7 +124,8 @@ const fetcher = {
 // 4. Definición limpia del SDK
 export const backend = {
   jobs: {
-    list: (): Promise<Job[]> => fetcher.get<Job[]>("/jobs"),
+    list: (query?: string): Promise<Job[]> =>
+      fetcher.get<Job[]>(`/jobs${query ? `?search=${query}` : ""}`),
 
     recommendations: (): Promise<Job[]> =>
       fetcher.get<Job[]>("/jobs/recommendations"),
