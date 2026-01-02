@@ -152,6 +152,13 @@ export const billingService = {
     const plan = await prisma.plan.findUniqueOrThrow({ where: { tier } });
 
     return prisma.$transaction(async (tx) => {
+      const existingSub = await tx.subscription.findUnique({
+        where: { userId: internalId },
+      });
+
+      const now = new Date();
+      const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
       const sub = await tx.subscription.upsert({
         where: { userId: internalId },
         create: {
@@ -160,18 +167,28 @@ export const billingService = {
           status: SubscriptionStatus.ACTIVE,
           provider,
           providerSubId,
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          currentPeriodStart: now,
+          currentPeriodEnd: nextMonth,
         },
         update: {
           planId: plan.id,
           status: SubscriptionStatus.ACTIVE,
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          providerSubId, // Update sub ID if changed
+          currentPeriodEnd: nextMonth,
         },
       });
 
-      // Grant monthly credits if it's a new period (simplified)
-      await this.addCredits(internalId, plan.monthlyCredits, "MONTHLY_GRANT");
+      // Grant monthly credits only if it's a new subscription or a different plan
+      // OR if the previous period has definitely ended.
+      // This is a simple heuristic; Stripe billing period would be better.
+      const shouldGrantCredits =
+        !existingSub ||
+        existingSub.planId !== plan.id ||
+        existingSub.currentPeriodEnd < now;
+
+      if (shouldGrantCredits) {
+        await this.addCredits(internalId, plan.monthlyCredits, "MONTHLY_GRANT");
+      }
 
       return sub;
     });

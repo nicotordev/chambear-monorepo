@@ -67,7 +67,10 @@ const scanJobs = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponseSchema(
-            z.object({ message: z.string() })
+            z.object({
+              message: z.string(),
+              jobId: z.string(),
+            })
           ),
         },
       },
@@ -90,6 +93,14 @@ const scanJobs = createRoute({
     },
     402: {
       description: "Payment Required",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal Server Error",
       content: {
         "application/json": {
           schema: ErrorResponseSchema,

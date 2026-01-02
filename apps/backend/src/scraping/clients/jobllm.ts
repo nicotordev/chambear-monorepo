@@ -12,11 +12,11 @@ import {
   dedupeCanonicalJobs,
 } from "../../domain/jobs/canonicalization";
 import { UrlKind } from "../../lib/generated";
+import { logger } from "../../lib/logger";
 import { chunk, clamp, withRetry } from "../../lib/utils/common";
 import { assertNonEmpty, normalizeUrl } from "../../lib/utils/misc-utils";
 import {
   ExtractJobsResponseSchema,
-  GenerateSearchDorksResponseSchema,
   RankJobsResponseSchema,
   ScoreUrlsResponseSchema,
 } from "../../schemas/scraping";
@@ -57,7 +57,10 @@ export class JobLlmClient {
 
   private get openai(): OpenAI {
     if (!this._openai) {
-      const apiKey = assertNonEmpty(process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
+      const apiKey = assertNonEmpty(
+        process.env.OPENAI_API_KEY,
+        "OPENAI_API_KEY"
+      );
       this._openai = new OpenAI({ apiKey });
     }
     return this._openai;
@@ -180,6 +183,8 @@ ${userContext.trim()}
     const original = input.urls.map(normalizeUrl).filter((u) => u.length > 0);
     if (original.length === 0) return { items: [] };
 
+    logger.debug({ count: original.length }, "Scoring URLs");
+
     // Unique list only for efficiency; we'll map back later
     const unique: string[] = [];
     const seen = new Set<string>();
@@ -203,8 +208,9 @@ ${userContext.trim()}
           );
 
           if (resp.items.length !== b.length) {
-            console.warn(
-              `[AI Client] Expected ${b.length} items, got ${resp.items.length}. Some items might be missing.`
+            logger.warn(
+              { expected: b.length, got: resp.items.length },
+              "[AI Client] Mismatch in scored items count"
             );
           }
 
@@ -217,7 +223,7 @@ ${userContext.trim()}
 
           return normalized;
         } catch (error) {
-          console.error("[AI Client] Batch scoring failed", error);
+          logger.error({ err: error }, "[AI Client] Batch scoring failed");
           return [] as ScoredUrl[];
         }
       })
@@ -339,6 +345,7 @@ ${userContext.trim()}
   public async extractJobsFromMarkdown(
     input: ExtractJobsInput
   ): Promise<ExtractJobsOutput> {
+    logger.debug({ url: input.url }, "Extracting jobs from markdown");
     const system = this.buildExtractJobsSystemPrompt(
       input.userContext,
       input.exhaustive
@@ -415,6 +422,7 @@ ${userContext.trim()}
 
   public async rankJobs(input: RankJobsInput): Promise<RankJobsOutput> {
     const topK = input.topK ?? 10;
+    logger.debug({ jobCount: input.jobs.length, topK }, "Ranking jobs");
     const system = this.buildRankJobsSystemPrompt();
     const user = {
       userContext: input.userContext,
@@ -461,141 +469,68 @@ ${userContext.trim()}
     userContext: string,
     limit: number = 5
   ): Promise<readonly { query: string; site?: string; location?: string }[]> {
+    logger.info({ limit }, "Generating search dorks");
     const clampLimit = (n: number): number => {
       const x = Number.isFinite(n) ? Math.floor(n) : 5;
       return Math.max(1, Math.min(10, x));
     };
 
-    const formatIsoDate = (d: Date): string => {
-      const pad2 = (v: number): string => String(v).padStart(2, "0");
-      const year = d.getUTCFullYear();
-      const month = pad2(d.getUTCMonth() + 1);
-      const day = pad2(d.getUTCDate());
-      return `${year}-${month}-${day}`;
-    };
-
-    const daysAgoUtc = (days: number): string => {
-      const now = new Date();
-      const ms = days * 24 * 60 * 60 * 1000;
-      return formatIsoDate(new Date(now.getTime() - ms));
-    };
-
     const safeLimit = clampLimit(limit);
-    const afterDateIso = daysAgoUtc(30);
 
-    const system = `
-### SYSTEM ROLE
-You are an elite OSINT Specialist and Google Dorking Expert.
-Your mission is to engineer high-precision search queries (dorks) that uncover fresh, direct job postings on company websites, strictly bypassing noise and aggregators.
+    const systemPrompt = `
+    ### SYSTEM ROLE
+    You are an expert at generating Google Search operators to discover hidden job listings (Google Dorking).
 
-### OBJECTIVE
-Generate ${safeLimit} distinct, high-signal Google Search queries to find:
-1. Direct "Careers" or "Jobs" pages for the target role.
-2. Specific job postings hosted on company domains or direct ATS links.
-3. "Hidden" opportunities via specific phrasing (e.g., "Work with us", "Join the team").
+    ### PRIMARY GOAL
+    Generate queries that guarantee non-zero results. Prioritize Recall (finding pages) over Precision (perfect match).
+    A query usually fails because it has too many words. KEEP QUERIES SHORT.
 
-### INPUT CONTEXT
-- **Role:** Target Job Title (synonyms allowed).
-- **Stack:** Key technologies (keep it broad, max 2-3).
-- **Location/Remote:** Constraints.
-- **Type:** Employee vs Contractor.
+    ### HARD REQUIREMENTS
+    - Output EXACTLY ${safeLimit} queries.
+    - Each query must be a single string.
+    - DO NOT use "-site:" exclusions.
+    - DO NOT include specific job board brands (e.g. LinkedIn, Indeed).
+    - DO NOT stack every technology. Pick ONE role and ONE stack term per query.
+    - Use "intitle:" or "inurl:" operators for high-value structural matching.
 
-### DORKING STRATEGIES (Mix & Match)
-1. **The "Direct Hit":** \`intitle:"{ROLE}" (inurl:careers OR inurl:jobs OR inurl:vacancies)\`
-2. **The "Intent Hunter":** \`"{ROLE}" ("Apply now" OR "We are hiring" OR "Join our team")\`
-3. **The "ATS Whisperer":** \`site:greenhouse.io OR site:lever.co OR site:ashbyhq.com intitle:"{ROLE}"\` (Optional, use if relevant)
-4. **The "Location Pinpoint":** \`"{ROLE}" "London" (inurl:careers OR inurl:jobs)\`
+    ### QUERY STRATEGY (Must include all types)
+    1) **Broad Discovery (High Recall):**
+       - Format: intitle:[Intent] "Role"
+       - Example: intitle:careers "Software Engineer"
 
-### STRICT CONSTRAINTS
-1. **NO AGGREGATORS:** You MUST exclude major boards in EVERY query.
-   Append: \` -site:linkedin.com -site:indeed.com -site:glassdoor.com -site:ziprecruiter.com -site:monster.com -site:weworkremotely.com -site:remoteok.com\`
-2. **NO NOISE:** Exclude blogs and generic info.
-   Append: \` -inurl:blog -inurl:articles -inurl:news -intitle:resume -intitle:cv\`
-3. **FRESHNESS:** Append \` after:${afterDateIso}\` to every query.
-4. **EFFICIENCY:** Keep queries concise (under 32 words). Use \`OR\` to group terms effectively.
+    2) **Tech-Focused (Medium Precision):**
+       - Format: "Role" "Stack" (remote OR contract)
+       - Example: "Frontend Developer" React (remote OR contract)
 
-### OUTPUT FORMAT
-Return JSON ONLY:
-{
-  "queries": [
-    { "query": "...", "strategy": "Explanation of the dork logic", "estimated_precision": "High" }
-  ]
-}
-`.trim();
+    3) **Footprint Hunting (High Precision):**
+       - Format: inurl:[Intent] "Stack"
+       - Example: inurl:jobs "Next.js"
 
-    const user = {
-      userContext,
-      limit: safeLimit,
-      afterDateIso,
-    };
+    ### KEYWORD POOLS
+    - **Role Terms:** "Full Stack", "Software Engineer", "Web Developer", "Frontend", "Backend"
+    - **Stack Terms:** TypeScript, React, Node.js, Next.js (Pick only ONE per query)
+    - **Intent Terms (for intitle/inurl):** careers, jobs, vacancies, work-at, join-us
+    - **Action Terms (for text):** "apply now", "job description", "hiring"
+
+    ### FRESHNESS
+    - Only use the "after:YYYY-MM-DD" operator in exactly 1 query.
+    - Calculate the date for 3 months ago from ${
+      new Date().toISOString().split("T")[0]
+    }
+
+    ### OUTPUT FORMAT
+    Return JSON ONLY:
+    { "queries": [ { "query": "..." }, ... ] }
+    `;
 
     const resp = await this.callJson(
-      system,
-      user,
-      GenerateSearchDorksResponseSchema,
+      systemPrompt,
+      { userContext, limit: safeLimit },
+      z.object({ queries: z.array(z.object({ query: z.string().min(1) })) }),
       "gpt-5.2"
     );
 
-    // Normalize to your existing return type (query/site/location)
-    return resp.queries.slice(0, safeLimit).map((q) => ({
-      query: q.query,
-      site: q.site,
-      location: q.location,
-    }));
-  }
-
-  public async extractUrlsFromSearchMarkdown(
-    markdown: string
-  ): Promise<readonly { url: string; title: string }[]> {
-    const system = `
-You parse SERP results represented as Markdown.
-
-Extract ONLY external organic results that are likely to be job-related pages.
-
-Exclude:
-- Ads / sponsored results
-- Aggregators and boards: linkedin.com, indeed.com, glassdoor.com, monster.com, ziprecruiter.com, talent.com, jooble.org
-- Google internal links and redirects unless you can recover the final URL
-- Social: twitter/x.com, facebook, instagram
-- Non-job content: blog/news/about pages unless the URL strongly indicates jobs/careers
-
-Prefer:
-- ATS domains: greenhouse.io, lever.co, ashbyhq.com, bamboohr.com, workday, icims, smartrecruiters
-- URLs containing: /jobs, /careers, /job/, /positions, /vacancies, /join-us, /work-with-us
-
-Return JSON ONLY:
-{
-  "results": [
-    { "url": "...", "title": "..." }
-  ]
-}
-`.trim();
-
-    const schema = z.object({
-      results: z.array(
-        z.object({
-          url: z.string().url(),
-          title: z.string().min(1),
-        })
-      ),
-    });
-
-    const resp = await this.callJson(system, { markdown }, schema, "gpt-5.2");
-
-    // cheap dedupe + normalize
-    const seen = new Set<string>();
-    const out: Array<{ url: string; title: string }> = [];
-
-    for (const r of resp.results) {
-      const u = normalizeUrl(r.url);
-      if (!u) continue;
-      const key = u.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push({ url: u, title: r.title.trim() });
-    }
-
-    return out;
+    return resp.queries.slice(0, safeLimit).map((q) => ({ query: q.query }));
   }
 
   /**
@@ -635,6 +570,11 @@ Return JSON ONLY:
     const minScoreToScrape = params.minScoreToScrape ?? 60;
     const keepCareers = params.keepCareers ?? true;
     const concurrency = params.concurrency ?? 3;
+
+    logger.info(
+      { urlCount: params.urls.length, maxToScrape },
+      "Starting score -> fetch -> extract pipeline"
+    );
 
     const scoredResp = await this.scoreUrls({
       urls: params.urls,
@@ -702,9 +642,9 @@ Return JSON ONLY:
               extraction,
             };
           } catch (err) {
-            console.error(
-              `[JobLLM] Failed to scrape/extract from ${it.url}`,
-              err
+            logger.error(
+              { url: it.url, err },
+              "[JobLLM] Failed to scrape/extract"
             );
             return null;
           }
@@ -758,8 +698,9 @@ Return JSON ONLY:
       filter: params.filter,
     });
 
-    console.log(
-      `[AI Client] Retrieved ${retrieved.length} jobs from Pinecone for reranking.`
+    logger.info(
+      { count: retrieved.length },
+      "[AI Client] Keep-set retrieved from Pinecone for reranking"
     );
 
     return this.rankJobs({

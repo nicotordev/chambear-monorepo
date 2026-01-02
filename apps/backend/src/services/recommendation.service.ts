@@ -123,17 +123,6 @@ const isObviouslyIrrelevantTitle = (title: string): boolean => {
   return banned.some((b) => t.includes(b));
 };
 
-const inferCountryForSerp = (location: string | null | undefined): string => {
-  const loc = (location ?? "").toLowerCase();
-  if (loc.includes("chile")) return "cl";
-  if (loc.includes("argentina")) return "ar";
-  if (loc.includes("mexico") || loc.includes("méxico")) return "mx";
-  if (loc.includes("peru") || loc.includes("perú")) return "pe";
-  if (loc.includes("colombia")) return "co";
-  // default to US because your SERP zone may be tuned for it
-  return "us";
-};
-
 const sortByScoreDesc = <T extends { score: number }>(
   items: readonly T[]
 ): T[] => [...items].sort((a, b) => b.score - a.score);
@@ -195,9 +184,6 @@ Skills: ${profile.skills.map((s) => s.skill.name).join(", ")}
 Headline: ${profile.headline ?? ""}
 Summary: ${profile.summary ?? ""}
 `.trim();
-
-    const serpCountry = inferCountryForSerp(profile.location);
-    console.debug(`${LOG_PREFIX} SERP country: ${serpCountry}`);
 
     /* ────────────────────────────────
      * 2) Load recent DB jobs (global cache)
@@ -283,8 +269,7 @@ Summary: ${profile.summary ?? ""}
           attempts++;
           try {
             const result = await brightdataClient.triggerSyncSerpSearch(
-              q.query,
-              serpCountry
+              q.query
             );
             console.debug(
               `${LOG_PREFIX} SERP returned ${result.length} results for query "${q.query}"`

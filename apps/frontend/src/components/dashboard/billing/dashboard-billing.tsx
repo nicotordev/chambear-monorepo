@@ -34,6 +34,7 @@ export default function DashboardBilling() {
     openPortal,
     isOpeningPortal,
     topup,
+    isToppingUp,
   } = useBilling();
 
   if (isLoading) {

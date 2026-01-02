@@ -1,4 +1,5 @@
 import { bdclient, BRDError, type BdClientOptions } from "@brightdata/sdk";
+import axios from "axios";
 import { env } from "../../config";
 import type {
   UnlockerSyncRequest,
@@ -100,11 +101,50 @@ class BrightDataClient {
       process.env.BRIGHTDATA_API_KEY,
       "BRIGHTDATA_API_KEY"
     );
+    const zone = ensureNonEmpty(process.env.BRIGHTDATA_ZONE, "BRIGHTDATA_ZONE");
+    const serpZone = ensureNonEmpty(
+      process.env.BRIGHTDATA_SERP_ZONE,
+      "BRIGHTDATA_SERP_ZONE"
+    );
 
     // The old SDK sometimes uses api_token in the constructor; but since we are not certain
     // of the exact shape, we pass it as an object and let the SDK consume it.
     this.client = new bdclient({
-      api_token: apiToken,
+      /**
+       * Your Bright Data API key (can also be set via BRIGHTDATA_API_KEY env var)
+       * @example 'brd-customer-hl_12345678-zone-web_unlocker:abc123xyz'
+       */
+      apiKey: apiToken,
+      /**
+       * Automatically create required zones if they don't exist (default: true)
+       * @example true | false
+       */
+      autoCreateZones: true,
+      /**
+       * Custom zone name for web unlocker (default: from env or 'sdk_unlocker')
+       * @example 'my_web_zone' | 'web_unlocker_1' | 'scraping_zone'
+       */
+      webUnlockerZone: zone,
+      /**
+       * Custom zone name for SERP API (default: from env or 'sdk_serp')
+       * @example 'my_serp_zone' | 'search_zone' | 'serp_api_1'
+       */
+      serpZone: serpZone,
+      /**
+       * Log level (default: 'INFO')
+       * Available values: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+       */
+      logLevel: "DEBUG",
+      /**
+       * Use structured JSON logging (default: true)
+       * @example true (JSON format) | false (plain text)
+       */
+      structuredLogging: true,
+      /**
+       * Enable verbose logging (default: false)
+       * @example true | false
+       */
+      verbose: false,
     } as unknown as BdClientOptions);
   }
 
@@ -187,35 +227,50 @@ class BrightDataClient {
   /**
    * SERP helper: tries to parse results from JSON body (if the SERP zone returns JSON).
    */
-  public async triggerSyncSerpSearch(
-    q: string,
-    country: string
-  ): Promise<SerpParsedResult[]> {
-    const res = await this.searchCompat([q], {
-      zone: env.brightDataSerpZone,
-      format: "raw",
-      method: "GET",
-      country,
-      timeout: 60_000,
-    });
+  public async triggerSyncSerpSearch(q: string): Promise<SerpParsedResult[]> {
+    const url = `https://www.google.com/search?q=${encodeURIComponent(q)}&brd_json=1`;
+
+    let res: any;
+    try {
+      const response = await axios.post(
+        "https://api.brightdata.com/request",
+        {
+          zone: env.brightDataSerpZone,
+          url: url,
+          format: "raw",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${env.brightDataApiKey}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 60_000,
+        }
+      );
+      res = response.data;
+    } catch (err: any) {
+      console.error(`[BrightDataClient] Direct SERP request failed:`, err.message);
+      throw err;
+    }
 
     const items = Array.isArray(res) ? res : [res];
     const out: SerpParsedResult[] = [];
 
     for (const it of items) {
-      if (it instanceof BRDError) throw it;
+      let parsed: any;
+      if (typeof it === "string") {
+        parsed = safeJsonParse(it);
+      } else if (isRecord(it)) {
+        parsed = it.body
+          ? typeof it.body === "string"
+            ? safeJsonParse(it.body)
+            : it.body
+          : it;
+      }
 
-      const bodyStr =
-        typeof it === "string"
-          ? it
-          : hasBodyString(it)
-          ? it.body
-          : JSON.stringify(it);
+      if (!isRecord(parsed)) continue;
 
-      const parsed = safeJsonParse(bodyStr);
-
-      // Supports payload { results: [...] } or { organic: [...] } (depending on SERP output)
-      if (isRecord(parsed) && Array.isArray(parsed.results)) {
+      if (Array.isArray(parsed.results)) {
         for (const r of parsed.results) {
           if (!isRecord(r)) continue;
           const url = typeof r.url === "string" ? normalizeUrl(r.url) : "";
@@ -224,13 +279,26 @@ class BrightDataClient {
           const position = typeof r.position === "number" ? r.position : 0;
           if (url && title) out.push({ type, position, title, url });
         }
-      } else if (isRecord(parsed) && Array.isArray(parsed.organic)) {
+      } else if (Array.isArray(parsed.organic)) {
         for (const r of parsed.organic) {
           if (!isRecord(r)) continue;
           const url = typeof r.link === "string" ? normalizeUrl(r.link) : "";
           const title = typeof r.title === "string" ? r.title : "";
           const position =
             typeof r.global_rank === "number" ? r.global_rank : 0;
+          if (url && title) out.push({ type: "organic", position, title, url });
+        }
+      } else if (Array.isArray(parsed.organic_results)) {
+        for (const r of parsed.organic_results) {
+          if (!isRecord(r)) continue;
+          const url =
+            typeof r.link === "string"
+              ? normalizeUrl(r.link)
+              : typeof r.url === "string"
+              ? normalizeUrl(r.url)
+              : "";
+          const title = typeof r.title === "string" ? r.title : "";
+          const position = typeof r.position === "number" ? r.position : 0;
           if (url && title) out.push({ type: "organic", position, title, url });
         }
       }

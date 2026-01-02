@@ -60,7 +60,6 @@ const jobsController = {
       return c.json(
         response.error({
           message: "Insufficient credits or no active subscription",
-          status: 402,
         }),
         402
       );

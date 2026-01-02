@@ -1,7 +1,7 @@
 import stripe from "@/lib/stripe";
 import response from "@/lib/utils/response";
 import billingService from "@/services/billing.service";
-import { processScrapeQueue } from "@/workers/scrape.worker";
+import { processScrapeQueueDirect } from "@/workers/scrape.worker";
 import { Hono } from "hono";
 import { PlanTier } from "../generated";
 import { prisma } from "../prisma";
@@ -36,16 +36,45 @@ app.post("/", async (c) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as any;
-        const userId = session.metadata?.userId;
+        let userId = session.metadata?.userId;
         const type = session.metadata?.type;
+
+        console.log(`📦 Session metadata:`, session.metadata);
+
+        // Fallback: if userId is missing in metadata, try to find user by stripeCustomerId or email
+        if (!userId) {
+          console.log(`🔍 userId missing in metadata, searching by customer/email...`);
+          const stripeCustomerId = session.customer as string;
+          const customerEmail = session.customer_details?.email || session.customer_email;
+
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { stripeCustomerId: stripeCustomerId || undefined },
+                { email: customerEmail || undefined }
+              ]
+            },
+            select: { id: true }
+          });
+
+          if (user) {
+            userId = user.id;
+            console.log(`🎯 Found user by fallback: ${userId}`);
+          }
+        }
 
         if (type === "TOPUP") {
           const amount = Number.parseInt(session.metadata?.amount || "0", 10);
+          console.log(`💰 TOPUP detected. userId: ${userId}, amount: ${amount}`);
           if (userId && amount > 0) {
             await billingService.addCredits(userId, amount, "STRIPE_TOPUP");
+            console.log(`✅ Credits added successfully for user ${userId}`);
+          } else {
+            console.warn(`⚠️ Missing userId or invalid amount for topup. userId: ${userId}, amount: ${amount}`);
           }
         } else {
           const tier = session.metadata?.tier as PlanTier;
+          console.log(`Subscription detected. userId: ${userId}, tier: ${tier}`);
           if (userId && tier) {
             await billingService.syncSubscription(
               userId,
@@ -53,15 +82,19 @@ app.post("/", async (c) => {
               session.subscription as string,
               "stripe"
             );
+            console.log(`✅ Subscription synced successfully for user ${userId}`);
+          } else {
+            console.warn(`⚠️ Missing userId or tier for subscription. userId: ${userId}, tier: ${tier}`);
           }
         }
 
         // Update customer ID if not set
-        if (userId) {
+        if (userId && session.customer) {
           await prisma.user.update({
             where: { id: userId },
             data: { stripeCustomerId: session.customer as string },
           });
+          console.log(`👤 Updated stripeCustomerId for user ${userId}`);
         }
         break;
       }
@@ -102,7 +135,7 @@ app.post("/scrappers/users", async (c) => {
     return c.json(response.unauthorized(), 401);
   }
 
-  const res = await processScrapeQueue({
+  const res = await processScrapeQueueDirect({
     concurrency: 5,
     maxJobs: 100,
     maxDurationMs: 4 * 60_000,
