@@ -1,9 +1,8 @@
+import { JobSource, UrlKind } from "@/lib/generated";
+import pLimit from "p-limit";
 import { DocumentType } from "../lib/generated";
 import { prisma } from "../lib/prisma";
-import { jobLlmClient } from "../scraping/clients";
-import aiContextService from "./aiContext.service";
-import documentService from "./documents.service";
-import { JobSource, Prisma, UrlKind } from "@/lib/generated";
+import { sortByScoreDesc, uniqueBy, uniqueStrings } from "../lib/utils/common";
 import {
   dedupeJobPostings,
   mapEmploymentType,
@@ -11,12 +10,13 @@ import {
   mapWorkMode,
   normalizeSkillName,
 } from "../lib/utils/mapping";
-import { brightdataClient } from "../scraping/clients";
-import type { JobPosting, RankedJob } from "../types/ai";
-import billingService from "./billing.service";
-import jobsService from "./jobs.service";
-import { sortByScoreDesc, uniqueBy, uniqueStrings } from "../lib/utils/common";
 import { toPrismaJsonValue } from "../lib/utils/prisma";
+import { brightdataClient, jobLlmClient } from "../scraping/clients";
+import type { JobPosting, RankedJob } from "../types/ai";
+import aiContextService from "./aiContext.service";
+import billingService from "./billing.service";
+import documentService from "./documents.service";
+import jobsService from "./jobs.service";
 
 // Funnel knobs
 const EMBED_TOP_K = 30; // candidates passed to LLM re-rank
@@ -275,55 +275,60 @@ ${job.description || "No description available."}
     const queries = await jobLlmClient.generateSearchDorks(userContext, 3);
     console.debug(`${LOG_PREFIX} Generated ${queries.length} search queries.`);
 
-    const scrapedJobs: JobPosting[] = [];
+    const limit = pLimit(2); // safe concurrency for external scraping
 
-    for (const q of queries) {
-      console.debug(`${LOG_PREFIX} Executing search query: "${q.query}"`);
-      let attempts = 0;
-      const maxAttempts = 2;
-      let success = false;
+    const results = await Promise.all(
+      queries.map((q) =>
+        limit(async () => {
+          console.debug(`${LOG_PREFIX} Executing search query: "${q.query}"`);
+          let attempts = 0;
+          const maxAttempts = 2;
 
-      while (attempts < maxAttempts && !success) {
-        attempts++;
-        try {
-          const result = await brightdataClient.searchGoogle(q.query);
-          console.debug(
-            `${LOG_PREFIX} SERP returned ${result.length} results for query "${q.query}"`
-          );
+          while (attempts < maxAttempts) {
+            attempts++;
+            try {
+              const result = await brightdataClient.searchGoogle(q.query);
+              console.debug(
+                `${LOG_PREFIX} SERP returned ${result.length} results for query "${q.query}"`
+              );
 
-          success = true;
-          const urls = result.map((r) => r.url);
+              const urls = result.map((r) => r.url);
 
-          const extracted = await jobLlmClient.scoreThenFetchThenExtractJobs({
-            urls,
-            fetchMarkdown: async (url: string) => {
-              const [res] = await brightdataClient.scrapeMarkdown(url);
-              return res;
-            },
-            userContext,
-            maxToScrape: 5,
-            minScoreToScrape: 40,
-          });
+              const extracted =
+                await jobLlmClient.scoreThenFetchThenExtractJobs({
+                  urls,
+                  fetchMarkdown: async (url: string) => {
+                    const [res] = await brightdataClient.scrapeMarkdown(url);
+                    return res;
+                  },
+                  userContext,
+                  maxToScrape: 5,
+                  minScoreToScrape: 40,
+                });
 
-          scrapedJobs.push(...extracted.jobs);
-          console.info(
-            `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
-          );
-        } catch (err) {
-          if (attempts >= maxAttempts) {
-            console.error(
-              `${LOG_PREFIX} Scraping failed for query "${q.query}" after ${attempts} attempts`,
-              err
-            );
-          } else {
-            console.warn(
-              `${LOG_PREFIX} Attempt ${attempts} failed for query "${q.query}". Retrying...`
-            );
+              console.info(
+                `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
+              );
+              return extracted.jobs;
+            } catch (err) {
+              if (attempts >= maxAttempts) {
+                console.error(
+                  `${LOG_PREFIX} Scraping failed for query "${q.query}" after ${attempts} attempts`,
+                  err
+                );
+              } else {
+                console.warn(
+                  `${LOG_PREFIX} Attempt ${attempts} failed for query "${q.query}". Retrying...`
+                );
+              }
+            }
           }
-        }
-      }
-    }
-    return scrapedJobs;
+          return [];
+        })
+      )
+    );
+
+    return results.flat();
   },
 
   async upsertScrapedJobs(scrapedJobs: JobPosting[]) {
@@ -370,7 +375,10 @@ ${job.description || "No description available."}
     });
 
     // 1) Upsert jobs
-    await Promise.all(jobRows.map((row) => jobsService.upsertJob(row.payload)));
+    const limit = pLimit(10); // reasonable concurrency for DB writes
+    await Promise.all(
+      jobRows.map((row) => limit(() => jobsService.upsertJob(row.payload)))
+    );
 
     // 2) Resolver jobIds reales desde DB por externalUrl
     const extUrls = uniqueStrings(
