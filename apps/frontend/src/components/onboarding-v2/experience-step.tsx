@@ -87,18 +87,18 @@ export function ExperienceStep() {
 
   return (
     <>
-      <div className="space-y-10 w-[60%] flex flex-col">
+      <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           className="space-y-4"
         >
-          <h1 className="text-5xl md:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
             Construct Your{" "}
             <span className="text-accent italic">Career Matrix</span>
           </h1>
-          <p className="text-muted-foreground text-xl font-medium leading-relaxed max-w-md">
+          <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-md">
             Every role is training data for your AI Agent. Share your
             professional journey to help JobPilot strategize your next
             breakthrough move.
@@ -120,7 +120,7 @@ export function ExperienceStep() {
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="p-8 border-2 border-border/50 bg-card/40 backdrop-blur-xl rounded-[32px] relative group overflow-hidden">
+                <Card className="p-6 md:p-8 border-2 border-border/50 bg-card/40 backdrop-blur-xl rounded-[32px] relative group overflow-hidden">
                   <div className="absolute top-0 left-0 w-2 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
 
                   <Button
@@ -133,7 +133,7 @@ export function ExperienceStep() {
                   </Button>
 
                   <div className="grid gap-6">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <Briefcase className="h-3 w-3" /> Job Title
@@ -164,7 +164,7 @@ export function ExperienceStep() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <Calendar className="h-3 w-3" /> Start Date
@@ -270,13 +270,13 @@ export function ExperienceStep() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex items-center gap-4"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
         >
           <Button
             type="button"
             variant="ghost"
             onClick={() => router.push("/onboarding-v2?step=4")}
-            className="h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+            className="w-full sm:w-auto h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground order-2 sm:order-1"
           >
             <ChevronLeft className="mr-2 h-5 w-5" />
             Back
@@ -287,7 +287,7 @@ export function ExperienceStep() {
               router.push("/onboarding-v2?step=6");
             }}
             disabled={isSaving}
-            className="h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
             {isSaving ? "Saving..." : "Next"}
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -295,7 +295,7 @@ export function ExperienceStep() {
         </motion.div>
       </div>
 
-      <div className="relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] opacity-[0.03]" />
 

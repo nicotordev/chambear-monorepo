@@ -64,7 +64,7 @@ export default function Problem() {
               />
               <div className="mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
                 {/* Abstract representation of "chaos" or "manual work" using CSS shapes since we don't have the specific image */}
-                <div className="w-160 max-w-none rounded-tl-xl bg-card ring-1 ring-border shadow-2xl p-6 space-y-4">
+                <div className="w-full rounded-tl-xl bg-card ring-1 ring-border shadow-2xl p-6 space-y-4">
                   <div className="flex items-center gap-4 border-b border-border pb-4">
                     <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
                     <div className="space-y-2">

@@ -116,8 +116,8 @@ function OnboardingContent() {
 
   return (
     <FormProvider {...form}>
-      <div className="min-h-screen bg-background flex flex-col items-center w-full">
-        <div className="flex items-stretch justify-center gap-16 w-full max-w-7xl mx-auto h-full pt-32 pb-12">
+      <div className="min-h-screen bg-background flex flex-col items-center w-full px-4 md:px-8">
+        <div className="flex flex-col lg:flex-row items-stretch justify-center gap-12 lg:gap-16 w-full max-w-7xl mx-auto h-full pt-20 lg:pt-32 pb-12">
           {step === "1" && <LocationStep />}
           {step === "2" && <PreferencesStep />}
           {step === "3" && <ProfileStep />}

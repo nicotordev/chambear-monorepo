@@ -55,18 +55,18 @@ export function ProfileStep() {
 
   return (
     <>
-      <div className="space-y-10 w-[60%] flex flex-col">
+      <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           className="space-y-4"
         >
-          <h1 className="text-5xl md:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
             Activate Your{" "}
             <span className="text-accent italic">Career Agent</span>
           </h1>
-          <p className="text-muted-foreground text-xl font-medium leading-relaxed max-w-md">
+          <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-md">
             Welcome to JobPilot. Let's initialize your Agentic AI to navigate
             the 2026 job market, bypass ATS filters, and secure high-quality
             offers.
@@ -182,13 +182,13 @@ export function ProfileStep() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex items-center gap-4"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
         >
           <Button
             type="button"
             variant="ghost"
             onClick={() => router.push("/onboarding-v2?step=2")}
-            className="h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+            className="w-full sm:w-auto h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground order-2 sm:order-1"
           >
             <ChevronLeft className="mr-2 h-5 w-5" />
             Back
@@ -200,7 +200,7 @@ export function ProfileStep() {
               router.push("/onboarding-v2?step=4");
             }}
             disabled={isSaving}
-            className="h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
             {isSaving ? "Initializing Agent..." : "Activate Agent"}
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -208,7 +208,7 @@ export function ProfileStep() {
         </motion.div>
       </div>
 
-      <div className="relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] opacity-[0.03]" />
 

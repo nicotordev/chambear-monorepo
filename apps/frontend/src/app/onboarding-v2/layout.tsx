@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-background text-foreground overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 pointer-events-none opacity-30 select-none overflow-hidden">
         <motion.div
           animate={{

@@ -88,18 +88,18 @@ export function PreferencesStep() {
 
   return (
     <>
-      <div className="space-y-10 w-1/2 flex flex-col">
+      <div className="space-y-10 w-full lg:w-1/2 flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           className="space-y-4"
         >
-          <h1 className="text-5xl md:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
             Mission Parameters{" "}
             <span className="text-accent italic">& Alignment</span>
           </h1>
-          <p className="text-muted-foreground text-xl font-medium leading-relaxed max-w-md">
+          <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-md">
             Configure your Agent's operational constraints. Define your ideal
             role—choose from standard vectors or define a custom mission.
           </p>
@@ -110,7 +110,7 @@ export function PreferencesStep() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="grid grid-cols-2 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             {categories.map((cat) => (
               <Card
@@ -223,13 +223,13 @@ export function PreferencesStep() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex items-center gap-4"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
         >
           <Button
             type="button"
             variant="ghost"
             onClick={() => router.push("/onboarding-v2?step=1")}
-            className="h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+            className="w-full sm:w-auto h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground order-2 sm:order-1"
           >
             <ChevronLeft className="mr-2 h-5 w-5" />
             Back
@@ -240,7 +240,7 @@ export function PreferencesStep() {
               router.push("/onboarding-v2?step=3");
             }}
             disabled={isSaving}
-            className="h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
             {isSaving ? "Initializing..." : "Proceed to Core Bio"}
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -248,7 +248,7 @@ export function PreferencesStep() {
         </motion.div>
       </div>
 
-      <div className="relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
         {/* Decorative AI Visualization */}
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <motion.div

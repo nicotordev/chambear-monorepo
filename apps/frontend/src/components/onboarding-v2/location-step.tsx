@@ -128,17 +128,17 @@ export function LocationStep() {
 
   return (
     <>
-      <div className="space-y-10 w-[60%] flex flex-col">
+      <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="space-y-4"
         >
-          <h1 className="text-5xl md:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display leading-[1.1] text-foreground tracking-tight">
             Fill in with your <span className="text-accent italic">info</span>.
           </h1>
-          <p className="text-muted-foreground text-xl font-medium leading-relaxed max-w-md">
+          <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-md">
             Let's start with the basics. Who are we helping today?
           </p>
         </motion.div>
@@ -148,7 +148,7 @@ export function LocationStep() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <Card className="p-8 border-border/50 shadow-sm bg-card/40 backdrop-blur-xl border-2 rounded-3xl overflow-hidden relative">
+          <Card className="p-6 md:p-8 border-border/50 shadow-sm bg-card/40 backdrop-blur-xl border-2 rounded-3xl overflow-hidden relative">
             <div className="space-y-2">
               <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                 Full Name
@@ -171,7 +171,7 @@ export function LocationStep() {
           <h2 className="text-3xl md:text-5xl font-display leading-[1.1] text-foreground tracking-tight">
             Geo-Strategic <span className="text-accent italic">Placement</span>
           </h2>
-          <p className="text-muted-foreground text-xl font-medium leading-relaxed max-w-md">
+          <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-md">
             Where should JobPilot focus its search? Define your target
             markets—whether remote, local, or global—to maximize opportunity
             density.
@@ -183,7 +183,7 @@ export function LocationStep() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <Card className="p-8 border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-none bg-card/40 backdrop-blur-xl border-2 rounded-3xl overflow-hidden relative">
+          <Card className="p-6 md:p-8 border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-none bg-card/40 backdrop-blur-xl border-2 rounded-3xl overflow-hidden relative">
             <div className="space-y-6">
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -198,7 +198,7 @@ export function LocationStep() {
                 />
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="outline"
                   className={cn(
@@ -216,7 +216,7 @@ export function LocationStep() {
                   }}
                 >
                   <Navigation className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-xs uppercase tracking-widest">
+                  <span className="font-semibold text-xs uppercase tracking-widest text-center">
                     Remote / Global Mission
                   </span>
                 </Button>
@@ -253,13 +253,13 @@ export function LocationStep() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex flex-col sm:flex-row items-center gap-4"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
         >
           <Button
             type="button"
             variant="ghost"
             onClick={() => router.push("/")}
-            className="h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+            className="w-full sm:w-auto h-16 px-8 text-lg rounded-full hover:bg-muted transition-all active:scale-95 text-muted-foreground order-2 sm:order-1"
           >
             <ChevronLeft className="mr-2 h-5 w-5" />
             Back
@@ -276,7 +276,7 @@ export function LocationStep() {
               isLocating ||
               isSaving
             }
-            className="h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
             {isSaving ? "Saving..." : "Confirm details"}
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -286,7 +286,7 @@ export function LocationStep() {
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10"
+              className="flex items-center justify-center gap-2 text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10 order-3"
             >
               <Check className="h-5 w-5" />
               <span className="font-bold text-sm uppercase tracking-wider">
@@ -298,7 +298,7 @@ export function LocationStep() {
       </div>
 
       <motion.div
-        className="relative h-125 lg:h-175 w-[35%] perspective-1000"
+        className="hidden lg:flex relative h-125 lg:h-175 w-[35%] perspective-1000"
         onMouseMove={handleMouseMove}
         style={{ rotateX, rotateY }}
       >

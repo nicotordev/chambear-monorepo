@@ -62,7 +62,7 @@ export default function Solution() {
                 className="absolute -inset-y-px -left-3 -z-10 w-full origin-bottom-left skew-x-[-30deg] bg-background/50 opacity-20 ring-1 ring-border ring-inset"
               />
               <div className="mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
-                <div className="w-screen overflow-hidden rounded-tl-xl bg-card ring-1 ring-border shadow-2xl">
+                <div className="w-full overflow-hidden rounded-tl-xl bg-card ring-1 ring-border shadow-2xl">
                   <div className="flex bg-muted/50 ring-1 ring-border/10">
                     <div className="-mb-px flex text-sm/6 font-medium text-muted-foreground">
                       <div className="border-r border-b border-r-border/10 border-b-border/20 bg-background/5 px-4 py-2 text-foreground border-border">

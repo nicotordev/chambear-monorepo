@@ -55,7 +55,7 @@ export default function HeroSection() {
           <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
             {/* TEXT COLUMN */}
             <div className="relative w-full lg:max-w-xl lg:shrink-0 xl:max-w-2xl">
-              <h1 className="text-5xl font-semibold tracking-tight text-pretty text-foreground sm:text-7xl">
+              <h1 className="text-4xl font-semibold tracking-tight text-pretty text-foreground sm:text-7xl">
                 Surgical precision for your job search
               </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-muted-foreground sm:max-w-md sm:text-xl/8 lg:max-w-none">
@@ -63,9 +63,9 @@ export default function HeroSection() {
                 using our smart credit system. Choose your plan and pay only for
                 results.
               </p>
-              <div className="mt-10 flex items-center gap-x-6">
-                <Button size="lg">Start for Free</Button>
-                <Button variant="ghost" size="lg" className="group">
+              <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-x-6">
+                <Button size="lg" className="w-full sm:w-auto">Start for Free</Button>
+                <Button variant="ghost" size="lg" className="group w-full sm:w-auto justify-center sm:justify-start">
                   View Plans{" "}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
@@ -73,8 +73,8 @@ export default function HeroSection() {
             </div>
 
             {/* IMAGES MASONRY GRID */}
-            <div className="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
-              <div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-0 xl:pt-80">
+            <div className="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0 overflow-hidden sm:overflow-visible">
+              <div className="hidden sm:block ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-0 xl:pt-80">
                 <div className="relative">
                   <img
                     alt=""
