@@ -57,8 +57,8 @@ export const JobPostingSchema = z.object({
   niceToHave: z.array(z.string().min(1)).optional(),
   skills: z.array(z.string().min(1)).optional(),
   compensation: z.string().min(1).optional(),
-  applyUrl: z.string().url().optional(),
-  sourceUrl: z.string().url(),
+  applyUrl: z.string().optional(),
+  sourceUrl: z.string(),
 });
 
 export const ExtractJobsResponseSchema = z.object({

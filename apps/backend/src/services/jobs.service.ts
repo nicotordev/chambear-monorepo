@@ -129,12 +129,18 @@ const jobsService = {
     });
   },
 
-  async scanJobs(profileId: string) {
-    return recommendationService.scanJobs(profileId);
-  },
+  async getPublicJobs(query?: string, clerkId?: string) {
+    let profileId: string | undefined;
 
-  async getPublicJobs(query?: string) {
-    return await prisma.job.findMany({
+    if (clerkId) {
+      const user = await prisma.user.findUnique({
+        where: { clerkId },
+        select: { profiles: { select: { id: true }, take: 1 } },
+      });
+      profileId = user?.profiles[0]?.id;
+    }
+
+    const jobs = await prisma.job.findMany({
       where: query
         ? {
             OR: [
@@ -154,8 +160,21 @@ const jobsService = {
             skill: true,
           },
         },
+        fitScores: profileId
+          ? {
+              where: { profileId },
+              select: { score: true },
+            }
+          : false,
       },
     });
+
+    // Map to frontend-friendly format (flatten fitScore)
+    return jobs.map((j) => ({
+      ...j,
+      fit: j.fitScores?.[0]?.score ?? 0,
+      description: j.description || "", // Ensure description is at least an empty string
+    }));
   },
 
   async getFreeJobs() {

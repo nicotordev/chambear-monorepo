@@ -86,3 +86,19 @@ export const toPineconeMetadata = (job: JobPosting): PineconeJobMetadata => {
     applyUrl: n.applyUrl,
   };
 };
+
+export function normalizeSkillName(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return null;
+  return trimmed.replace(/\s+/g, " ");
+}
+
+export const dedupeJobPostings = (jobs: readonly JobPosting[]): JobPosting[] => {
+  const map = new Map<string, JobPosting>();
+  for (const j of jobs) {
+    const key = j.sourceUrl;
+    if (!key) continue;
+    if (!map.has(key)) map.set(key, { ...j, sourceUrl: key });
+  }
+  return Array.from(map.values());
+};

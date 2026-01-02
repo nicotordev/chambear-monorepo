@@ -50,3 +50,26 @@ export async function withRetry<T>(
   }
   throw last instanceof Error ? last : new Error("Unknown error after retries");
 }
+
+export function uniqueStrings(values: readonly string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+export function sortByScoreDesc<T extends { score: number }>(
+  items: readonly T[]
+): T[] {
+  return [...items].sort((a, b) => b.score - a.score);
+}
+
+export function uniqueBy<T>(items: readonly T[], keyFn: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(item);
+    }
+  }
+  return out;
+}

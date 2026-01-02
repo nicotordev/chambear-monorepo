@@ -91,21 +91,22 @@ export class JobLlmClient {
       // Try to salvage: prefer object, then array
       const objStart = raw.indexOf("{");
       const objEnd = raw.lastIndexOf("}");
-      if (objStart >= 0 && objEnd > objStart) {
-        parsed = tryParse(raw.slice(objStart, objEnd + 1));
-        parsed = this.removeNulls(parsed);
-        return schema.parse(parsed);
-      }
-
       const arrStart = raw.indexOf("[");
       const arrEnd = raw.lastIndexOf("]");
-      if (arrStart >= 0 && arrEnd > arrStart) {
-        parsed = tryParse(raw.slice(arrStart, arrEnd + 1));
-        parsed = this.removeNulls(parsed);
-        return schema.parse(parsed);
-      }
 
-      throw new Error("Model did not return valid JSON");
+      const start = (objStart !== -1 && (arrStart === -1 || objStart < arrStart)) ? objStart : arrStart;
+      const end = (objEnd > arrEnd) ? objEnd : arrEnd;
+
+      if (start >= 0 && end > start) {
+        try {
+          parsed = tryParse(raw.slice(start, end + 1));
+        } catch (innerErr) {
+          logger.error({ text: raw, err: innerErr }, "[JobLLM] Failed to salvage JSON");
+          throw new Error("Model did not return valid JSON");
+        }
+      } else {
+        throw new Error("Model did not return valid JSON");
+      }
     }
 
     parsed = this.removeNulls(parsed);
@@ -151,18 +152,17 @@ kind must be one of:
 Rules:
 - One output item per input URL, preserve order, do NOT invent URLs.
 - Use only URL patterns + domain cues (do not fetch pages).
+- Be PERMISSIVE: If a URL looks like it MIGHT lead to a job or a list of jobs, give it a chance with a higher score.
 
 Scoring:
-- 95-100: ATS job listing OR direct job posting page
-- 80-94: ATS jobs index / search page listing multiple jobs
-- 65-79: careers landing page that likely links to listings
-- 0-64: everything else (do not waste scraping budget)
+- 90-100: ATS job listing, direct job posting, or high-confidence job page.
+- 70-89: Jobs index, search page, or careers landing page likely to have listings.
+- 40-69: Potential job-related page, generic careers page, or company page with hiring cues.
+- 0-39: Definitely irrelevant (e.g., privacy policy, generic footer links, unrelated blog posts).
 
-Hard negatives (always <= 10):
-- Blog/news/articles, press, about pages
-- Anything requiring login/captcha to view job content
-- Generic company pages unrelated to hiring
-
+Hard negatives (always <= 5):
+- Clear login gates, captchas, or password-protected areas.
+- Terms of service, privacy policy, cookie settings.
 `.trim();
 
     if (!userContext || userContext.trim().length === 0) return base;
@@ -170,6 +170,7 @@ Hard negatives (always <= 10):
     return (
       `${base}` +
       `
+
 User context (optional; use only as a mild prior):
 ${userContext.trim()}
 `.trim()
@@ -278,14 +279,20 @@ ${userContext.trim()}
     - "irrelevant": No hiring intent found.
 
     ### EXTRACTION RULES
-    1. **Strict JSON Only**: No markdown formatting, no conversation.
+    1. **Strict JSON Only**: No markdown formatting (no \`\`\`json blocks), no conversation.
     2. **No Hallucination**: If a field (like salary or team) is not explicitly present in the text, omit it. Do not guess.
     3. **Null Handling**: Do NOT use null. If a field is missing, omit the key entirely from the JSON object.
     4. **Enum Normalization**:
        - **Remote**: Detect "Remote", "Work from home", "Telecommute" -> "remote". Detect "Hybrid" -> "hybrid". Default to "on_site" if a specific office location is mandatory and no remote option is mentioned. Else "unknown".
        - **Seniority**: Map "Sr", "Senior" -> "senior"; "Principal" -> "principal"; "Staff" -> "staff"; "Lead", "Manager" -> "lead"; "Entry Level", "Junior" -> "junior". Default "unknown".
        - **EmploymentType**: Map "Contract", "Contractor" -> "contract"; "Full-time" -> "full_time".
-    5. **Source URL**: The output "sourceUrl" field must exactly match the input provided sourceUrl.
+    5. **URLs**:
+       - "sourceUrl": Must exactly match the input provided sourceUrl.
+       - "applyUrl": Extract the direct application link. If it is a relative URL (e.g. "/jobs/123"), leave it as is; it will be resolved later.
+
+    6. **Content Extraction**:
+       - "descriptionMarkdown": Provide a meaningful summary of the role (at least 2-3 paragraphs if possible). Include the company's mission, the team's goals, and the primary focus of the position. DO NOT leave this empty if there is text on the page.
+       - "skills": Focus on technical keywords (e.g., "TypeScript", "Node.js", "PostgreSQL").
 
     ### OUTPUT SCHEMA
     Return this JSON structure:
@@ -302,13 +309,13 @@ ${userContext.trim()}
           "employmentType": "full_time" | "part_time" | "contract" | "internship" | "temporary" | "unknown",
           "seniority": "junior" | "mid" | "senior" | "staff" | "lead" | "principal" | "unknown",
           "team": "string (Optional)",
-          "descriptionMarkdown": "string (Compact markdown summary, Optional)",
+          "descriptionMarkdown": "string (Detailed markdown summary, REQUIRED if possible)",
           "responsibilities": ["string", "string"],
           "requirements": ["string", "string"],
           "niceToHave": ["string", "string"],
-          "skills": ["string", "string (Tech stack, tools, languages, frameworks - e.g. 'React', 'TypeScript', 'AWS')"],
+          "skills": ["string", "string (Tech stack, tools, languages, frameworks)"],
           "compensation": "string (Optional - raw text e.g. '$100k - $120k')",
-          "applyUrl": "string (Valid Absolute URL only, Optional)",
+          "applyUrl": "string (Optional)",
           "sourceUrl": "string (Required, strictly copy from input)"
         }
       ]
@@ -595,11 +602,11 @@ ${userContext.trim()}
     const filtered = candidates
       .filter((it) => {
         if (it.kind === UrlKind.JOB_LISTING)
-          return it.score >= Math.max(55, minScoreToScrape);
+          return it.score >= Math.max(40, minScoreToScrape);
         if (it.kind === UrlKind.JOBS_INDEX)
-          return it.score >= Math.max(60, minScoreToScrape);
+          return it.score >= Math.max(45, minScoreToScrape);
         if (it.kind === UrlKind.CAREERS)
-          return keepCareers && it.score >= Math.max(65, minScoreToScrape);
+          return keepCareers && it.score >= Math.max(50, minScoreToScrape);
         return false;
       })
       .sort((a, b) => b.score - a.score)

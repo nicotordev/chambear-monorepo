@@ -25,6 +25,7 @@ export const JobSchema = z.object({
   postedAt: z.coerce.date().nullish(),
   expiresAt: z.coerce.date().nullish(),
   createdAt: z.coerce.date(),
+  fit: z.number().optional(),
   jobSkills: z.array(
     z.object({
       skill: z.object({
@@ -51,20 +52,42 @@ export const JobUpsertSchema = JobSchema.extend({
 
 export type JobUpsertInput = z.infer<typeof JobUpsertSchema>;
 
-export const JobPostingSchema = z.object({
-  title: z.string(),
-  company: z.string().optional(),
-  location: z.string().optional(),
-  remote: z.enum(WorkMode).optional(),
-  employmentType: z.enum(EmploymentType).optional(),
-  sourceUrl: z.string(),
-  descriptionMarkdown: z.string().optional(),
-});
+export const JobPostingSchema = z
+  .object({
+    title: z.string(),
+    company: z.string().optional(),
+    location: z.string().optional(),
+    remote: z.enum(WorkMode).optional(),
+    employmentType: z.enum(EmploymentType).optional(),
+    seniority: z.enum(Seniority).optional(),
+    team: z.string().optional(),
+    descriptionMarkdown: z.string().optional(),
+    responsibilities: z.array(z.string()).optional(),
+    requirements: z.array(z.string()).optional(),
+    niceToHave: z.array(z.string()).optional(),
+    skills: z.array(z.string()).optional(),
+    compensation: z.string().optional(),
+    applyUrl: z.string().optional(),
+    sourceUrl: z.string(),
+    pageKind: z.enum(UrlKind).optional(),
+  })
+  .readonly();
 
-export const RankedJobSchema = z.object({
-  job: JobPostingSchema,
-  fitScore: z.number(),
-  rationale: z.string(),
-});
+export const RankedJobSchema = z
+  .object({
+    job: JobPostingSchema,
+    fitScore: z.number(),
+    rationale: z.union([
+      z.string(),
+      z
+        .object({
+          match: z.array(z.string()).readonly(),
+          missing: z.array(z.string()).readonly(),
+          reason: z.string().optional(),
+        })
+        .readonly(),
+    ]),
+  })
+  .readonly();
 
 export type JobInput = z.infer<typeof JobSchema>;

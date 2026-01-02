@@ -7,8 +7,11 @@ import type { Context } from "hono";
 
 const jobsController = {
   async getPublicJobs(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
     const search = c.req.query("search");
-    const jobs = await jobsService.getPublicJobs(search);
+    
+    const jobs = await jobsService.getPublicJobs(search, userId ?? undefined);
 
     return c.json(response.success(jobs), 200);
   },

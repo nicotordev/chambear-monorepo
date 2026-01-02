@@ -53,62 +53,6 @@ const getFreeJobs = createRoute({
   },
 });
 
-const scanJobs = createRoute({
-  method: "get",
-  path: "/jobs/scan",
-  request: {
-    query: z.object({
-      profileId: z.string(),
-    }),
-  },
-  responses: {
-    200: {
-      description: "Get job recommendations",
-      content: {
-        "application/json": {
-          schema: createSuccessResponseSchema(
-            z.object({
-              message: z.string(),
-              jobId: z.string(),
-            })
-          ),
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-    400: {
-      description: "Bad Request",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-    402: {
-      description: "Payment Required",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-    500: {
-      description: "Internal Server Error",
-      content: {
-        "application/json": {
-          schema: ErrorResponseSchema,
-        },
-      },
-    },
-  },
-});
 
 const getJobById = createRoute({
   method: "get",
@@ -257,7 +201,6 @@ const app = new OpenAPIHono();
 
 app.openapi(getPublicJobs, jobsController.getPublicJobs);
 app.openapi(getFreeJobs, jobsController.getFreeJobs);
-app.openapi(scanJobs, jobsController.scanJobs);
 app.openapi(getScanStatus, jobsController.getScanStatus);
 app.openapi(getJobById, jobsController.getJobById);
 app.openapi(applyJob, jobsController.applyJob);

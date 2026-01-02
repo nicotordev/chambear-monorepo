@@ -6,6 +6,7 @@ import {
 } from "@/schemas/ai-action";
 import { FitScoreSchema } from "@/schemas/application";
 import { DocumentSchema } from "@/schemas/document";
+import { RankedJobSchema } from "@/schemas/job";
 import {
   createSuccessResponseSchema,
   ErrorResponseSchema,
@@ -143,8 +144,61 @@ const calculateFit = createRoute({
   },
 });
 
+const scanJobs = createRoute({
+  method: "get",
+  path: "/ai/scan",
+  request: {
+    query: z.object({
+      profileId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Get job recommendations",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(z.array(RankedJobSchema)),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    402: {
+      description: "Payment Required",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal Server Error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 app.openapi(optimizeCv, aiActionController.optimizeCv);
 app.openapi(generateCoverLetter, aiActionController.generateCoverLetter);
 app.openapi(calculateFit, aiActionController.calculateFit);
+app.openapi(scanJobs, aiActionController.scanJobs);
 
 export default app;

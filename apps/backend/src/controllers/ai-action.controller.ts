@@ -137,6 +137,27 @@ const aiActionController = {
       );
     }
   },
+
+  scanJobs: async (c: Context) => {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+    const profileId = c.req.query("profileId");
+
+    if (!userId || !profileId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    try {
+      const scannedJobs = await aiActionService.scanJobs(profileId);
+      return c.json(response.success([...scannedJobs]), 200);
+    } catch (error: any) {
+      console.error(error);
+      return c.json(
+        response.error(error.message || "Failed to scan jobs"),
+        500
+      );
+    }
+  },
 };
 
 export default aiActionController;

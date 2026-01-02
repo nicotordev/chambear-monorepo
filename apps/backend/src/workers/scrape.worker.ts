@@ -2,8 +2,7 @@ import { Queue, Job, type JobsOptions } from "bullmq";
 import IORedis from "ioredis";
 import { SCRAPE_QUEUE_NAME } from "../lib/queue";
 import { redisUrl, bullmqRedisOptions } from "../lib/redis";
-import jobsService from "../services/jobs.service";
-
+import aiActionService from "@/services/ai-action.service";
 export interface ScrapeJobData {
   profileId: string;
   userId: string;
@@ -136,7 +135,7 @@ export const processScrapeQueueDirect = async (
 
       try {
         const { profileId } = job.data;
-        await jobsService.scanJobs(profileId);
+        await aiActionService.scanJobs(profileId);
 
         // Mark completed in BullMQ
         // moveToCompleted expects a return value and a token (for locks) in worker context,
