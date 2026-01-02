@@ -59,7 +59,9 @@ export default async function JobsPage() {
 
         {/* RIGHT: Job detail */}
         <div className="flex-1 overflow-y-auto bg-background/50">
+        <div>
           <SelectedJob ssrJobs={jobs} />
+        </div>
         </div>
       </div>
     </div>

@@ -43,9 +43,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 animate-in fade-in">
         <MousePointerClick className="w-16 h-16 mb-4 opacity-20" />
         <p className="text-lg font-medium">Select an offer</p>
-        <p className="text-sm">
-          Click on a card on the left to see details.
-        </p>
+        <p className="text-sm">Click on a card on the left to see details.</p>
       </div>
     );
   }
@@ -80,18 +78,24 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Estimated Fit</span>
             <span className="font-medium text-foreground">
-              {selectedJob?.fit ?? 0}%
+              {selectedJob?.fit ?? "No fit calculated"}
             </span>
           </div>
           <Progress value={selectedJob?.fit ?? 0} className="h-2" />
         </div>
 
-        {/* SINGLE PRIMARY ACTION */}
-        <Button asChild size="lg" className="w-full font-semibold">
-          <Link href={`/dashboard/jobs/${selectedJob?.id}`}>
-            View full offer
-          </Link>
-        </Button>
+        <div className="flex justify-center items-center gap-4">
+          <Button asChild size="lg" className="font-semibold grow">
+            <Link href={`/dashboard/jobs/${selectedJob?.id}`}>
+              View full offer
+            </Link>
+          </Button>
+          {!selectedJob.fit && (
+            <Button variant="outline" size="lg">
+              Calculate Fit
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Context */}
@@ -127,7 +131,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
           className="text-muted-foreground"
         >
           <Link
-            href={selectedJob?.source || "#"}
+            href={selectedJob?.externalUrl || "#"}
             target="_blank"
             rel="noreferrer"
           >

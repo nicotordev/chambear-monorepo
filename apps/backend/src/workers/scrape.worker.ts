@@ -73,7 +73,7 @@ const releaseLock = async (
   await redis.eval(script, 1, key, token);
 };
 
-type JobStateToFetch = "wait" | "prioritized" | "active";
+type JobStateToFetch = "wait" | "prioritized" | "active" | "delayed";
 
 /**
  * Process jobs directly without Worker.
@@ -197,20 +197,23 @@ export const processScrapeQueueDirect = async (
       const waitEmpty = (counts.wait ?? 0) === 0;
       const activeEmpty = (counts.active ?? 0) === 0;
       const prioritizedEmpty = (counts.prioritized ?? 0) === 0;
+      const delayedEmpty = (counts.delayed ?? 0) === 0;
+
+      console.log(`[scrape.worker] Job counts: wait=${counts.wait}, active=${counts.active}, prioritized=${counts.prioritized}, delayed=${counts.delayed}`);
 
       const shouldTreatAsDrained = includePrioritized
-        ? waitEmpty && activeEmpty && prioritizedEmpty
-        : waitEmpty && activeEmpty;
+        ? waitEmpty && activeEmpty && prioritizedEmpty && delayedEmpty
+        : waitEmpty && activeEmpty && delayedEmpty;
 
       if (shouldTreatAsDrained) {
         stoppedBy = "drained";
         break;
       }
 
-      // Fetch a batch of jobs (wait + prioritized)
+      // Fetch a batch of jobs (wait + prioritized + delayed)
       const states: JobStateToFetch[] = includePrioritized
-        ? ["prioritized", "wait"]
-        : ["wait"];
+        ? ["prioritized", "wait", "delayed"]
+        : ["wait", "delayed"];
 
       // Pull slightly more than concurrency to keep the pipeline full
       const batchSize = Math.max(concurrency * 2, 10);

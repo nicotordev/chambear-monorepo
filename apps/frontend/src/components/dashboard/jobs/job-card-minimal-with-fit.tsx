@@ -1,10 +1,15 @@
 "use client";
 
-import type { Job } from "@/types";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { useJobsPageStore } from "@/stores/jobs-page/jobs-page";
+import type { Job } from "@/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface JobCardMinimalWithFitProps {
   job: Job;
@@ -13,8 +18,8 @@ interface JobCardMinimalWithFitProps {
 export default function JobCardMinimalWithFit({
   job,
 }: JobCardMinimalWithFitProps) {
-  const setSelectedJobId = useJobsPageStore(state => state.setSelectedJobId);
-  const selectedJobId = useJobsPageStore(state => state.selectedJobId);
+  const setSelectedJobId = useJobsPageStore((state) => state.setSelectedJobId);
+  const selectedJobId = useJobsPageStore((state) => state.selectedJobId);
   const isActive = job.id === selectedJobId;
 
   return (
@@ -40,9 +45,19 @@ export default function JobCardMinimalWithFit({
 
         <div className="flex flex-wrap gap-1">
           {job.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
+            <Tooltip key={tag}>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className="text-xs max-w-[150px] truncate block"
+                >
+                  {tag}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[300px]">
+                <p>{tag}</p>
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </CardContent>
