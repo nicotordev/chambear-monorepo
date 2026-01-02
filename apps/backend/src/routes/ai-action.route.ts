@@ -196,9 +196,47 @@ const scanJobs = createRoute({
   },
 });
 
+const getScanStatus = createRoute({
+  method: "get",
+  path: "/ai/scan/status",
+  request: {
+    query: z.object({
+      profileId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Get scan status",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(
+            z.object({
+              status: z.string(),
+              jobId: z.string().optional(),
+            })
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    400: {
+      description: "Bad Request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
+});
+
 app.openapi(optimizeCv, aiActionController.optimizeCv);
 app.openapi(generateCoverLetter, aiActionController.generateCoverLetter);
 app.openapi(calculateFit, aiActionController.calculateFit);
 app.openapi(scanJobs, aiActionController.scanJobs);
+app.openapi(getScanStatus, aiActionController.getScanStatus);
 
 export default app;

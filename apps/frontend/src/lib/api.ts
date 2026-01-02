@@ -7,7 +7,6 @@ import type {
 import { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
-  CreditWallet,
   Document,
   InterviewSession,
   Job,
@@ -187,7 +186,7 @@ class Api {
 
   public async scanJobs(profileId: string): Promise<void> {
     try {
-      await this.instance.get("/jobs/scan", {
+      await this.instance.get("/ai/scan", {
         params: { profileId },
       });
     } catch (error) {
@@ -199,7 +198,7 @@ class Api {
   public async getScanStatus(
     profileId: string
   ): Promise<{ status: string; jobId?: string }> {
-    const res = await this.instance.get("/jobs/scan/status", {
+    const res = await this.instance.get("/ai/scan/status", {
       params: { profileId },
     });
     return res.data.data;

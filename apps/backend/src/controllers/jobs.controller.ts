@@ -10,7 +10,7 @@ const jobsController = {
     const auth = getAuth(c);
     const userId = auth?.userId;
     const search = c.req.query("search");
-    
+
     const jobs = await jobsService.getPublicJobs(search, userId ?? undefined);
 
     return c.json(response.success(jobs), 200);
@@ -114,31 +114,6 @@ const jobsController = {
 
     return c.json(response.success(job), 200);
   },
-
-  async getScanStatus(c: Context) {
-    const auth = getAuth(c);
-    const userId = auth?.userId;
-
-    if (!userId) {
-      return c.json(response.unauthorized(), 401);
-    }
-
-    const profileId = c.req.query("profileId");
-    if (!profileId) {
-      return c.json(response.badRequest("Profile ID is required"), 400);
-    }
-
-    const jobId = `scan:${userId}:${profileId}`;
-    const job = await scrapeQueue.getJob(jobId);
-
-    if (!job) {
-      return c.json(response.success({ status: "idle" }), 200);
-    }
-
-    const state = await job.getState();
-    return c.json(response.success({ status: state, jobId }), 200);
-  },
-
   async upsertJob(c: Context) {
     const auth = getAuth(c);
     const userId = auth?.userId;

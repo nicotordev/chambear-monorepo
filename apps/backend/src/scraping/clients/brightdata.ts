@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
+import { logger } from "../../lib/logger";
 
 /* =======================
  * Types
@@ -6,7 +7,7 @@ import axios, { type AxiosInstance } from "axios";
 
 type HttpMethod = "GET" | "POST";
 type BrightDataFormat = "raw" | "json";
-type BrightDataDataFormat = "html" | "markdown" | "json";
+type BrightDataDataFormat = "html" | "markdown" | "json" | "parsed";
 
 export type UnlockerSyncRequest = Readonly<{
   url: string;
@@ -45,6 +46,18 @@ export type SerpResult = Readonly<{
   position: number;
   snippet?: string;
 }>;
+
+export interface OganicResult {
+  link: string;
+  title: string;
+  description: string;
+  extensions: Array<{
+    type: "site_link";
+    link: string;
+    text: string;
+  }>;
+  global_rank: number;
+}
 
 /* =======================
  * Helpers
@@ -102,6 +115,48 @@ export class BrightDataClient {
     });
   }
 
+  private async serpRequest(query: string): Promise<Array<OganicResult>> {
+    const res = await this.request({
+      zone: this.serpZone,
+      url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+      format: "json",
+      data_format: "parsed_light",
+    });
+
+    const body =
+      res.kind === "json"
+        ? res.body
+        : safeJsonParse(res.body) ?? res.body;
+
+    const organic = this.extractOrganicResults(body);
+
+    return organic;
+  }
+
+  private extractOrganicResults(body: unknown): Array<OganicResult> {
+    if (!isRecord(body)) return [];
+
+    if (Array.isArray(body.organic)) {
+      return body.organic as Array<OganicResult>;
+    }
+
+    if (Array.isArray(body.organic_results)) {
+      return body.organic_results as Array<OganicResult>;
+    }
+
+    if (isRecord(body.data)) {
+      if (Array.isArray(body.data.organic)) {
+        return body.data.organic as Array<OganicResult>;
+      }
+
+      if (Array.isArray(body.data.organic_results)) {
+        return body.data.organic_results as Array<OganicResult>;
+      }
+    }
+
+    return [];
+  }
+
   /* =======================
    * Low-level request
    * ======================= */
@@ -121,12 +176,32 @@ export class BrightDataClient {
     if (req.data_format) payload.data_format = req.data_format;
     if (req.headers) payload.headers = req.headers;
 
+    logger.debug(
+      {
+        zone: req.zone,
+        url: req.url,
+        method: payload.method,
+      },
+      "[BrightData] Sending request"
+    );
+
     const res = await this.http.post("/request", payload, {
       timeout: req.timeout_ms ?? 60_000,
     });
 
     const raw = String(res.data ?? "");
     const parsed = safeJsonParse(raw);
+
+    if (!parsed && raw.length > 0) {
+      logger.error(
+        {
+          status: res.status,
+          snippet: raw.slice(0, 200),
+          headers: res.headers,
+        },
+        "[BrightData] Failed to parse response as JSON"
+      );
+    }
 
     if (
       isRecord(parsed) &&
@@ -177,43 +252,23 @@ export class BrightDataClient {
    * SERP → URLs
    * ======================= */
 
-  public async searchGoogle(query: string): Promise<readonly SerpResult[]> {
+  public async searchGoogle(query: string): Promise<readonly OganicResult[]> {
     const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
-    const res = await this.request({
-      url,
-      zone: this.serpZone,
-      format: "json",
-      data_format: "json",
-    });
+    const organic = await this.serpRequest(query);
 
-    const data = res.kind === "json" ? res.body : null;
-    if (!isRecord(data)) return [];
-
-    const organic =
-      (Array.isArray(data.organic) && data.organic) ||
-      (isRecord(data.results) &&
-        Array.isArray(data.results.organic) &&
-        data.results.organic) ||
-      [];
-
-    const results: SerpResult[] = [];
-
-    for (const item of organic) {
-      if (!isRecord(item)) continue;
-
-      const url = normalizeUrl(String(item.link ?? ""));
-      const title = String(item.title ?? "").trim();
-      const pos = Number(item.rank ?? item.position ?? 0);
-      const snippet =
-        typeof item.snippet === "string" ? item.snippet : undefined;
-
-      if (!url || !title) continue;
-
-      results.push({ url, title, position: pos, snippet });
+    if (organic.length === 0) {
+      logger.info(
+        {
+          query,
+          hasResults: !!organic,
+          keys: Object.keys(organic),
+        },
+        "[BrightData] No organic results found in SERP response"
+      );
     }
 
-    return results;
+    return organic;
   }
 
   /* =======================
@@ -247,10 +302,7 @@ export class BrightDataClient {
   > {
     const serp = await this.searchGoogle(query);
 
-    const urls = serp
-      .map((r) => r.url)
-      .filter(Boolean)
-      .slice(0, maxUrls);
+    const urls = serp;
 
     const pages: { url: string; markdown: string }[] = [];
     let i = 0;
@@ -263,13 +315,13 @@ export class BrightDataClient {
           if (idx >= urls.length) return;
 
           const url = urls[idx];
-          const markdown = await this.scrapeMarkdown(url);
-          pages.push({ url, markdown });
+          const markdown = await this.scrapeMarkdown(url.link);
+          pages.push({ url: url.link, markdown });
         }
       });
 
     await Promise.all(workers);
 
-    return { query, urls, pages };
+    return { query, urls: urls.map((u) => u.link), pages };
   }
 }

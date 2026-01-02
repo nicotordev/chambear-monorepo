@@ -35,6 +35,8 @@ import {
   ScoredUrl,
 } from "../../types/ai";
 import { PineconeJobsClient } from "./ai";
+import { brightdataClient } from ".";
+import type { OganicResult } from "./brightdata";
 
 /* =========================
  * Client class (LLM)
@@ -94,14 +96,20 @@ export class JobLlmClient {
       const arrStart = raw.indexOf("[");
       const arrEnd = raw.lastIndexOf("]");
 
-      const start = (objStart !== -1 && (arrStart === -1 || objStart < arrStart)) ? objStart : arrStart;
-      const end = (objEnd > arrEnd) ? objEnd : arrEnd;
+      const start =
+        objStart !== -1 && (arrStart === -1 || objStart < arrStart)
+          ? objStart
+          : arrStart;
+      const end = objEnd > arrEnd ? objEnd : arrEnd;
 
       if (start >= 0 && end > start) {
         try {
           parsed = tryParse(raw.slice(start, end + 1));
         } catch (innerErr) {
-          logger.error({ text: raw, err: innerErr }, "[JobLLM] Failed to salvage JSON");
+          logger.error(
+            { text: raw, err: innerErr },
+            "[JobLLM] Failed to salvage JSON"
+          );
           throw new Error("Model did not return valid JSON");
         }
       } else {
@@ -139,7 +147,7 @@ export class JobLlmClient {
     return withRetry(run, this.retry);
   }
 
-  private buildUrlScoringSystemPrompt(userContext?: string): string {
+  private buildUrlScoringSystemPrompt(userContext: string): string {
     const base = `
 You are a URL classifier for discovering job pages to scrape.
 
@@ -177,27 +185,24 @@ ${userContext.trim()}
     );
   }
 
-  public async scoreUrls(input: ScoreUrlsInput): Promise<ScoreUrlsOutput> {
-    const batchSize = input.batchSize ?? 25;
-
-    // Keep original order (and duplicates) for output contract
-    const original = input.urls.map(normalizeUrl).filter((u) => u.length > 0);
-    if (original.length === 0) return { items: [] };
-
-    logger.debug({ count: original.length }, "Scoring URLs");
+  public async scoreUrls(
+    data: readonly OganicResult[],
+    userContext: string
+  ): Promise<ScoreUrlsOutput> {
+    logger.debug({ count: data.length }, "Scoring URLs");
 
     // Unique list only for efficiency; we'll map back later
     const unique: string[] = [];
     const seen = new Set<string>();
-    for (const u of original) {
-      if (!seen.has(u)) {
-        seen.add(u);
-        unique.push(u);
+    for (const u of data) {
+      if (!seen.has(u.link)) {
+        seen.add(u.link);
+        unique.push(u.link);
       }
     }
 
-    const system = this.buildUrlScoringSystemPrompt(input.userContext);
-    const batches = chunk(unique, batchSize);
+    const system = this.buildUrlScoringSystemPrompt(userContext);
+    const batches = chunk(unique, 25);
 
     const results = await Promise.all(
       batches.map(async (b) => {
@@ -240,13 +245,13 @@ ${userContext.trim()}
     }
 
     // Rebuild outputs exactly aligned to original list (including duplicates)
-    const items: ScoredUrl[] = original.map((u) => {
-      const hit = byUrl.get(u);
+    const items: ScoredUrl[] = data.map((u) => {
+      const hit = byUrl.get(u.link);
       if (hit) return hit;
 
       // fallback if model omitted something
       return {
-        url: u,
+        url: u.link,
         score: 0,
         kind: UrlKind.IRRELEVANT,
         reason: "Missing model output for this URL; defaulting to irrelevant.",
@@ -475,69 +480,52 @@ ${userContext.trim()}
   public async generateSearchDorks(
     userContext: string,
     limit: number = 5
-  ): Promise<readonly { query: string; site?: string; location?: string }[]> {
-    logger.info({ limit }, "Generating search dorks");
-    const clampLimit = (n: number): number => {
-      const x = Number.isFinite(n) ? Math.floor(n) : 5;
-      return Math.max(1, Math.min(10, x));
-    };
+  ): Promise<{ query: string }[]> {
+    // 1. One-line clamp (1 to 10)
+    const count = Math.min(Math.max(limit, 1), 10);
 
-    const safeLimit = clampLimit(limit);
+    // 2. Dynamic date calculation (3 months ago)
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const dateStr = threeMonthsAgo.toISOString().split("T")[0];
 
+    logger.info({ count }, "Generating search dorks");
+
+    // 3. Simplified Prompt: Focuses on behavior, not hardcoded keyword lists
     const systemPrompt = `
-    ### SYSTEM ROLE
-    You are an expert at generating Google Search operators to discover hidden job listings (Google Dorking).
+    You are an expert at Google Dorking for job hunting.
+    Generate ${count} distinct, high-recall search queries based on the user's career profile.
 
-    ### PRIMARY GOAL
-    Generate queries that guarantee non-zero results. Prioritize Recall (finding pages) over Precision (perfect match).
-    A query usually fails because it has too many words. KEEP QUERIES SHORT.
+    ### PROFILE SUMMARY:
+    ${userContext}
 
-    ### HARD REQUIREMENTS
-    - Output EXACTLY ${safeLimit} queries.
-    - Each query must be a single string.
-    - DO NOT use "-site:" exclusions.
-    - DO NOT include specific job board brands (e.g. LinkedIn, Indeed).
-    - DO NOT stack every technology. Pick ONE role and ONE stack term per query.
-    - Use "intitle:" or "inurl:" operators for high-value structural matching.
+    ### RULES:
+    1. RECALL IS TOP PRIORITY. Keep queries broad enough to find results.
+    2. MAXIMUM 6-8 keywords per query. Do NOT over-specify.
+    3. Use operators: site:, intitle:, inurl:, OR.
+    4. Mix specific ATS sites (site:greenhouse.io, site:lever.co, etc.) with broad "careers" page searches.
+    5. At least one query MUST be broad (e.g., intitle:careers "Software Engineer" "Remote").
+    6. Do NOT use job aggregators (LinkedIn, Indeed, Glassdoor).
+    7. Include exactly one query using "after:${dateStr}".
+    8. Output JSON: { "queries": [ { "query": "..." } ] }
 
-    ### QUERY STRATEGY (Must include all types)
-    1) **Broad Discovery (High Recall):**
-       - Format: intitle:[Intent] "Role"
-       - Example: intitle:careers "Software Engineer"
-
-    2) **Tech-Focused (Medium Precision):**
-       - Format: "Role" "Stack" (remote OR contract)
-       - Example: "Frontend Developer" React (remote OR contract)
-
-    3) **Footprint Hunting (High Precision):**
-       - Format: inurl:[Intent] "Stack"
-       - Example: inurl:jobs "Next.js"
-
-    ### KEYWORD POOLS
-    - **Role Terms:** "Full Stack", "Software Engineer", "Web Developer", "Frontend", "Backend"
-    - **Stack Terms:** TypeScript, React, Node.js, Next.js (Pick only ONE per query)
-    - **Intent Terms (for intitle/inurl):** careers, jobs, vacancies, work-at, join-us
-    - **Action Terms (for text):** "apply now", "job description", "hiring"
-
-    ### FRESHNESS
-    - Only use the "after:YYYY-MM-DD" operator in exactly 1 query.
-    - Calculate the date for 3 months ago from ${
-      new Date().toISOString().split("T")[0]
-    }
-
-    ### OUTPUT FORMAT
-    Return JSON ONLY:
-    { "queries": [ { "query": "..." }, ... ] }
+    Example good query: site:lever.co intitle:"Software Engineer" "TypeScript" remote
+    Example bad query (too long): site:lever.co intitle:"Full Stack Developer" (TypeScript OR React OR Node.js OR PostgreSQL) (Remote OR "Latin America") -linkedin -indeed
     `;
+
+    // 4. Schema validation
+    const schema = z.object({
+      queries: z.array(z.object({ query: z.string() })).length(count),
+    });
 
     const resp = await this.callJson(
       systemPrompt,
-      { userContext, limit: safeLimit },
-      z.object({ queries: z.array(z.object({ query: z.string().min(1) })) }),
+      userContext,
+      schema,
       "gpt-5.2"
     );
 
-    return resp.queries.slice(0, safeLimit).map((q) => ({ query: q.query }));
+    return resp.queries;
   }
 
   /**
@@ -548,18 +536,8 @@ ${userContext.trim()}
    * - it extracts jobs from top URLs
    */
   public async scoreThenFetchThenExtractJobs(
-    params: Readonly<{
-      urls: readonly string[];
-      fetchMarkdown: FetchMarkdown;
-      userContext?: string;
-      batchSize?: number;
-      maxToScrape?: number; // default 10
-      targetJobs?: number; // default 25
-      minScoreToScrape?: number; // default 60
-      keepCareers?: boolean; // default true
-      exhaustiveExtraction?: boolean; // default true
-      concurrency?: number; // default 3
-    }>
+    data:  readonly OganicResult[],
+    userContext: string
   ): Promise<
     Readonly<{
       scored: readonly ScoredUrl[];
@@ -572,22 +550,18 @@ ${userContext.trim()}
       jobs: readonly JobPosting[];
     }>
   > {
-    const maxToScrape = params.maxToScrape ?? 10;
-    const targetJobs = params.targetJobs ?? 25;
-    const minScoreToScrape = params.minScoreToScrape ?? 60;
-    const keepCareers = params.keepCareers ?? true;
-    const concurrency = params.concurrency ?? 3;
+    const maxToScrape = 15; // increased from 10
+    const targetJobs = 25;
+    const minScoreToScrape = 50; // lowered from 60
+    const keepCareers = true;
+    const concurrency = 3;
 
     logger.info(
-      { urlCount: params.urls.length, maxToScrape },
+      { urlCount: data.length, maxToScrape },
       "Starting score -> fetch -> extract pipeline"
     );
 
-    const scoredResp = await this.scoreUrls({
-      urls: params.urls,
-      userContext: params.userContext,
-      batchSize: params.batchSize,
-    });
+    const scoredResp = await this.scoreUrls(data, userContext);
 
     // Deduplicate pages by URL for scraping (scoreUrls may contain duplicates)
     const bestByUrl = new Map<string, ScoredUrl>();
@@ -602,11 +576,11 @@ ${userContext.trim()}
     const filtered = candidates
       .filter((it) => {
         if (it.kind === UrlKind.JOB_LISTING)
-          return it.score >= Math.max(40, minScoreToScrape);
+          return it.score >= 40; // More permissive for direct listings
         if (it.kind === UrlKind.JOBS_INDEX)
-          return it.score >= Math.max(45, minScoreToScrape);
+          return it.score >= 45;
         if (it.kind === UrlKind.CAREERS)
-          return keepCareers && it.score >= Math.max(50, minScoreToScrape);
+          return keepCareers && it.score >= 50;
         return false;
       })
       .sort((a, b) => b.score - a.score)
@@ -635,12 +609,12 @@ ${userContext.trim()}
       const results = await Promise.all(
         batch.map(async (it) => {
           try {
-            const md = await params.fetchMarkdown(it.url);
+            const md = await brightdataClient.scrapeMarkdown(it.url);
             const extraction = await this.extractJobsFromMarkdown({
               url: it.url,
               markdown: md,
-              userContext: params.userContext,
-              exhaustive: params.exhaustiveExtraction ?? true,
+              userContext,
+              exhaustive: true,
             });
             return {
               url: it.url,

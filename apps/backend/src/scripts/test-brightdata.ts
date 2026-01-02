@@ -25,7 +25,7 @@ async function main() {
       console.log("First 3 results:");
       results.slice(0, 3).forEach((r, i) => {
         console.log(`${i + 1}. ${r.title}`);
-        console.log(`   URL: ${r.url}`);
+        console.log(`   URL: ${r.link}`);
       });
     } else {
       console.log("No results found. This might indicate a parsing issue or a blocked request.");

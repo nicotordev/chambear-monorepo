@@ -59,20 +59,8 @@ const aiActionService = {
 
     const scrapedJobs = await this.performScraping(userContext);
 
-    const scrapedUnique = dedupeJobPostings(scrapedJobs)
-      .filter((j) => j.title)
-      .slice(0, 200); // safety cap
-
-    console.info(
-      `${LOG_PREFIX} Total unique scraped jobs after hard filters: ${scrapedUnique.length}`
-    );
-
-    if (scrapedUnique.length > 0) {
-      await this.upsertScrapedJobs(scrapedUnique);
-    }
-
     // Add scraped as candidates (retrievalScore is “unknown”)
-    const candidates = scrapedUnique.map((job) => ({
+    const candidates = scrapedJobs.map((job) => ({
       job,
       retrievalScore: 0,
       source: "SCRAPED",
@@ -112,7 +100,6 @@ const aiActionService = {
       jobs: topForLlm.map((r) => r.job),
       userContext,
       topK: RANK_LIMIT,
-      // NEXT: add model: "gpt-5.2" if your client supports it
     });
     console.timeEnd(`${LOG_PREFIX} LLM Re-rank`);
     console.info(`${LOG_PREFIX} Returned ${ranked.items.length} ranked items.`);
@@ -215,7 +202,7 @@ ${job.description || "No description available."}
     return doc;
   },
 
-  async calculateFit(userId: string, profileId: string, jobId: string) {
+  async calculateFit(profileId: string, jobId: string) {
     // 1. Get Job
     const job = await prisma.job.findUnique({
       where: { id: jobId },
@@ -260,11 +247,11 @@ ${job.description || "No description available."}
         profileId,
         jobId,
         score: item.fitScore,
-        rationale: item.rationale as any,
+        rationale: item.rationale,
       },
       update: {
         score: item.fitScore,
-        rationale: item.rationale as any,
+        rationale: item.rationale,
       },
     });
 
@@ -288,23 +275,21 @@ ${job.description || "No description available."}
             attempts++;
             try {
               const result = await brightdataClient.searchGoogle(q.query);
-              console.debug(
+              
+              if (result.length === 0) {
+                console.info(`${LOG_PREFIX} No results for query: "${q.query}"`);
+                return [];
+              }
+
+              console.info(
                 `${LOG_PREFIX} SERP returned ${result.length} results for query "${q.query}"`
               );
 
-              const urls = result.map((r) => r.url);
-
               const extracted =
-                await jobLlmClient.scoreThenFetchThenExtractJobs({
-                  urls,
-                  fetchMarkdown: async (url: string) => {
-                    const [res] = await brightdataClient.scrapeMarkdown(url);
-                    return res;
-                  },
-                  userContext,
-                  maxToScrape: 5,
-                  minScoreToScrape: 40,
-                });
+                await jobLlmClient.scoreThenFetchThenExtractJobs(
+                  result,
+                  userContext
+                );
 
               console.info(
                 `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
@@ -327,8 +312,11 @@ ${job.description || "No description available."}
         })
       )
     );
+    const flatResults = results.flat();
 
-    return results.flat();
+    await this.upsertScrapedJobs(flatResults);
+
+    return flatResults;
   },
 
   async upsertScrapedJobs(scrapedJobs: JobPosting[]) {
@@ -508,6 +496,7 @@ ${job.description || "No description available."}
 
     return results.filter((x) => x).length;
   },
+  
 };
 
 export default aiActionService;

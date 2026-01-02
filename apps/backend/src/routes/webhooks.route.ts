@@ -3,9 +3,9 @@ import response from "@/lib/utils/response";
 import billingService from "@/services/billing.service";
 import { processScrapeQueueDirect } from "@/workers/scrape.worker";
 import { Hono } from "hono";
-import { PlanTier } from "../generated";
-import { prisma } from "../prisma";
-import algoliaClient from "../algolia";
+import { PlanTier } from "@/lib/generated";
+import { prisma } from "@/lib/prisma";
+import algoliaClient from "@/lib/algolia";
 
 const app = new Hono();
 
@@ -43,18 +43,21 @@ app.post("/", async (c) => {
 
         // Fallback: if userId is missing in metadata, try to find user by stripeCustomerId or email
         if (!userId) {
-          console.log(`🔍 userId missing in metadata, searching by customer/email...`);
+          console.log(
+            `🔍 userId missing in metadata, searching by customer/email...`
+          );
           const stripeCustomerId = session.customer as string;
-          const customerEmail = session.customer_details?.email || session.customer_email;
+          const customerEmail =
+            session.customer_details?.email || session.customer_email;
 
           const user = await prisma.user.findFirst({
             where: {
               OR: [
                 { stripeCustomerId: stripeCustomerId || undefined },
-                { email: customerEmail || undefined }
-              ]
+                { email: customerEmail || undefined },
+              ],
             },
-            select: { id: true }
+            select: { id: true },
           });
 
           if (user) {
@@ -65,16 +68,22 @@ app.post("/", async (c) => {
 
         if (type === "TOPUP") {
           const amount = Number.parseInt(session.metadata?.amount || "0", 10);
-          console.log(`💰 TOPUP detected. userId: ${userId}, amount: ${amount}`);
+          console.log(
+            `💰 TOPUP detected. userId: ${userId}, amount: ${amount}`
+          );
           if (userId && amount > 0) {
             await billingService.addCredits(userId, amount, "STRIPE_TOPUP");
             console.log(`✅ Credits added successfully for user ${userId}`);
           } else {
-            console.warn(`⚠️ Missing userId or invalid amount for topup. userId: ${userId}, amount: ${amount}`);
+            console.warn(
+              `⚠️ Missing userId or invalid amount for topup. userId: ${userId}, amount: ${amount}`
+            );
           }
         } else {
           const tier = session.metadata?.tier as PlanTier;
-          console.log(`Subscription detected. userId: ${userId}, tier: ${tier}`);
+          console.log(
+            `Subscription detected. userId: ${userId}, tier: ${tier}`
+          );
           if (userId && tier) {
             await billingService.syncSubscription(
               userId,
@@ -82,9 +91,13 @@ app.post("/", async (c) => {
               session.subscription as string,
               "stripe"
             );
-            console.log(`✅ Subscription synced successfully for user ${userId}`);
+            console.log(
+              `✅ Subscription synced successfully for user ${userId}`
+            );
           } else {
-            console.warn(`⚠️ Missing userId or tier for subscription. userId: ${userId}, tier: ${tier}`);
+            console.warn(
+              `⚠️ Missing userId or tier for subscription. userId: ${userId}, tier: ${tier}`
+            );
           }
         }
 

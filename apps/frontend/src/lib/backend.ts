@@ -133,13 +133,13 @@ export const backend = {
     getById: (id: string): Promise<Job> => fetcher.get<Job>(`/jobs/${id}`),
 
     scan: (_body?: any, profileId?: string): Promise<void> =>
-      fetcher.get<void>(`/jobs/scan?profileId=${profileId}`),
+      fetcher.get<void>(`/ai/scan?profileId=${profileId}`),
 
     getScanStatus: (
       profileId: string
     ): Promise<{ status: string; jobId?: string }> =>
       fetcher.get<{ status: string; jobId?: string }>(
-        `/jobs/scan/status?profileId=${profileId}`
+        `/ai/scan/status?profileId=${profileId}`
       ),
   },
 

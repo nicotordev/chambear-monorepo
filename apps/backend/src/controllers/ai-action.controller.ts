@@ -1,3 +1,4 @@
+import { scrapeQueue } from "@/lib/queue";
 import response from "@/lib/utils/response";
 import {
   CalculateFitSchema,
@@ -119,11 +120,7 @@ const aiActionController = {
         );
       }
 
-      const fitScore = await aiActionService.calculateFit(
-        userId,
-        profileId,
-        jobId
-      );
+      const fitScore = await aiActionService.calculateFit(profileId, jobId);
 
       // Consume credits
       await billingService.consumeCredits(userId, "SKILL_GAP_ANALYSIS");
@@ -157,6 +154,29 @@ const aiActionController = {
         500
       );
     }
+  },
+  async getScanStatus(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    const profileId = c.req.query("profileId");
+    if (!profileId) {
+      return c.json(response.badRequest("Profile ID is required"), 400);
+    }
+
+    const jobId = `scan:${userId}:${profileId}`;
+    const job = await scrapeQueue.getJob(jobId);
+
+    if (!job) {
+      return c.json(response.success({ status: "idle" }), 200);
+    }
+
+    const state = await job.getState();
+    return c.json(response.success({ status: state, jobId }), 200);
   },
 };
 
