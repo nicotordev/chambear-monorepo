@@ -181,6 +181,7 @@ export const useOnboarding = () => {
       }
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 

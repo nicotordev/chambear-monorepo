@@ -1,14 +1,8 @@
 import DashboardCard from "@/components/dashboard-card";
 import DashboardCarousel from "@/components/dashboard-carousel";
 import JobCard from "@/components/job-card/job-card";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { Job } from "@/types";
-import { FolderSearch, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import DashboardScanJobs from "./dashboard-scan-jobs";
 
 interface DashboardRecommendedJobsProps {
@@ -30,18 +24,7 @@ export function DashboardRecommendedJobs({
       }
       description="Our AI will find the best offers for you"
       cardContentClassName="pt-6"
-      action={
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="icon">
-              <FolderSearch className="size-4 text-primary" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p className="text-xs">Scan for new jobs</p>
-          </TooltipContent>
-        </Tooltip>
-      }
+      action={<DashboardScanJobs variant="icon" />}
     >
       {hasJobs ? (
         // Data State

@@ -1,6 +1,7 @@
-import 'dotenv/config'
-import { serve } from "@hono/node-server";
+import "dotenv/config";
 import app from "@/app";
+import { logger } from "@/lib/logger";
+import { serve } from "@hono/node-server";
 
 const port = Number.parseInt(process.env.PORT ?? "3001", 10);
 const host = process.env.HOST ?? "0.0.0.0";
@@ -10,10 +11,10 @@ const server = bun?.serve
   ? bun.serve({ fetch: app.fetch, port, hostname: host })
   : serve({ fetch: app.fetch, port, hostname: host });
 
-console.log(`🚀 API ready on http://${host}:${port}`);
+logger.info(`🚀 API ready on http://${host}:${port}`);
 
 const shutdown = () => {
-  console.log("Shutting down server...");
+  logger.info("Shutting down server...");
   if ("stop" in server) {
     server.stop();
     process.exit(0);

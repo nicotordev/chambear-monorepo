@@ -12,9 +12,10 @@ export const CreateDocumentSchema = z.object({
 
 export type CreateDocumentInput = z.infer<typeof CreateDocumentSchema>;
 
-export const UpdateDocumentSchema = CreateDocumentSchema.partial().extend({
+export const UpdateDocumentSchema = CreateDocumentSchema.extend({
   id: z.string(),
-});
+}).partial();
+
 export type UpdateDocumentInput = z.infer<typeof UpdateDocumentSchema>;
 
 export const DocumentSchema = CreateDocumentSchema.extend({

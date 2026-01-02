@@ -1,5 +1,5 @@
 import { DocumentType } from "@/lib/generated";
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 
 export const CreateDocumentSchema = z.object({
   type: z.enum(Object.values(DocumentType)),

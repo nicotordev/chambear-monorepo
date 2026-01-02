@@ -51,6 +51,5 @@ const triggerScrape = async () => {
   }
 };
 
-setTimeout(() => {
-  setInterval(triggerScrape, 5 * 60 * 1000);
-}, 5 * 60 * 1000);
+await triggerScrape();
+setInterval(triggerScrape, 60 * 1000);

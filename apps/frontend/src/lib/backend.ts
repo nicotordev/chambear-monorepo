@@ -1,4 +1,3 @@
-import "server-only";
 import type { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
@@ -14,6 +13,7 @@ import type {
 } from "@/types";
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { headers } from "next/headers";
+import "server-only";
 
 import type { CreateInterviewSessionInput } from "@/schemas/interview";
 
@@ -134,6 +134,13 @@ export const backend = {
 
     scan: (_body?: any, profileId?: string): Promise<void> =>
       fetcher.get<void>(`/jobs/scan?profileId=${profileId}`),
+
+    getScanStatus: (
+      profileId: string
+    ): Promise<{ status: string; jobId?: string }> =>
+      fetcher.get<{ status: string; jobId?: string }>(
+        `/jobs/scan/status?profileId=${profileId}`
+      ),
   },
 
   user: {

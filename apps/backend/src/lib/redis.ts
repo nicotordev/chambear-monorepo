@@ -1,14 +1,20 @@
-import IORedis from "ioredis";
+import IORedis, { type RedisOptions } from "ioredis";
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+export const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
-const connection = new IORedis(redisUrl, {
-  maxRetriesPerRequest: null, // Required by BullMQ
+export const baseRedisOptions: RedisOptions = {
   retryStrategy(times) {
     const delay = Math.min(times * 50, 2000);
     return delay;
   },
-});
+};
+
+export const bullmqRedisOptions: RedisOptions = {
+  ...baseRedisOptions,
+  maxRetriesPerRequest: null, // Required by BullMQ
+};
+
+const connection = new IORedis(redisUrl, baseRedisOptions);
 
 connection.on("error", (err: any) => {
   if (err.code === "ENOTFOUND" || err.code === "ECONNREFUSED") {
@@ -24,6 +30,14 @@ connection.on("error", (err: any) => {
 
 connection.on("connect", () => {
   console.log("✅ Connected to Redis");
+});
+
+connection.on("close", () => {
+  console.warn("⚠️ Redis connection closed");
+});
+
+connection.on("end", () => {
+  console.warn("⚠️ Redis connection ended");
 });
 
 export default connection;

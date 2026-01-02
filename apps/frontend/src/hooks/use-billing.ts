@@ -45,13 +45,17 @@ export function useBilling() {
 
   const topupMutation = useMutation({
     mutationFn: (amount: number) => api.topup(amount),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["billing", "me"] });
-      queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-      toast.success("Credits added successfully");
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["billing", "me"] });
+        queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+        toast.success("Credits added successfully");
+      }
     },
     onError: (error: any) => {
-      toast.error(error.message || "Error adding credits");
+      toast.error(error.message || "Error starting credit purchase");
     },
   });
 

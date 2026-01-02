@@ -92,10 +92,10 @@ const topup = createRoute({
   },
   responses: {
     200: {
-      description: "Topup credits successful",
+      description: "Topup checkout session created",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(CreditWalletSchema),
+          schema: createSuccessResponseSchema(z.object({ url: z.string() })),
         },
       },
     },

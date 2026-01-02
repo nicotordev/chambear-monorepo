@@ -1,11 +1,10 @@
 import { clerkClient } from "@/lib/clerk";
 import { CreditActionType, Role } from "@/lib/generated";
 import { uploadFileToR2 } from "@/lib/storage";
-import { CreateProfileSchema } from "@/schemas/user";
 import { prisma } from "../lib/prisma";
 
 import stripe from "@/lib/stripe";
-import { CreateProfileInput } from "@/schemas/user";
+import { CreateProfileInput, CreateProfileSchema } from "@/schemas/user";
 
 type CreateProfileInputWithOptionalId = CreateProfileInput & {
   /** If true, missing items will be removed (replace-all behavior). Defaults to false (merge). */
@@ -130,10 +129,10 @@ const userService = {
           targetRoles: validated.targetRoles,
         },
         update: {
-          headline: validated.headline,
-          summary: validated.summary,
-          location: validated.location,
-          avatar: validated.avatar,
+          headline: validated.headline || undefined,
+          summary: validated.summary || undefined,
+          location: validated.location || undefined,
+          avatar: validated.avatar || undefined,
           yearsExperience: validated.yearsExperience,
           targetRoles: validated.targetRoles,
         },

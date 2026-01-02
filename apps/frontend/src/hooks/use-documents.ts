@@ -55,7 +55,7 @@ export default function useDocuments() {
     useMutation({
       mutationFn: (document: UpdateDocumentInput) => {
         if (!profileId) throw new Error("No profile selected");
-        return api.updateDocument(document.id, document, profileId);
+        return api.updateDocument(document.id || "", document, profileId);
       },
       onSuccess: () => {
         toast.success("Document updated successfully");

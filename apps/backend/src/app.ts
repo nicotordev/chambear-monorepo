@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+import aiActionRoute from "@/lib/routes/ai-action.route";
 import applicationsRoute from "@/lib/routes/applications.route";
 import billingRoute from "@/lib/routes/billing.route";
 import documentRoute from "@/lib/routes/documents.route";
@@ -5,7 +7,6 @@ import jobsRoute from "@/lib/routes/jobs.route";
 import remindersRoute from "@/lib/routes/reminders.route";
 import userRoute from "@/lib/routes/user.route";
 import webhooksRoute from "@/lib/routes/webhooks.route";
-import aiActionRoute from "@/lib/routes/ai-action.route";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -34,8 +35,19 @@ app.use(
 );
 
 app.use("*", async (c, next) => {
-  console.log(`🚀 [API Request] ${c.req.method?.toUpperCase()} ${c.req.url}`);
-  return await next();
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+
+  logger.info(
+    {
+      method: c.req.method,
+      url: c.req.path,
+      status: c.res.status,
+      duration: `${ms}ms`,
+    },
+    "API Request"
+  );
 });
 
 app.use("*", clerkMiddleware());

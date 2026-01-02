@@ -257,27 +257,29 @@ export default function DashboardBilling() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
-            {[10, 25, 50, 100].map((amount) => (
+            {[
+              { amount: 10, price: 5 },
+              { amount: 25, price: 12 },
+              { amount: 50, price: 20 },
+              { amount: 100, price: 35 },
+            ].map(({ amount, price }) => (
               <Button
                 key={amount}
                 variant="outline"
-                className="flex-1 min-w-30 h-16 flex flex-col gap-1 hover:border-primary hover:bg-primary/5 transition-all"
-                onClick={() => {
-                  if (
-                    confirm(
-                      `Do you want to add ${amount} credits for $${(
-                        amount * 0.5
-                      ).toFixed(2)}?`
-                    )
-                  ) {
-                    topup(amount);
-                  }
-                }}
+                className="flex-1 min-w-40 h-20 flex flex-col gap-1 hover:border-primary hover:bg-primary/5 transition-all relative overflow-hidden group"
+                disabled={isCreatingCheckout || isOpeningPortal || isToppingUp}
+                onClick={() => topup(amount)}
               >
-                <span className="font-bold text-lg">+{amount}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                <div className="absolute top-0 right-0 p-1">
+                  <Badge variant="outline" className="text-[9px] font-bold">
+                    ${price}
+                  </Badge>
+                </div>
+                <span className="font-bold text-xl">+{amount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                   Credits
                 </span>
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
               </Button>
             ))}
           </div>

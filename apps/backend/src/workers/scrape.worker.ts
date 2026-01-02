@@ -1,6 +1,7 @@
-import { Worker, type Job } from "bullmq";
-import connection from "../lib/redis";
-import { SCRAPE_QUEUE_NAME, scrapeQueue } from "../lib/queue";
+import { Worker, Queue, type Job } from "bullmq";
+import IORedis from "ioredis";
+import { SCRAPE_QUEUE_NAME } from "../lib/queue";
+import { redisUrl, bullmqRedisOptions } from "../lib/redis";
 import jobsService from "../services/jobs.service";
 
 export interface ScrapeJobData {
@@ -8,69 +9,124 @@ export interface ScrapeJobData {
   userId: string;
 }
 
-let isProcessing = false;
+export interface ProcessQueueResult {
+  processed: number;
+  succeeded: number;
+  failed: number;
+  drained: boolean;
+  durationMs: number;
+  stoppedBy: "drained" | "maxJobs" | "maxDuration" | "error";
+}
 
-/**
- * Processes jobs from the queue until empty or a timeout is reached.
- * Intended to be called by a CRON webhook.
- */
-export const processScrapeQueue = async () => {
-  if (isProcessing) {
-    console.log("[Worker] Already processing a batch. Skipping.");
-    return;
-  }
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
-  const counts = await scrapeQueue.getJobCounts("wait", "active");
-  if (counts.wait === 0 && counts.active === 0) {
-    console.log("[Worker] No jobs waiting or active. Skipping.");
-    return;
-  }
+type ProcessOpts = Readonly<{
+  concurrency?: number;
+  maxJobs?: number;
+  maxDurationMs?: number;
+  idleWaitMs?: number;
+}>;
 
-  isProcessing = true;
-  console.log("[Worker] Starting batch processing...");
-  
-  return new Promise<void>((resolve, reject) => {
-    const worker = new Worker<ScrapeJobData>(
-      SCRAPE_QUEUE_NAME,
-      async (job: Job<ScrapeJobData>) => {
-        const { profileId, userId } = job.data;
-        console.log(`[Worker] Processing job ${job.id} for profile: ${profileId}`);
-        await jobsService.scanJobs(profileId);
-      },
-      {
-        connection,
-        concurrency: 5,
-        // We want this worker to close after it's idle for a bit
-        // But specifically for this "serverless" style, we'll manually manage lifecycle below
-      }
-    );
+export const processScrapeQueue = async (
+  opts?: ProcessOpts
+): Promise<ProcessQueueResult> => {
+  const concurrency = opts?.concurrency ?? 5;
+  const maxJobs = opts?.maxJobs ?? 100;
+  const maxDurationMs = opts?.maxDurationMs ?? 4 * 60_000; // 4 min
+  const idleWaitMs = opts?.idleWaitMs ?? 1000;
 
-    const cleanup = async () => {
-      isProcessing = false;
-      await worker.close();
-      resolve();
-    };
+  const started = Date.now();
+  let processed = 0;
+  let succeeded = 0;
+  let failed = 0;
+  let stoppedBy: ProcessQueueResult["stoppedBy"] = "drained";
 
-    worker.on("completed", (job) => {
-      console.log(`[Worker] Job ${job.id} completed`);
-    });
+  // Isolated connections for this process run
+  const workerConn = new IORedis(redisUrl, bullmqRedisOptions);
+  const monitorConn = new IORedis(redisUrl, bullmqRedisOptions);
 
-    worker.on("failed", (job, err) => {
-      console.error(`[Worker] Job ${job?.id} failed: ${err.message}`);
-    });
+  workerConn.on("error", (err) => console.error("Worker Redis Error:", err));
+  monitorConn.on("error", (err) => console.error("Monitor Redis Error:", err));
 
-    // Strategy: Listen for 'drained' event to know when queue is empty.
-    // However, if new jobs are added *during* processing, 'drained' fires when locally empty.
-    worker.on("drained", async () => {
-      console.log("[Worker] Queue drained. Closing worker...");
-      await cleanup();
-    });
+  const monitorQueue = new Queue(SCRAPE_QUEUE_NAME, { connection: monitorConn });
 
-    // Safety timeout: 5 minutes (matches the cron interval roughly)
-    // If it takes longer, we kill it so the next cron run can pick up.
-    setTimeout(async () => {
-      console.warn("[Worker] Timeout reached. Closing worker...");
-      await cleanup();
-    }, 4 * 60 * 1000); // 4 minutes
+  const processor = async (job: Job<ScrapeJobData>) => {
+    const { profileId } = job.data;
+    console.log(`[Worker] Processing job ${job.id} for profile ${profileId}`);
+    await jobsService.scanJobs(profileId);
+    return { ok: true, profileId } as const;
+  };
+
+  const worker = new Worker<ScrapeJobData>(SCRAPE_QUEUE_NAME, processor, {
+    connection: workerConn,
+    concurrency,
+    lockDuration: 60_000,
   });
+
+  console.log(`[Worker] Started for queue ${SCRAPE_QUEUE_NAME}`);
+  await sleep(2000); // Give it a moment to start
+
+  const onCompleted = () => {
+    succeeded += 1;
+    processed += 1;
+  };
+
+  const onFailed = (job: Job<ScrapeJobData> | undefined, err: Error) => {
+    console.error(`Job ${job?.id ?? "unknown"} failed:`, err);
+    failed += 1;
+    processed += 1;
+  };
+
+  worker.on("completed", onCompleted);
+  worker.on("failed", onFailed);
+  worker.on("error", (err) => console.error("Worker Error:", err));
+
+  try {
+    while (true) {
+      const elapsed = Date.now() - started;
+      if (elapsed >= maxDurationMs) {
+        stoppedBy = "maxDuration";
+        break;
+      }
+
+      if (processed >= maxJobs) {
+        stoppedBy = "maxJobs";
+        break;
+      }
+
+      // Check if queue is empty using the monitor queue
+      const counts = await monitorQueue.getJobCounts("wait", "active", "delayed", "prioritized", "completed", "failed");
+      console.log(`[Worker Monitor] wait: ${counts.wait}, active: ${counts.active}, delayed: ${counts.delayed}, prioritized: ${counts.prioritized}, completed: ${counts.completed}, failed: ${counts.failed}`);
+      
+      if (counts.wait === 0 && counts.active === 0 && counts.prioritized === 0) {
+        stoppedBy = "drained";
+        break;
+      }
+
+      await sleep(idleWaitMs);
+    }
+  } catch (error) {
+    console.error("Process Queue Loop Error:", error);
+    stoppedBy = "error";
+  } finally {
+    worker.off("completed", onCompleted);
+    worker.off("failed", onFailed);
+
+    await Promise.allSettled([
+      worker.close(),
+      monitorQueue.close(),
+      workerConn.quit(),
+      monitorConn.quit(),
+    ]);
+  }
+
+  return {
+    processed,
+    succeeded,
+    failed,
+    drained: stoppedBy === "drained",
+    durationMs: Date.now() - started,
+    stoppedBy,
+  };
 };

@@ -196,6 +196,15 @@ class Api {
     }
   }
 
+  public async getScanStatus(
+    profileId: string
+  ): Promise<{ status: string; jobId?: string }> {
+    const res = await this.instance.get("/jobs/scan/status", {
+      params: { profileId },
+    });
+    return res.data.data;
+  }
+
   public async createJob(data: any): Promise<Job> {
     const res = await this.instance.post("/jobs", data);
     return res.data.data;
@@ -251,7 +260,7 @@ class Api {
     return res.data.data;
   }
 
-  public async topup(amount: number): Promise<CreditWallet> {
+  public async topup(amount: number): Promise<{ url: string }> {
     const res = await this.instance.post("/billing/topup", { amount });
     return res.data.data;
   }

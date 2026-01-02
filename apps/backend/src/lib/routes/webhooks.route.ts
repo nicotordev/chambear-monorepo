@@ -9,6 +9,12 @@ import algoliaClient from "../algolia";
 
 const app = new Hono();
 
+const getBearer = (authHeader: string | null | undefined): string | null => {
+  if (!authHeader) return null;
+  const m = authHeader.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : null;
+};
+
 app.post("/", async (c) => {
   const signature = c.req.header("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -31,17 +37,27 @@ app.post("/", async (c) => {
       case "checkout.session.completed": {
         const session = event.data.object as any;
         const userId = session.metadata?.userId;
-        const tier = session.metadata?.tier as PlanTier;
+        const type = session.metadata?.type;
 
-        if (userId && tier) {
-          await billingService.syncSubscription(
-            userId,
-            tier,
-            session.subscription as string,
-            "stripe"
-          );
+        if (type === "TOPUP") {
+          const amount = Number.parseInt(session.metadata?.amount || "0", 10);
+          if (userId && amount > 0) {
+            await billingService.addCredits(userId, amount, "STRIPE_TOPUP");
+          }
+        } else {
+          const tier = session.metadata?.tier as PlanTier;
+          if (userId && tier) {
+            await billingService.syncSubscription(
+              userId,
+              tier,
+              session.subscription as string,
+              "stripe"
+            );
+          }
+        }
 
-          // Update customer ID if not set
+        // Update customer ID if not set
+        if (userId) {
           await prisma.user.update({
             where: { id: userId },
             data: { stripeCustomerId: session.customer as string },
@@ -76,26 +92,27 @@ app.post("/", async (c) => {
 
 // search the queue and run the scrapper
 app.post("/scrappers/users", async (c) => {
-  const authHeader = c.req.header("Authorization");
   const cronSecret = process.env.CRON_SECRET;
-
-  // Simple security check
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return c.json(response.unauthorized("Invalid Cron Secret"), 401);
+  if (!cronSecret) {
+    return c.json(response.internalError("CRON_SECRET not configured"), 500);
   }
 
-  try {
-    console.log("Starting scheduled scrape processing...");
-    // This will run until queue is empty or timeout
-    await processScrapeQueue();
-    return c.json(response.success({ message: "Scrape batch processed" }), 200);
-  } catch (error: any) {
-    console.error("Scrape processing error:", error);
-    return c.json(response.error(error.message), 500);
+  const token = getBearer(c.req.header("authorization"));
+  if (!token || token !== cronSecret) {
+    return c.json(response.unauthorized(), 401);
   }
+
+  const res = await processScrapeQueue({
+    concurrency: 5,
+    maxJobs: 100,
+    maxDurationMs: 4 * 60_000,
+    idleWaitMs: 250,
+  });
+
+  return c.json(response.success(res), 200);
 });
 
-app.post("/sync/algolia", async (c) => {
+app.post("/algolia/sync", async (c) => {
   const authHeader = c.req.header("Authorization");
   const cronSecret = process.env.CRON_SECRET;
 

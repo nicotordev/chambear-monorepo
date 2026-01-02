@@ -269,7 +269,13 @@ export function LocationStep() {
               await onSubmit();
               router.push("/onboarding-v2?step=2");
             }}
-            disabled={!address || !name || isLocating || isSaving}
+            disabled={
+              !address ||
+              !name ||
+              name.trim().split(/\s+/).length < 2 ||
+              isLocating ||
+              isSaving
+            }
             className="h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group"
           >
             {isSaving ? "Saving..." : "Confirm details"}

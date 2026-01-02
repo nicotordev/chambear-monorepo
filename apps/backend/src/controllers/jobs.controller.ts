@@ -41,7 +41,7 @@ const jobsController = {
 
   async scanJobs(c: Context) {
     const auth = getAuth(c);
-    const userId = auth?.userId;
+    const userId: string | undefined | null = auth?.userId;
 
     if (!userId) {
       return c.json(response.unauthorized(), 401);
@@ -49,32 +49,55 @@ const jobsController = {
 
     const profileId = c.req.query("profileId");
     if (!profileId) {
+      console.warn(`[scanJobs] Missing profileId for user ${userId}`);
       return c.json(response.badRequest("Profile ID is required"), 400);
     }
 
+    console.log(`[scanJobs] Checking credits for user ${userId}`);
     const canScan = await billingService.canUserAction(userId, "JOB_SCAN");
     if (!canScan) {
+      console.warn(`[scanJobs] User ${userId} has insufficient credits`);
       return c.json(
-        response.badRequest("Insufficient credits or no active subscription"),
+        response.error({
+          message: "Insufficient credits or no active subscription",
+          status: 402,
+        }),
         402
       );
     }
 
-    // Add to Queue
-    await scrapeQueue.add("scan-jobs", {
-      profileId,
-      userId,
-    });
+    const payload = { profileId, userId };
+    const jobId = `scan:${userId}:${profileId}`;
 
-    // Consume credit per scan request
+    console.log(`[scanJobs] Adding job ${jobId} to queue`);
+    try {
+      const existingJob = await scrapeQueue.getJob(jobId);
+      if (existingJob) {
+        console.log(`[scanJobs] Removing existing job ${jobId}`);
+        await existingJob.remove();
+      }
+
+      await scrapeQueue.add("scan-jobs", payload, {
+        jobId,
+        removeOnComplete: { age: 60 * 60, count: 1000 },
+        removeOnFail: { age: 24 * 60 * 60, count: 1000 },
+        attempts: 3,
+        backoff: { type: "exponential", delay: 10_000 },
+      });
+      console.log(`[scanJobs] Job ${jobId} added successfully`);
+    } catch (err) {
+      console.error(`[scanJobs] Failed to add job to queue:`, err);
+      return c.json(response.error("Failed to schedule scan"), 500);
+    }
+
     await billingService.consumeCredits(userId, "JOB_SCAN");
 
-    return c.json(response.success({ message: "Scan scheduled" }), 200);
+    return c.json(response.success({ message: "Scan scheduled", jobId }), 200);
   },
 
   async applyJob(c: Context) {
     const auth = getAuth(c);
-    const userId = auth?.userId;
+    const userId: string | undefined | null = auth?.userId;
 
     if (!userId) {
       return c.json(response.unauthorized(), 401);
@@ -88,6 +111,30 @@ const jobsController = {
     const job = await jobsService.applyJob(jobId, userId);
 
     return c.json(response.success(job), 200);
+  },
+
+  async getScanStatus(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+
+    if (!userId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    const profileId = c.req.query("profileId");
+    if (!profileId) {
+      return c.json(response.badRequest("Profile ID is required"), 400);
+    }
+
+    const jobId = `scan:${userId}:${profileId}`;
+    const job = await scrapeQueue.getJob(jobId);
+
+    if (!job) {
+      return c.json(response.success({ status: "idle" }), 200);
+    }
+
+    const state = await job.getState();
+    return c.json(response.success({ status: state, jobId }), 200);
   },
 
   async upsertJob(c: Context) {

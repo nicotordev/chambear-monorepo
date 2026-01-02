@@ -153,14 +153,6 @@ export function ProfileStep() {
                   className="h-14 bg-card/40 backdrop-blur-xl border-2 border-border/50 focus-visible:border-primary rounded-2xl text-lg"
                 />
               </div>
-              <div className="flex items-end pb-1">
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 w-full h-14 flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <span className="text-xs font-bold text-primary uppercase">
-                    Verified expert
-                  </span>
-                </div>
-              </div>
             </div>
 
             <div className="space-y-2">

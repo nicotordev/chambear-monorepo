@@ -8,16 +8,30 @@ import { prisma } from "../lib/prisma";
 import stripe from "../lib/stripe";
 
 export const billingService = {
+  async resolveUserId(id: string) {
+    if (id.startsWith("user_")) {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: id },
+        select: { id: true },
+      });
+      if (!user) throw new Error(`User not found for Clerk ID: ${id}`);
+      return user.id;
+    }
+    return id;
+  },
+
   async getUserBalance(userId: string) {
+    const internalId = await this.resolveUserId(userId);
     const wallet = await prisma.creditWallet.findUnique({
-      where: { userId },
+      where: { userId: internalId },
     });
     return wallet?.balance ?? 0;
   },
 
   async getUserSubscription(userId: string) {
+    const internalId = await this.resolveUserId(userId);
     return prisma.subscription.findUnique({
-      where: { userId },
+      where: { userId: internalId },
       include: { plan: true },
     });
   },
@@ -46,17 +60,18 @@ export const billingService = {
    * Consume credits for a specific action.
    */
   async consumeCredits(userId: string, action: CreditAction) {
+    const internalId = await this.resolveUserId(userId);
     const amount = CREDIT_COSTS[action];
 
     return prisma.$transaction(async (tx) => {
       // Ensure wallet exists
       let wallet = await tx.creditWallet.findUnique({
-        where: { userId },
+        where: { userId: internalId },
       });
 
       if (!wallet) {
         wallet = await tx.creditWallet.create({
-          data: { userId, balance: 0 },
+          data: { userId: internalId, balance: 0 },
         });
       }
 
@@ -92,14 +107,15 @@ export const billingService = {
     amount: number,
     actionName: string = "TOPUP"
   ) {
+    const internalId = await this.resolveUserId(userId);
     return prisma.$transaction(async (tx) => {
       let wallet = await tx.creditWallet.findUnique({
-        where: { userId },
+        where: { userId: internalId },
       });
 
       if (!wallet) {
         wallet = await tx.creditWallet.create({
-          data: { userId, balance: 0 },
+          data: { userId: internalId, balance: 0 },
         });
       }
 
@@ -132,13 +148,14 @@ export const billingService = {
     providerSubId: string,
     provider: string
   ) {
+    const internalId = await this.resolveUserId(userId);
     const plan = await prisma.plan.findUniqueOrThrow({ where: { tier } });
 
     return prisma.$transaction(async (tx) => {
       const sub = await tx.subscription.upsert({
-        where: { userId },
+        where: { userId: internalId },
         create: {
-          userId,
+          userId: internalId,
           planId: plan.id,
           status: SubscriptionStatus.ACTIVE,
           provider,
@@ -154,15 +171,16 @@ export const billingService = {
       });
 
       // Grant monthly credits if it's a new period (simplified)
-      await this.addCredits(userId, plan.monthlyCredits, "MONTHLY_GRANT");
+      await this.addCredits(internalId, plan.monthlyCredits, "MONTHLY_GRANT");
 
       return sub;
     });
   },
 
   async createCheckoutSession(userId: string, tier: PlanTier): Promise<string> {
+    const internalId = await this.resolveUserId(userId);
     const user = await prisma.user.findUniqueOrThrow({
-      where: { id: userId },
+      where: { id: internalId },
     });
 
     const plan = await prisma.plan.findUniqueOrThrow({
@@ -190,7 +208,7 @@ export const billingService = {
       success_url: `${frontendUrl}/dashboard/billing?success=true`,
       cancel_url: `${frontendUrl}/dashboard/billing?canceled=true`,
       metadata: {
-        userId,
+        userId: internalId, // Store internal ID
         tier,
       },
     });
@@ -202,9 +220,54 @@ export const billingService = {
     return session.url;
   },
 
-  async createPortalSession(userId: string): Promise<string> {
+  async createTopupSession(userId: string, amount: number): Promise<string> {
+    const internalId = await this.resolveUserId(userId);
     const user = await prisma.user.findUniqueOrThrow({
-      where: { id: userId },
+      where: { id: internalId },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+    // Simplified: $1 for 2 credits (0.50 per credit)
+    const priceInCents = Math.round(amount * 50);
+
+    const session = await stripe.checkout.sessions.create({
+      customer: user.stripeCustomerId || undefined,
+      customer_email: user.stripeCustomerId ? undefined : user.email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${amount} Additional Credits`,
+              description: `One-time purchase of ${amount} credits for AI actions.`,
+            },
+            unit_amount: priceInCents,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${frontendUrl}/dashboard/billing?success=true`,
+      cancel_url: `${frontendUrl}/dashboard/billing?canceled=true`,
+      metadata: {
+        userId: internalId,
+        type: "TOPUP",
+        amount: amount.toString(),
+      },
+    });
+
+    if (!session.url) {
+      throw new Error("Failed to create Stripe top-up session");
+    }
+
+    return session.url;
+  },
+
+  async createPortalSession(userId: string): Promise<string> {
+    const internalId = await this.resolveUserId(userId);
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: internalId },
     });
 
     if (!user.stripeCustomerId) {

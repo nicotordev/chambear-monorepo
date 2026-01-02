@@ -51,6 +51,6 @@ const triggerAlgoliaSync = async () => {
   }
 };
 
-setTimeout(() => {
-  setInterval(triggerAlgoliaSync, 5 * 60 * 1000);
-}, 5 * 60 * 1000);
+await triggerAlgoliaSync();
+setInterval(triggerAlgoliaSync, 60 * 1000);
+

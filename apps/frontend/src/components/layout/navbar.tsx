@@ -306,7 +306,7 @@ export default function Navbar() {
         </div>
 
         {/* LOGIN */}
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        <div className="flex lg:flex-1 lg:justify-end">
           <SignedIn>
             <UserButton />
           </SignedIn>

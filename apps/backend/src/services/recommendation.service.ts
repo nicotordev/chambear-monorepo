@@ -1,11 +1,4 @@
-import { env } from "process";
-import {
-  JobSource,
-  Prisma,
-  UrlKind,
-  type EmploymentType,
-  type WorkMode,
-} from "../lib/generated";
+import { EmploymentType, Prisma, WorkMode } from "@/lib/generated";
 import { prisma } from "../lib/prisma";
 import { generateEmbedding } from "../lib/utils/ai";
 import {
@@ -20,6 +13,8 @@ import {
 } from "../scraping/clients";
 import type { JobPosting } from "../types/ai";
 import jobsService from "./jobs.service";
+import { UrlKind } from "@/lib/generated";
+import { JobSource } from "@/lib/generated";
 
 const MIN_RECENT_JOBS = 5;
 const RECENT_DAYS = 30;
@@ -280,33 +275,51 @@ Summary: ${profile.summary ?? ""}
 
       for (const q of queries) {
         console.debug(`${LOG_PREFIX} Executing search query: "${q.query}"`);
-        try {
-          const result = await brightdataClient.triggerSyncSerpSearch(
-            q.query,
-            serpCountry
-          );
+        let attempts = 0;
+        const maxAttempts = 2;
+        let success = false;
 
-          const urls = result.map((r) => r.url);
+        while (attempts < maxAttempts && !success) {
+          attempts++;
+          try {
+            const result = await brightdataClient.triggerSyncSerpSearch(
+              q.query,
+              serpCountry
+            );
+            console.debug(
+              `${LOG_PREFIX} SERP returned ${result.length} results for query "${q.query}"`
+            );
 
-          const extracted = await jobLlmClient.scoreThenFetchThenExtractJobs({
-            urls,
-            fetchMarkdown: async (url: string) => {
-              const [res] = await brightdataClient.runSyncScrape([url]);
-              return res;
-            },
-            userContext,
-            maxToScrape: 5,
-          });
+            success = true;
+            const urls = result.map((r) => r.url);
 
-          scrapedJobs.push(...extracted.jobs);
-          console.info(
-            `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
-          );
-        } catch (err) {
-          console.error(
-            `${LOG_PREFIX} Scraping failed for query "${q.query}"`,
-            err
-          );
+            const extracted = await jobLlmClient.scoreThenFetchThenExtractJobs({
+              urls,
+              fetchMarkdown: async (url: string) => {
+                const [res] = await brightdataClient.runSyncScrape([url]);
+                return res;
+              },
+              userContext,
+              maxToScrape: 5,
+              minScoreToScrape: 50,
+            });
+
+            scrapedJobs.push(...extracted.jobs);
+            console.info(
+              `${LOG_PREFIX} Extracted ${extracted.jobs.length} jobs from this batch.`
+            );
+          } catch (err) {
+            if (attempts >= maxAttempts) {
+              console.error(
+                `${LOG_PREFIX} Scraping failed for query "${q.query}" after ${attempts} attempts`,
+                err
+              );
+            } else {
+              console.warn(
+                `${LOG_PREFIX} Attempt ${attempts} failed for query "${q.query}". Retrying...`
+              );
+            }
+          }
         }
       }
 

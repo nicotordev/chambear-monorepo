@@ -38,12 +38,10 @@ const billingController = {
         return c.json(response.badRequest("Invalid amount"), 400);
       }
 
-      // In a real app, this would be handled by Stripe webhooks
-      // For now, we'll simulate adding credits
-      const wallet = await billingService.addCredits(dbUserId, amount);
-      return c.json(response.success(wallet), 200);
-    } catch (error) {
-      return c.json(response.error("Failed to add credits"), 500);
+      const url = await billingService.createTopupSession(dbUserId, amount);
+      return c.json(response.success({ url }), 200);
+    } catch (error: any) {
+      return c.json(response.error(error.message), 500);
     }
   },
 

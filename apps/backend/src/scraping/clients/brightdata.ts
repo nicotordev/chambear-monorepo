@@ -196,7 +196,7 @@ class BrightDataClient {
       format: "raw",
       method: "GET",
       country,
-      timeout: 10_000,
+      timeout: 60_000,
     });
 
     const items = Array.isArray(res) ? res : [res];

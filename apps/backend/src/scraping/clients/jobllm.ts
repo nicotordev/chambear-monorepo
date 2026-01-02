@@ -41,21 +41,26 @@ import { PineconeJobsClient } from "./ai";
  * ========================= */
 
 export class JobLlmClient {
-  private readonly openai: OpenAI;
+  private _openai: OpenAI | null = null;
   private readonly model: string;
   private readonly temperature: number;
   private readonly retry: RetryOptions;
 
   public constructor(opts: JobLlmClientOptions = {}) {
-    const apiKey = assertNonEmpty(process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
-    this.openai = new OpenAI({ apiKey });
-
     this.model = opts.model ?? "gpt-4.1-mini";
     this.temperature = opts.temperature ?? 0.2;
     this.retry = {
       maxRetries: 3,
       retryBaseDelayMs: 400,
     };
+  }
+
+  private get openai(): OpenAI {
+    if (!this._openai) {
+      const apiKey = assertNonEmpty(process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
+      this._openai = new OpenAI({ apiKey });
+    }
+    return this._openai;
   }
 
   private removeNulls(obj: unknown): unknown {
@@ -479,53 +484,44 @@ ${userContext.trim()}
     const afterDateIso = daysAgoUtc(30);
 
     const system = `
-  ### SYSTEM ROLE
-  You are an expert Search Logic Engineer specializing in OSINT and Recruitment.
-  Your goal is to generate high-precision Google Search Dorks to locate fresh job postings
-  directly on company career pages or ATS platforms, bypassing aggregators.
+### SYSTEM ROLE
+You are an elite OSINT Specialist and Google Dorking Expert.
+Your mission is to engineer high-precision search queries (dorks) that uncover fresh, direct job postings on company websites, strictly bypassing noise and aggregators.
 
-  ### INPUT PROCESSING
-  Extract:
-  1) Target Role
-  2) Tech Stack/Keywords
-  3) Target Location / Remote preference
-  4) Contractor vs Employee preference (if stated)
+### OBJECTIVE
+Generate ${safeLimit} distinct, high-signal Google Search queries to find:
+1. Direct "Careers" or "Jobs" pages for the target role.
+2. Specific job postings hosted on company domains or direct ATS links.
+3. "Hidden" opportunities via specific phrasing (e.g., "Work with us", "Join the team").
 
-  ### HARD CONSTRAINTS (IMPORTANT)
-  - Return EXACTLY ${safeLimit} queries.
-  - Use ONLY these 4 templates (pick the best ones; do not invent new templates):
-    T1) site:{ATS_DOMAIN} intitle:({ROLE_OR}) ({TECH_OR}) (remote OR "work from home")
-    T2) site:{ATS_DOMAIN} ("{ROLE_PHRASE}") ({TECH_OR}) (remote OR "work from home")
-    T3) (inurl:careers OR inurl:jobs OR inurl:vacantes OR inurl:trabaja-con-nosotros) intitle:({ROLE_OR}) ({TECH_OR})
-    T4) site:{TLD} (inurl:careers OR inurl:jobs OR inurl:vacantes OR inurl:trabaja-con-nosotros) intitle:({ROLE_OR}) ({TECH_OR})
+### INPUT CONTEXT
+- **Role:** Target Job Title (synonyms allowed).
+- **Stack:** Key technologies (keep it broad, max 2-3).
+- **Location/Remote:** Constraints.
+- **Type:** Employee vs Contractor.
 
-  - Each query MUST:
-    1) include EXACTLY ONE of:
-       - ATS target: site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:bamboohr.com
-       - OR URL-pattern target: inurl:careers/jobs/vacantes/trabaja-con-nosotros (+ optional site:.tld)
-    2) include at most 3 tech keywords total (keep it broad).
-    3) include aggregator exclusions:
-       -site:linkedin.com -site:indeed.com -site:glassdoor.com
-    4) include info exclusions:
-       -inurl:blog -inurl:news -intitle:resume -intitle:cv
-    5) include freshness token:
-       after:${afterDateIso}
-  - If user prefers contractor/freelance, include ONE of:
-    (contract OR contractor OR freelance)
+### DORKING STRATEGIES (Mix & Match)
+1. **The "Direct Hit":** \`intitle:"{ROLE}" (inurl:careers OR inurl:jobs OR inurl:vacancies)\`
+2. **The "Intent Hunter":** \`"{ROLE}" ("Apply now" OR "We are hiring" OR "Join our team")\`
+3. **The "ATS Whisperer":** \`site:greenhouse.io OR site:lever.co OR site:ashbyhq.com intitle:"{ROLE}"\` (Optional, use if relevant)
+4. **The "Location Pinpoint":** \`"{ROLE}" "London" (inurl:careers OR inurl:jobs)\`
 
-  ### LOCALIZATION & LANGUAGE
-  - If target is local to a country, add site:.tld (e.g., site:.cl).
-  - If role is global/remote, keep English role tokens.
-  - Keep queries under ~32 terms.
+### STRICT CONSTRAINTS
+1. **NO AGGREGATORS:** You MUST exclude major boards in EVERY query.
+   Append: \` -site:linkedin.com -site:indeed.com -site:glassdoor.com -site:ziprecruiter.com -site:monster.com -site:weworkremotely.com -site:remoteok.com\`
+2. **NO NOISE:** Exclude blogs and generic info.
+   Append: \` -inurl:blog -inurl:articles -inurl:news -intitle:resume -intitle:cv\`
+3. **FRESHNESS:** Append \` after:${afterDateIso}\` to every query.
+4. **EFFICIENCY:** Keep queries concise (under 32 words). Use \`OR\` to group terms effectively.
 
-  ### OUTPUT FORMAT
-  Return JSON ONLY:
-  {
-    "queries": [
-      { "query": "The raw search string", "strategy": "Brief explanation", "estimated_precision": "High|Medium" }
-    ]
-  }
-  `.trim();
+### OUTPUT FORMAT
+Return JSON ONLY:
+{
+  "queries": [
+    { "query": "...", "strategy": "Explanation of the dork logic", "estimated_precision": "High" }
+  ]
+}
+`.trim();
 
     const user = {
       userContext,
