@@ -4,7 +4,6 @@ import { JobPosting } from "@/types/ai";
 import { Job } from "../lib/generated";
 import { prisma } from "../lib/prisma";
 import { generateEmbedding } from "../lib/utils/ai";
-import recommendationService from "./recommendation.service";
 
 const jobsService = {
   /**

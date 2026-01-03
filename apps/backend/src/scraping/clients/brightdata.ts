@@ -7,7 +7,13 @@ import { logger } from "../../lib/logger";
 
 type HttpMethod = "GET" | "POST";
 type BrightDataFormat = "raw" | "json";
-type BrightDataDataFormat = "html" | "markdown" | "json" | "parsed";
+type BrightDataDataFormat =
+  | "html"
+  | "markdown"
+  | "json"
+  | "parsed"
+  | "parsed_light"
+  | "text";
 
 export type UnlockerSyncRequest = Readonly<{
   url: string;
@@ -48,15 +54,17 @@ export type SerpResult = Readonly<{
 }>;
 
 export interface OganicResult {
-  link: string;
-  title: string;
-  description: string;
-  extensions: Array<{
+  link?: string;
+  url?: string;
+  title?: string;
+  description?: string;
+  snippet?: string;
+  extensions?: Array<{
     type: "site_link";
     link: string;
     text: string;
   }>;
-  global_rank: number;
+  global_rank?: number;
 }
 
 /* =======================
@@ -74,15 +82,13 @@ const safeJsonParse = (v: string): unknown => {
   }
 };
 
-const normalizeUrl = (url: string): string => {
-  try {
-    const u = new URL(url.trim());
-    u.hash = "";
-    return u.toString();
-  } catch {
-    return "";
-  }
-};
+const looksLikeEnvelope = (v: unknown): v is BrightDataEnvelope =>
+  isRecord(v) && typeof v.status_code === "number" && "body" in v;
+
+const isOrganicResult = (v: unknown): v is OganicResult =>
+  isRecord(v) &&
+  (typeof v.link === "string" || typeof v.url === "string") &&
+  typeof v.title === "string";
 
 const mustEnv = (key: string): string => {
   const v = process.env[key];
@@ -115,25 +121,86 @@ export class BrightDataClient {
     });
   }
 
+  private parseEnvelope(raw: unknown): BrightDataEnvelope | null {
+    const parsed = typeof raw === "string" ? safeJsonParse(raw) ?? raw : raw;
+    return looksLikeEnvelope(parsed) ? parsed : null;
+  }
+
+  private parseResponseBody(raw: unknown): unknown {
+    const envelope = this.parseEnvelope(raw);
+    if (envelope) {
+      const body = envelope.body;
+      if (typeof body === "string") {
+        return safeJsonParse(body) ?? body;
+      }
+      return body;
+    }
+
+    return typeof raw === "string" ? safeJsonParse(raw) ?? raw : raw;
+  }
+
+  public async scrapeRequestAsMarkdown(url: string): Promise<string> {
+    const res = await this.http.post("/request", {
+      zone: this.unlockerZone,
+      url,
+      format: "raw",
+      data_format: "markdown",
+    });
+
+    const envelope = this.parseEnvelope(res.data);
+    if (envelope && envelope.status_code >= 400) {
+      logger.warn(
+        { url, status: envelope.status_code, body: envelope.body },
+        "[BrightData] Unlocker request failed"
+      );
+      throw new Error(
+        `BrightData unlocker request failed with status ${envelope.status_code}`
+      );
+    }
+
+    const body = this.parseResponseBody(res.data);
+    if (typeof body === "string") return body;
+
+    logger.warn(
+      { url, bodyType: typeof body },
+      "[BrightData] Expected markdown body but received non-string"
+    );
+    return JSON.stringify(body ?? "");
+  }
+
   private async serpRequest(query: string): Promise<Array<OganicResult>> {
-    const res = await this.request({
+    const res = await this.http.post("/request", {
       zone: this.serpZone,
       url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
       format: "json",
       data_format: "parsed_light",
     });
 
-    const body =
-      res.kind === "json"
-        ? res.body
-        : safeJsonParse(res.body) ?? res.body;
+    const envelope = this.parseEnvelope(res.data);
+    if (envelope && envelope.status_code >= 400) {
+      logger.warn(
+        { query, status: envelope.status_code, body: envelope.body },
+        "[BrightData] SERP request failed"
+      );
+      throw new Error(
+        `BrightData SERP request failed with status ${envelope.status_code}`
+      );
+    }
 
+    const body = this.parseResponseBody(res.data);
     const organic = this.extractOrganicResults(body);
 
     return organic;
   }
 
   private extractOrganicResults(body: unknown): Array<OganicResult> {
+    if (!body) return [];
+
+    if (Array.isArray(body)) {
+      if (body.every(isOrganicResult)) return body;
+      return body.flatMap((item) => this.extractOrganicResults(item));
+    }
+
     if (!isRecord(body)) return [];
 
     if (Array.isArray(body.organic)) {
@@ -158,131 +225,43 @@ export class BrightDataClient {
   }
 
   /* =======================
-   * Low-level request
-   * ======================= */
-
-  private async request(
-    req: UnlockerSyncRequest
-  ): Promise<UnlockerSyncResponse> {
-    const payload: Record<string, unknown> = {
-      zone: req.zone,
-      url: req.url,
-      method: req.method ?? "GET",
-      format: req.format ?? "raw",
-    };
-
-    if (req.country) payload.country = req.country;
-    if (req.timeout_ms) payload.timeout = req.timeout_ms;
-    if (req.data_format) payload.data_format = req.data_format;
-    if (req.headers) payload.headers = req.headers;
-
-    logger.debug(
-      {
-        zone: req.zone,
-        url: req.url,
-        method: payload.method,
-      },
-      "[BrightData] Sending request"
-    );
-
-    const res = await this.http.post("/request", payload, {
-      timeout: req.timeout_ms ?? 60_000,
-    });
-
-    const raw = String(res.data ?? "");
-    const parsed = safeJsonParse(raw);
-
-    if (!parsed && raw.length > 0) {
-      logger.error(
-        {
-          status: res.status,
-          snippet: raw.slice(0, 200),
-          headers: res.headers,
-        },
-        "[BrightData] Failed to parse response as JSON"
-      );
-    }
-
-    if (
-      isRecord(parsed) &&
-      typeof parsed.status_code === "number" &&
-      "body" in parsed
-    ) {
-      const env = parsed as BrightDataEnvelope;
-
-      if ((req.format ?? "raw") === "json") {
-        return {
-          kind: "json",
-          status: env.status_code,
-          headers: env.headers,
-          body:
-            typeof env.body === "string"
-              ? safeJsonParse(env.body) ?? env.body
-              : env.body,
-        };
-      }
-
-      return {
-        kind: "raw",
-        status: env.status_code,
-        headers: env.headers,
-        body:
-          typeof env.body === "string" ? env.body : JSON.stringify(env.body),
-      };
-    }
-
-    if ((req.format ?? "raw") === "json") {
-      return {
-        kind: "json",
-        status: res.status,
-        headers: res.headers as Record<string, string>,
-        body: parsed ?? raw,
-      };
-    }
-
-    return {
-      kind: "raw",
-      status: res.status,
-      headers: res.headers as Record<string, string>,
-      body: raw,
-    };
-  }
-
-  /* =======================
    * SERP → URLs
    * ======================= */
 
   public async searchGoogle(query: string): Promise<readonly OganicResult[]> {
-    const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-
     const organic = await this.serpRequest(query);
 
     if (organic.length === 0) {
       logger.info(
         {
           query,
-          hasResults: !!organic,
-          keys: Object.keys(organic),
+          hasResults: organic.length > 0,
+          resultCount: organic.length,
         },
         "[BrightData] No organic results found in SERP response"
       );
     }
 
-    return organic;
-  }
+    const normalized: OganicResult[] = [];
 
-  /* =======================
-   * Page → Markdown
-   * ======================= */
+    for (const item of organic) {
+      const link =
+        typeof item.link === "string"
+          ? item.link
+          : typeof item.url === "string"
+          ? item.url
+          : "";
 
-  public async scrapeMarkdown(url: string): Promise<string> {
-    const res = await this.request({
-      url,
-      zone: this.unlockerZone,
-      data_format: "markdown",
-    });
+      if (!link) continue;
 
-    return res.kind === "raw" ? res.body : JSON.stringify(res.body);
+      normalized.push({
+        ...item,
+        link,
+        description: item.description ?? item.snippet,
+      });
+    }
+
+    return normalized;
   }
 
   /* =======================
@@ -301,8 +280,9 @@ export class BrightDataClient {
     }>
   > {
     const serp = await this.searchGoogle(query);
-
-    const urls = serp;
+    const urls = serp
+      .filter((u): u is OganicResult & { link: string } => Boolean(u.link))
+      .slice(0, maxUrls);
 
     const pages: { url: string; markdown: string }[] = [];
     let i = 0;
@@ -315,7 +295,7 @@ export class BrightDataClient {
           if (idx >= urls.length) return;
 
           const url = urls[idx];
-          const markdown = await this.scrapeMarkdown(url.link);
+          const markdown = await this.scrapeRequestAsMarkdown(url.link);
           pages.push({ url: url.link, markdown });
         }
       });

@@ -81,20 +81,28 @@ export class JobLlmClient {
     return obj;
   }
 
+  private normalizeUnicodeEscapes(text: string): string {
+    // Fix common model glitches like "\uu2122" while preserving valid escapes.
+    let normalized = text.replace(/\\u{2,}([0-9a-fA-F]{4})/g, "\\u$1");
+    normalized = normalized.replace(/\\u(?![0-9a-fA-F]{4})/g, "\\\\u");
+    return normalized;
+  }
+
   private parseJsonStrict<T>(text: string, schema: z.ZodType<T>): T {
     const raw = text.trim();
+    const sanitized = this.normalizeUnicodeEscapes(raw);
     let parsed: unknown;
 
     const tryParse = (s: string): unknown => JSON.parse(s);
 
     try {
-      parsed = tryParse(raw);
+      parsed = tryParse(sanitized);
     } catch {
       // Try to salvage: prefer object, then array
-      const objStart = raw.indexOf("{");
-      const objEnd = raw.lastIndexOf("}");
-      const arrStart = raw.indexOf("[");
-      const arrEnd = raw.lastIndexOf("]");
+      const objStart = sanitized.indexOf("{");
+      const objEnd = sanitized.lastIndexOf("}");
+      const arrStart = sanitized.indexOf("[");
+      const arrEnd = sanitized.lastIndexOf("]");
 
       const start =
         objStart !== -1 && (arrStart === -1 || objStart < arrStart)
@@ -104,7 +112,7 @@ export class JobLlmClient {
 
       if (start >= 0 && end > start) {
         try {
-          parsed = tryParse(raw.slice(start, end + 1));
+          parsed = tryParse(sanitized.slice(start, end + 1));
         } catch (innerErr) {
           logger.error(
             { text: raw, err: innerErr },
@@ -195,9 +203,11 @@ ${userContext.trim()}
     const unique: string[] = [];
     const seen = new Set<string>();
     for (const u of data) {
-      if (!seen.has(u.link)) {
-        seen.add(u.link);
-        unique.push(u.link);
+      const link = u.link ?? u.url;
+      if (!link) continue;
+      if (!seen.has(link)) {
+        seen.add(link);
+        unique.push(link);
       }
     }
 
@@ -246,12 +256,13 @@ ${userContext.trim()}
 
     // Rebuild outputs exactly aligned to original list (including duplicates)
     const items: ScoredUrl[] = data.map((u) => {
-      const hit = byUrl.get(u.link);
+      const link = u.link ?? u.url ?? "";
+      const hit = byUrl.get(link);
       if (hit) return hit;
 
       // fallback if model omitted something
       return {
-        url: u.link,
+        url: link,
         score: 0,
         kind: UrlKind.IRRELEVANT,
         reason: "Missing model output for this URL; defaulting to irrelevant.",
@@ -536,7 +547,7 @@ ${userContext.trim()}
    * - it extracts jobs from top URLs
    */
   public async scoreThenFetchThenExtractJobs(
-    data:  readonly OganicResult[],
+    data: readonly OganicResult[],
     userContext: string
   ): Promise<
     Readonly<{
@@ -575,12 +586,9 @@ ${userContext.trim()}
 
     const filtered = candidates
       .filter((it) => {
-        if (it.kind === UrlKind.JOB_LISTING)
-          return it.score >= 40; // More permissive for direct listings
-        if (it.kind === UrlKind.JOBS_INDEX)
-          return it.score >= 45;
-        if (it.kind === UrlKind.CAREERS)
-          return keepCareers && it.score >= 50;
+        if (it.kind === UrlKind.JOB_LISTING) return it.score >= 40; // More permissive for direct listings
+        if (it.kind === UrlKind.JOBS_INDEX) return it.score >= 45;
+        if (it.kind === UrlKind.CAREERS) return keepCareers && it.score >= 50;
         return false;
       })
       .sort((a, b) => b.score - a.score)
@@ -609,7 +617,7 @@ ${userContext.trim()}
       const results = await Promise.all(
         batch.map(async (it) => {
           try {
-            const md = await brightdataClient.scrapeMarkdown(it.url);
+            const md = await brightdataClient.scrapeRequestAsMarkdown(it.url);
             const extraction = await this.extractJobsFromMarkdown({
               url: it.url,
               markdown: md,
