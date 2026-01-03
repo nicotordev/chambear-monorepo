@@ -7,6 +7,7 @@ import {
   Calendar,
   ChevronsUpDown,
   CreditCard,
+  File,
   FilePlus,
   FileText,
   LayoutDashboard,
@@ -126,6 +127,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/reminders",
       icon: Bell,
       isActive: pathname?.startsWith("/dashboard/reminders"),
+    },
+    {
+      title: "Documents",
+      url: "/dashboard/documents",
+      icon: File,
+      isActive: pathname?.startsWith("/dashboard/documents"),
     },
     {
       title: "Billing",

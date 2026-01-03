@@ -1,30 +1,9 @@
 import backend from "@/lib/backend";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Calendar,
-  Clock,
-  MapPin,
-  MoreVertical,
-  Video,
-  Building2,
-  ExternalLink,
 } from "lucide-react";
 import { PlusCircle } from "lucide-react";
-import type { InterviewSession } from "@/types";
-import { InterviewMode } from "@/types/enums";
-import InterviewStatusBadge from "@/components/dashboard/interviews/interviews-status-badge";
 import InterviewCard from "@/components/dashboard/interviews/interview-card";
 
 export default async function InterviewsPage() {

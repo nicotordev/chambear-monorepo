@@ -14,9 +14,9 @@ export const bullmqRedisOptions: RedisOptions = {
   maxRetriesPerRequest: null, // Required by BullMQ
 };
 
-const connection = new IORedis(redisUrl, baseRedisOptions);
+const redisClient = new IORedis(redisUrl, baseRedisOptions);
 
-connection.on("error", (err: any) => {
+redisClient.on("error", (err: any) => {
   if (err.code === "ENOTFOUND" || err.code === "ECONNREFUSED") {
     console.error(`\n❌ Redis connection failed: ${err.message}`);
     console.error(`📍 URL: ${redisUrl}`);
@@ -28,16 +28,16 @@ connection.on("error", (err: any) => {
   }
 });
 
-connection.on("connect", () => {
+redisClient.on("connect", () => {
   console.log("✅ Connected to Redis");
 });
 
-connection.on("close", () => {
+redisClient.on("close", () => {
   console.warn("⚠️ Redis connection closed");
 });
 
-connection.on("end", () => {
+redisClient.on("end", () => {
   console.warn("⚠️ Redis connection ended");
 });
 
-export default connection;
+export default redisClient;

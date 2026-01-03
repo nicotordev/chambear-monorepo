@@ -132,6 +132,12 @@ enum CreditActionType {
   OTHER
 }
 
+enum JobSearchJobStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id               String   @id @default(cuid())
   email            String   @unique
@@ -245,14 +251,14 @@ model Job {
   updatedAt      DateTime       @updatedAt
   algoliaId      String?
 
-  applications Application[]
-  fitScores    FitScore[]
-  jobSkills    JobSkill[]
-  documents    Document[]
-  interviews   InterviewSession[]
-  reminders    Reminder[]
-  company      Company?           @relation(fields: [companyId], references: [id])
-  companyId    String?
+  applications  Application[]
+  fitScores     FitScore[]
+  jobSkills     JobSkill[]
+  documents     Document[]
+  interviews    InterviewSession[]
+  reminders     Reminder[]
+  company       Company?           @relation(fields: [companyId], references: [id])
+  companyId     String?
 }
 
 model Company {

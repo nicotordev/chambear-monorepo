@@ -9,6 +9,7 @@ import aiActionService from "@/services/ai-action.service";
 import billingService from "@/services/billing.service";
 import { getAuth } from "@hono/clerk-auth";
 import type { Context } from "hono";
+import redisClient from "@/lib/redis";
 
 const aiActionController = {
   async optimizeCv(c: Context) {
@@ -135,7 +136,7 @@ const aiActionController = {
     }
   },
 
-  scanJobs: async (c: Context) => {
+  requestScanJobs: async (c: Context) => {
     const auth = getAuth(c);
     const userId = auth?.userId;
     const profileId = c.req.query("profileId");
@@ -145,8 +146,8 @@ const aiActionController = {
     }
 
     try {
-      const scannedJobs = await aiActionService.scanJobs(profileId);
-      return c.json(response.success([...scannedJobs]), 200);
+      await redisClient.set(`scan:${userId}:${profileId}`, "pending");
+      return c.json(response.success(null), 200);
     } catch (error: any) {
       console.error(error);
       return c.json(
@@ -155,7 +156,7 @@ const aiActionController = {
       );
     }
   },
-  async getScanStatus(c: Context) {
+  async getRequestedScanStatus(c: Context) {
     const auth = getAuth(c);
     const userId = auth?.userId;
 
@@ -169,13 +170,9 @@ const aiActionController = {
     }
 
     const jobId = `scan:${userId}:${profileId}`;
-    const job = await scrapeQueue.getJob(jobId);
 
-    if (!job) {
-      return c.json(response.success({ status: "idle" }), 200);
-    }
+    const state = await redisClient.get(jobId);
 
-    const state = await job.getState();
     return c.json(response.success({ status: state, jobId }), 200);
   },
 };

@@ -6,7 +6,6 @@ import {
 } from "@/schemas/ai-action";
 import { FitScoreSchema } from "@/schemas/application";
 import { DocumentSchema } from "@/schemas/document";
-import { RankedJobSchema } from "@/schemas/job";
 import {
   createSuccessResponseSchema,
   ErrorResponseSchema,
@@ -144,7 +143,7 @@ const calculateFit = createRoute({
   },
 });
 
-const scanJobs = createRoute({
+const requestScanJobs = createRoute({
   method: "get",
   path: "/ai/scan",
   request: {
@@ -157,7 +156,7 @@ const scanJobs = createRoute({
       description: "Get job recommendations",
       content: {
         "application/json": {
-          schema: createSuccessResponseSchema(z.array(RankedJobSchema)),
+          schema: createSuccessResponseSchema(z.null()),
         },
       },
     },
@@ -196,7 +195,7 @@ const scanJobs = createRoute({
   },
 });
 
-const getScanStatus = createRoute({
+const getRequestedScanStatus = createRoute({
   method: "get",
   path: "/ai/scan/status",
   request: {
@@ -211,8 +210,8 @@ const getScanStatus = createRoute({
         "application/json": {
           schema: createSuccessResponseSchema(
             z.object({
-              status: z.string(),
-              jobId: z.string().optional(),
+              status: z.string().nullable(),
+              jobId: z.string(),
             })
           ),
         },
@@ -236,7 +235,7 @@ const getScanStatus = createRoute({
 app.openapi(optimizeCv, aiActionController.optimizeCv);
 app.openapi(generateCoverLetter, aiActionController.generateCoverLetter);
 app.openapi(calculateFit, aiActionController.calculateFit);
-app.openapi(scanJobs, aiActionController.scanJobs);
-app.openapi(getScanStatus, aiActionController.getScanStatus);
+app.openapi(requestScanJobs, aiActionController.requestScanJobs);
+app.openapi(getRequestedScanStatus, aiActionController.getRequestedScanStatus);
 
 export default app;

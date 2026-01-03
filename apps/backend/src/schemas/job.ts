@@ -1,5 +1,6 @@
 import {
   EmploymentType,
+  JobSearchJobStatus,
   JobSource,
   Seniority,
   UrlKind,
@@ -91,3 +92,12 @@ export const RankedJobSchema = z
   .readonly();
 
 export type JobInput = z.infer<typeof JobSchema>;
+
+
+export const JobSearchJobSchema = z.object({
+  id: z.string(),
+  profileId: z.string(),
+  status: z.enum(JobSearchJobStatus),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});

@@ -1,11 +1,11 @@
+import algoliaClient from "@/lib/algolia";
+import { PlanTier } from "@/lib/generated";
+import { prisma } from "@/lib/prisma";
 import stripe from "@/lib/stripe";
 import response from "@/lib/utils/response";
 import billingService from "@/services/billing.service";
-import { processScrapeQueueDirect } from "@/workers/scrape.worker";
+import scraperService from "@/services/scraper.service";
 import { Hono } from "hono";
-import { PlanTier } from "@/lib/generated";
-import { prisma } from "@/lib/prisma";
-import algoliaClient from "@/lib/algolia";
 
 const app = new Hono();
 
@@ -148,14 +148,9 @@ app.post("/scrappers/users", async (c) => {
     return c.json(response.unauthorized(), 401);
   }
 
-  const res = await processScrapeQueueDirect({
-    concurrency: 5,
-    maxJobs: 100,
-    maxDurationMs: 4 * 60_000,
-    idleWaitMs: 250,
-  });
+  await scraperService.scrapeJobs();
 
-  return c.json(response.success(res), 200);
+  return c.json(response.success({ message: "Scrape jobs processed" }), 200);
 });
 
 app.post("/algolia/sync", async (c) => {
