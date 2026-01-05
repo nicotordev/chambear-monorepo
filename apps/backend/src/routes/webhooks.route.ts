@@ -137,7 +137,7 @@ app.post("/", async (c) => {
 });
 
 // search the queue and run the scrapper
-app.post("/scrappers/users", async (c) => {
+app.post("/cron/scan", async (c) => {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     return c.json(response.internalError("CRON_SECRET not configured"), 500);

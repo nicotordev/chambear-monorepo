@@ -29,6 +29,14 @@ export default function DashboardScanJobs({
   useEffect(() => {
     if (!currentProfile?.id) return;
 
+    const SCAN_KEY = "CHAMBEAR_SCAN_IN_PROGRESS";
+    const isStoredScanning = localStorage.getItem(SCAN_KEY) === "true";
+    const isStateScanning = ["active", "delayed", "waiting"].includes(status);
+
+    if (!isStoredScanning && !isStateScanning) {
+      return;
+    }
+
     let intervalId: NodeJS.Timeout;
 
     const checkStatus = async () => {
@@ -36,14 +44,10 @@ export default function DashboardScanJobs({
         const res = await api.getScanStatus(currentProfile.id);
         setStatus(res.status as any);
 
-        // Stop polling if idle/failed (unless we just started it locally, but simple polling is safer)
-        // actually we want to poll if active/delayed/waiting
         if (["active", "delayed", "waiting"].includes(res.status)) {
-          // continue polling
+          localStorage.setItem(SCAN_KEY, "true");
         } else {
-          // stop or reduce freq?
-          // If completed, maybe we stop after a while?
-          // For now, let's just keep checking every 5s if active, else slower?
+          localStorage.removeItem(SCAN_KEY);
         }
       } catch (err) {
         console.error("Status check failed", err);
@@ -54,7 +58,7 @@ export default function DashboardScanJobs({
     intervalId = setInterval(checkStatus, 3000);
 
     return () => clearInterval(intervalId);
-  }, [currentProfile?.id]);
+  }, [currentProfile?.id, status]);
 
   const handleScan = async () => {
     if (!currentProfile?.id) {
@@ -68,12 +72,14 @@ export default function DashboardScanJobs({
     }
 
     try {
+      localStorage.setItem("CHAMBEAR_SCAN_IN_PROGRESS", "true");
       setStatus("active"); // Optimistic update
       await api.scanJobs(currentProfile?.id);
       toast.success("Scan started successfully");
     } catch (error: any) {
       console.error("Scan error:", error);
       setStatus("idle");
+      localStorage.removeItem("CHAMBEAR_SCAN_IN_PROGRESS");
 
       if (error.response?.status === 402) {
         toast.error("Insufficient credits", {

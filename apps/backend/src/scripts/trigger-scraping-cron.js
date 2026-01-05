@@ -10,7 +10,7 @@ if (!CRON_SECRET) {
 
 const triggerScrape = async () => {
   const startTime = performance.now();
-  const targetUrl = `${API_URL}/api/v1/webhooks/scrappers/users`;
+  const targetUrl = `${API_URL}/api/v1/webhooks/cron/scan`;
 
   console.log(`\n🚀 [Cron] Starting scrape trigger...`);
   console.log(`📍 Target: ${targetUrl}`);

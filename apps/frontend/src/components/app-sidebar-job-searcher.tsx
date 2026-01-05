@@ -4,9 +4,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDebounce } from "react-use";
-import { Button } from "@/components/ui/button";
 import { Input } from "./ui/input"
-import api from "@/lib/api";
 
 export default function AppSidebarJobSearcher() {
   const searchParams = useSearchParams();

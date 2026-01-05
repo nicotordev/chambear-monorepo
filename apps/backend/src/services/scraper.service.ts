@@ -6,13 +6,14 @@ class ScraperService {
   public async scrapeJobs() {
     try {
       // Find all scan keys
-      const keys = await redisClient.keys("scan:*:*");
-      if (keys.length === 0) return;
+      const allKeys = await redisClient.keys("scan:*");
+      if (allKeys.length === 0) return;
 
-      console.info(`[ScraperService] Found ${keys.length} scan keys.`);
+      console.info(`[ScraperService] Found ${allKeys.length} scan keys.`);
 
       // Concurrency limit for processing scans
       const limit = pLimit(5);
+      const keys = allKeys.length > 10 ? allKeys.slice(0, 10) : allKeys;
 
       await Promise.all(
         keys.map((key) =>

@@ -30,7 +30,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="w-full h-full">{children}</div>
           </div>
         </SidebarInset>
-        <LoadJobStore />
+        <Suspense>
+          <LoadJobStore />
+        </Suspense>
       </JobCardProvider>
     </SidebarProvider>
   );

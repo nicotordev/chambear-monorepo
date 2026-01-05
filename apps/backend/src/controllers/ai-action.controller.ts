@@ -145,8 +145,14 @@ const aiActionController = {
       return c.json(response.unauthorized(), 401);
     }
 
+    const findCurrentScan = await redisClient.get(`scan:${profileId}`);
+
+    if (findCurrentScan) {
+      return c.json(response.error("Scan already in progress"), 400);
+    }
+
     try {
-      await redisClient.set(`scan:${userId}:${profileId}`, "pending");
+      await redisClient.set(`scan:${profileId}`, "pending");
       return c.json(response.success(null), 200);
     } catch (error: any) {
       console.error(error);
