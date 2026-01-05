@@ -4,6 +4,22 @@ import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -17,6 +33,7 @@ import {
   Configure,
   RefinementList,
   useHits,
+  useHitsPerPage,
   usePagination,
   useRefinementList,
   useSearchBox,
@@ -44,8 +61,121 @@ function VirtualWidgets() {
   useSearchBox();
   useRefinementList({ attribute: "location" });
   useRefinementList({ attribute: "employmentType" });
+  useRefinementList({ attribute: "title" });
   usePagination();
+  useHitsPerPage({
+    items: [
+      { label: "10 per page", value: 10, default: true },
+      { label: "20 per page", value: 20 },
+      { label: "50 per page", value: 50 },
+    ],
+  });
   return null;
+}
+
+function CustomPagination() {
+  const {
+    currentRefinement,
+    nbPages,
+    pages,
+    isFirstPage,
+    isLastPage,
+    refine,
+    createURL,
+  } = usePagination();
+
+  if (nbPages <= 1) return null;
+
+  return (
+    <Pagination className="mt-8">
+      <PaginationContent className="flex-wrap justify-center">
+        <PaginationItem>
+          {!isFirstPage && (
+            <PaginationPrevious
+              href={createURL(currentRefinement - 1)}
+              onClick={(event) => {
+                event.preventDefault();
+                refine(currentRefinement - 1);
+              }}
+            />
+          )}
+        </PaginationItem>
+
+        {pages.map((page) => {
+          const isEllipsis = page === -1; // react-instantsearch uses -1 for ellipsis in some versions, but let's check the pages array
+          if (isEllipsis) {
+            return (
+              <PaginationItem key={`ellipsis-${Math.random()}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            );
+          }
+
+          return (
+            <PaginationItem key={page}>
+              <PaginationLink
+                href={createURL(page)}
+                isActive={currentRefinement === page}
+                onClick={(event) => {
+                  event.preventDefault();
+                  refine(page);
+                }}
+              >
+                {page + 1}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        })}
+
+        <PaginationItem>
+          {!isLastPage && (
+            <PaginationNext
+              href={createURL(currentRefinement + 1)}
+              onClick={(event) => {
+                event.preventDefault();
+                refine(currentRefinement + 1);
+              }}
+            />
+          )}
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
+function HitsPerPageSelector() {
+  const { items, refine } = useHitsPerPage({
+    items: [
+      { label: "10 per page", value: 10, default: true },
+      { label: "20 per page", value: 20 },
+      { label: "50 per page", value: 50 },
+    ],
+  });
+
+  const currentValue = items.find((item) => item.isRefined)?.value || 10;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        Show
+      </span>
+      <Select
+        value={currentValue.toString()}
+        onValueChange={(value) => refine(Number.parseInt(value))}
+      >
+        <SelectTrigger size="sm" className="h-8 w-27.5">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value.toString()}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
 function CustomHits() {
@@ -74,9 +204,16 @@ function CustomHits() {
 
   return (
     <div className="py-4 space-y-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-muted-foreground">
+          {results?.nbHits} jobs found
+        </p>
+        <HitsPerPageSelector />
+      </div>
       {items.map((hit) => (
         <JobCardMinimalWithFit key={hit.objectID} job={hit} />
       ))}
+      <CustomPagination />
     </div>
   );
 }
@@ -96,7 +233,7 @@ export default function AlgoliaJobsView({
           cleanUrlOnDispose: false,
         },
         stateMapping: {
-          stateToRoute(uiState: AlgoliaUiState): any {
+          stateToRoute(uiState: AlgoliaUiState) {
             const indexUiState = uiState[ALGOLIA_INDEX_NAME] || {};
             return {
               search: indexUiState.query,
@@ -105,7 +242,7 @@ export default function AlgoliaJobsView({
               page: indexUiState.page,
             };
           },
-          routeToState(routeState: any): AlgoliaUiState {
+          routeToState(routeState): AlgoliaUiState {
             return {
               [ALGOLIA_INDEX_NAME]: {
                 query: routeState.search,
@@ -147,9 +284,35 @@ export default function AlgoliaJobsView({
                 </SheetHeader>
                 <div className="py-6 space-y-8">
                   <div className="space-y-4">
+                    <h4 className="font-semibold px-1">Job Title</h4>
+                    <RefinementList
+                      attribute="title"
+                      limit={10}
+                      showMore
+                      searchable
+                      searchablePlaceholder="Search titles..."
+                      classNames={{
+                        label:
+                          "flex items-center gap-2 text-sm py-1.5 cursor-pointer hover:text-primary transition-colors",
+                        checkbox:
+                          "rounded border-muted-foreground/30 text-primary focus:ring-primary/20",
+                        count:
+                          "ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full",
+                        noResults:
+                          "text-xs text-muted-foreground py-2 text-center",
+                        showMore:
+                          "text-xs font-medium text-primary mt-2 flex items-center justify-center w-full py-1 hover:bg-muted rounded-md transition-colors",
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-4 pt-2 border-t">
                     <h4 className="font-semibold px-1">Location</h4>
                     <RefinementList
                       attribute="location"
+                      limit={10}
+                      showMore
+                      searchable
+                      searchablePlaceholder="Search locations..."
                       className="AlgoliaRefinementList"
                       classNames={{
                         label:
@@ -158,10 +321,14 @@ export default function AlgoliaJobsView({
                           "rounded border-muted-foreground/30 text-primary focus:ring-primary/20",
                         count:
                           "ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full",
+                        noResults:
+                          "text-xs text-muted-foreground py-2 text-center",
+                        showMore:
+                          "text-xs font-medium text-primary mt-2 flex items-center justify-center w-full py-1 hover:bg-muted rounded-md transition-colors",
                       }}
                     />
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 pt-2 border-t">
                     <h4 className="font-semibold px-1">Employment Type</h4>
                     <RefinementList
                       attribute="employmentType"
@@ -184,7 +351,7 @@ export default function AlgoliaJobsView({
         {/* Main layout */}
         <div className="pl-8 flex items-stretch gap-4 overflow-x-hidden flex-1 h-full">
           {/* LEFT: Job list */}
-          <div className="w-105 min-w-87.5 border-r overflow-y-scroll pr-8 pb-8 scrollbar-hide">
+          <div className="w-105 min-w-87.5 border-r overflow-y-scroll overflow-x-hidden pr-8 pb-8 scrollbar-hide">
             <CustomHits />
           </div>
 

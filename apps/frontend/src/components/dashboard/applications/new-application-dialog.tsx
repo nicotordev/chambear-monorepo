@@ -349,7 +349,7 @@ export default function NewApplicationDialog({
               return (
                 <div
                   key={s.id}
-                  className="flex flex-col items-center gap-2 bg-background px-2"
+                  className="flex flex-col items-center gap-2 p-2"
                 >
                   <div
                     className={cn(

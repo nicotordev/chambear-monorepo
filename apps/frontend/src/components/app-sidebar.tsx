@@ -168,11 +168,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Platform Section */}
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <div className="px-4 py-2">
-            <Suspense>
-              <AppSidebarJobSearcher />
-            </Suspense>
-          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {navMain.map((item) => (

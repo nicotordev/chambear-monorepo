@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "react-use";
 import { Input } from "./ui/input";
 
-export default function AppSidebarJobSearcher(): JSX.Element {
+export default function AppSidebarJobSearcher() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
