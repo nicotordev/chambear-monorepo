@@ -1,55 +1,90 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "react-use";
-import { Input } from "./ui/input"
+import { Input } from "./ui/input";
 
-export default function AppSidebarJobSearcher() {
+export default function AppSidebarJobSearcher(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState(() => {
-    return searchParams.get("search") || "";
-  });
+  const pathname = usePathname();
+
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // Guardamos el último "search" de la URL que aplicamos al estado,
+  // para evitar re-sincronizaciones que pisan el input mientras tipeas.
+  const lastUrlSearchRef = useRef<string>("");
 
   useEffect(() => {
-    const currentSearch = searchParams.get("search") || "";
-    if (searchTerm !== currentSearch) {
+    const currentSearch = searchParams.get("search") ?? "";
+
+    // Solo sincroniza estado cuando la URL cambió realmente (navegación externa)
+    if (currentSearch !== lastUrlSearchRef.current) {
+      lastUrlSearchRef.current = currentSearch;
       setSearchTerm(currentSearch);
     }
-  }, [searchParams, searchTerm]);
+  }, [searchParams]);
 
-  const updateSearch = (term: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (term) {
-      params.set("search", term);
-    } else {
-      params.delete("search");
-    }
-    router.replace(`/dashboard?${params.toString()}`);
-  };
+  const replaceWithParams = useCallback(
+    (params: URLSearchParams, targetPath: string) => {
+      const qs = params.toString();
+      const url = qs.length > 0 ? `${targetPath}?${qs}` : targetPath;
+      router.replace(url);
+    },
+    [router]
+  );
+
+  const updateSearch = useCallback(
+    (term: string) => {
+      const trimmed = term.trim();
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (trimmed.length > 0) {
+        params.set("search", trimmed);
+      } else {
+        params.delete("search");
+      }
+
+      const targetPath = pathname.startsWith("/dashboard/jobs")
+        ? pathname
+        : "/dashboard/jobs";
+
+      // Actualiza el ref para que el effect no te pise el input después del replace
+      lastUrlSearchRef.current = trimmed;
+
+      replaceWithParams(params, targetPath);
+    },
+    [pathname, replaceWithParams, searchParams]
+  );
 
   useDebounce(
     () => {
-      const currentSearch = searchParams.get("search") || "";
-      if (searchTerm !== currentSearch) {
-        updateSearch(searchTerm);
-      }
+      const currentSearch = searchParams.get("search") ?? "";
+      const next = searchTerm.trim();
+
+      // Evita reemplazar si no cambió nada
+      if (next === currentSearch) return;
+
+      updateSearch(next);
     },
     500,
-    [searchTerm],
+    [searchTerm, searchParams, updateSearch]
   );
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setSearchTerm("");
     updateSearch("");
-  };
+  }, [updateSearch]);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    updateSearch(searchTerm);
-  }
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      updateSearch(searchTerm);
+    },
+    [searchTerm, updateSearch]
+  );
 
   return (
     <form
@@ -63,9 +98,11 @@ export default function AppSidebarJobSearcher() {
           placeholder="Search jobs..."
           className="pl-9 pr-8 w-full h-9 bg-muted/50 border-transparent hover:bg-muted focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-md transition-all text-sm"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchTerm(e.target.value)
+          }
         />
-        {searchTerm && (
+        {searchTerm.length > 0 && (
           <button
             type="button"
             onClick={handleClear}

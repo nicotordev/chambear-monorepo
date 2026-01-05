@@ -1,17 +1,12 @@
-import JobCardMinimalWithFit from "@/components/dashboard/jobs/job-card-minimal-with-fit";
-import SelectedJob from "@/components/dashboard/jobs/selected-job";
+import AlgoliaJobsView from "@/components/dashboard/jobs/algolia-jobs-view";
 import { Button } from "@/components/ui/button";
 import backend from "@/lib/backend";
-import { SearchX, Sparkles } from "lucide-react"; // Importamos icono para estado vacío
+import { SearchX, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
-
-export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-  const jobs = await backend.jobs.list().catch(() => []); // Catch para evitar crash si falla backend
+  const jobs = await backend.jobs.list().catch(() => []);
 
-  // 1. ESTADO VACÍO: Si no hay trabajos en la BD
   if (!jobs || jobs.length === 0) {
     return (
       <div className="flex flex-col h-[calc(100dvh-4rem)] items-center justify-center bg-background animate-in fade-in duration-500 space-y-4">
@@ -35,35 +30,5 @@ export default async function JobsPage() {
     );
   }
 
-  // 2. LAYOUT NORMAL
-  return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] overflow-hidden bg-background animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="pl-8 py-2 border-b bg-card/30 backdrop-blur-sm shrink-0">
-        <h1 className="text-4xl font-bold tracking-tight">Jobs</h1>
-        <p className="text-muted-foreground mt-2">
-          Select a job and take action. Don't waste time browsing.
-        </p>
-      </div>
-
-      {/* Main layout */}
-      <div className="pl-8 flex items-stretch gap-4 overflow-x-hidden flex-1 h-full">
-        {/* LEFT: Job list */}
-        <div className="w-105 min-w-87.5 border-r overflow-y-scroll pr-8 pb-8 animate-in slide-in-from-left-4 duration-500">
-          <div className="py-4 space-y-3">
-            {jobs.map((job) => (
-              <JobCardMinimalWithFit key={job.id} job={job} />
-            ))}
-          </div>
-        </div>
-
-        {/* RIGHT: Job detail */}
-        <div className="flex-1 overflow-y-auto bg-background/50">
-        <div>
-          <SelectedJob ssrJobs={jobs} />
-        </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <AlgoliaJobsView initialJobs={jobs} />;
 }
