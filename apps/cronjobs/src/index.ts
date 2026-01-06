@@ -1,18 +1,15 @@
 import "dotenv/config";
 
 const CRON_SECRET = process.env.CRON_SECRET;
-const ENV_API_URL = process.env.API_URL;
-const PATH = "/api/v1/webhooks/scrappers/users";
+const URL = process.env.URL;
 
 if (!CRON_SECRET) {
   console.error("❌ CRON_SECRET is not defined in environment variables");
   process.exit(1);
 }
 
-const attemptTrigger = async (baseUrl: string): Promise<boolean> => {
-  // Ensure no double slashes if baseUrl ends with /
-  const cleanBase = baseUrl.replace(/\/$/, "");
-  const targetUrl = `${cleanBase}${PATH}`;
+const attemptTrigger = async (): Promise<boolean> => {
+  const targetUrl = `${URL}`;
 
   console.log(`📍 Attempting target: ${targetUrl}`);
   const startTime = performance.now();
@@ -42,7 +39,9 @@ const attemptTrigger = async (baseUrl: string): Promise<boolean> => {
   } catch (error: any) {
     const endTime = performance.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    console.warn(`⚠️  Failed attempt at ${targetUrl} after ${duration}s: ${error.message}`);
+    console.warn(
+      `⚠️  Failed attempt at ${targetUrl} after ${duration}s: ${error.message}`
+    );
     if (error.cause) {
       console.warn(`   Cause:`, error.cause);
     }
@@ -57,22 +56,22 @@ const main = async () => {
   // Candidate URLs to try
   const candidates: string[] = [];
 
-  if (ENV_API_URL) {
-    candidates.push(ENV_API_URL);
+  if (URL) {
+    candidates.push(URL);
   }
-  
+
   // Add fallbacks for Docker/Local environments
   // We avoid adding duplicates if ENV_API_URL is already one of them
   const fallbacks = ["http://backend:3001", "http://localhost:3001"];
-  
+
   for (const fb of fallbacks) {
-    if (fb !== ENV_API_URL) {
+    if (fb !== URL) {
       candidates.push(fb);
     }
   }
 
   for (const baseUrl of candidates) {
-    const success = await attemptTrigger(baseUrl);
+    const success = await attemptTrigger();
     if (success) {
       console.log("-----------------------------------\n");
       process.exit(0);
