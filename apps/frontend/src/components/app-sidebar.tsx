@@ -23,7 +23,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
-
+import { Suspense } from "react";
 import {
   Dialog,
   DialogContent,
@@ -53,13 +53,11 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-
 import { useUser as useAppUser } from "@/contexts/user-context";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
-import CreateDocumentForm from "./create-document-form";
 import AppSidebarJobSearcher from "./app-sidebar-job-searcher";
-import { Suspense } from "react";
+import CreateDocumentForm from "./create-document-form";
 
 // Secondary Navigation
 const navSecondary = [
@@ -335,7 +333,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   key={profile.id}
                   className={cn(
                     "cursor-pointer",
-                    profile.id === currentProfile?.id && "bg-primary"
+                    profile.id === currentProfile?.id && "bg-primary",
                   )}
                   onClick={() => switchProfile(profile.id)}
                 >

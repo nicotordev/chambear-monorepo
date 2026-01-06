@@ -1,7 +1,7 @@
 "use client";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export interface TabTriggerProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ export default function TabTrigger({ children }: TabTriggerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, setState] = useState(() =>
-    searchParams.get("state") === "sign-in" ? "sign-in" : "sign-up"
+    searchParams.get("state") === "sign-in" ? "sign-in" : "sign-up",
   );
 
   useEffect(() => {

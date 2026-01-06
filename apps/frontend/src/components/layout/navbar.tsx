@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
 import {
   ArrowRight,
   BarChart,
@@ -13,8 +13,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
-import UserButton from "./user-button";
-
 import {
   Accordion,
   AccordionContent,
@@ -41,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LinkAsChild } from "../common/LinkAsChild";
 import Logo from "../logo";
+import UserButton from "./user-button";
 
 const products = [
   {
@@ -268,7 +267,7 @@ export default function Navbar() {
                   <NavigationMenuLink
                     className={cn(
                       navigationMenuTriggerStyle(),
-                      "bg-transparent text-muted-foreground hover:text-primary font-semibold"
+                      "bg-transparent text-muted-foreground hover:text-primary font-semibold",
                     )}
                   >
                     Features
@@ -281,7 +280,7 @@ export default function Navbar() {
                   <NavigationMenuLink
                     className={cn(
                       navigationMenuTriggerStyle(),
-                      "bg-transparent text-muted-foreground hover:text-primary font-semibold"
+                      "bg-transparent text-muted-foreground hover:text-primary font-semibold",
                     )}
                   >
                     How it Works
@@ -294,7 +293,7 @@ export default function Navbar() {
                   <NavigationMenuLink
                     className={cn(
                       navigationMenuTriggerStyle(),
-                      "bg-transparent text-muted-foreground hover:text-primary font-semibold"
+                      "bg-transparent text-muted-foreground hover:text-primary font-semibold",
                     )}
                   >
                     Company

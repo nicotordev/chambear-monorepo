@@ -31,9 +31,9 @@ export default function Logo({
         alignment === "left"
           ? "justify-start"
           : alignment === "center"
-          ? "justify-center"
-          : "justify-end",
-        className
+            ? "justify-center"
+            : "justify-end",
+        className,
       )}
     >
       <Image

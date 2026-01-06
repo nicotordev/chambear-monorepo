@@ -1,5 +1,17 @@
 "use client";
 
+import { useClerk, useUser as useClerkUser } from "@clerk/nextjs";
+import {
+  Check,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,18 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/contexts/user-context";
-import { useClerk, useUser as useClerkUser } from "@clerk/nextjs";
-import {
-  Check,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  ShieldCheck,
-  User,
-  Users,
-  Zap,
-} from "lucide-react";
-import Link from "next/link";
 import { Button } from "../ui/button";
 
 /**

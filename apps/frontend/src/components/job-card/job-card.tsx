@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from "date-fns";
+import { Building2, Calendar, DollarSign, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -6,8 +8,6 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import type { Job } from "@/types";
-import { formatDistanceToNow } from "date-fns";
-import { Building2, Calendar, DollarSign, MapPin } from "lucide-react";
 import JobCardDetailButton from "./job-card-detail-button";
 import JobCardDetailCVButton from "./job-card-detail-cv-button";
 

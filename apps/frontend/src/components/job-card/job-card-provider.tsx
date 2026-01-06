@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  IconBuilding,
+  IconClock,
+  IconCoin,
+  IconExternalLink,
+  IconMapPin,
+} from "@tabler/icons-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,13 +21,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useJobStore } from "@/stores/job/job.store";
-import {
-  IconBuilding,
-  IconClock,
-  IconCoin,
-  IconExternalLink,
-  IconMapPin,
-} from "@tabler/icons-react";
 import Typography from "../ui/typography";
 
 export interface JobCardProviderProps {

@@ -2,7 +2,8 @@
 
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "react-use";
 import { Input } from "./ui/input";
 
@@ -33,7 +34,7 @@ export default function AppSidebarJobSearcher() {
       const url = qs.length > 0 ? `${targetPath}?${qs}` : targetPath;
       router.replace(url);
     },
-    [router]
+    [router],
   );
 
   const updateSearch = useCallback(
@@ -56,7 +57,7 @@ export default function AppSidebarJobSearcher() {
 
       replaceWithParams(params, targetPath);
     },
-    [pathname, replaceWithParams, searchParams]
+    [pathname, replaceWithParams, searchParams],
   );
 
   useDebounce(
@@ -70,7 +71,7 @@ export default function AppSidebarJobSearcher() {
       updateSearch(next);
     },
     500,
-    [searchTerm, searchParams, updateSearch]
+    [searchTerm, searchParams, updateSearch],
   );
 
   const handleClear = useCallback(() => {
@@ -83,7 +84,7 @@ export default function AppSidebarJobSearcher() {
       e.preventDefault();
       updateSearch(searchTerm);
     },
-    [searchTerm, updateSearch]
+    [searchTerm, updateSearch],
   );
 
   return (

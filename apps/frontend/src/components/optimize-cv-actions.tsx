@@ -1,18 +1,21 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import backend from "@/lib/backend";
-import { LetterText, Sparkles, Loader2 } from "lucide-react";
+import { LetterText, Loader2, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import backend from "@/lib/backend";
 
 interface OptimizeCvActionsProps {
   jobId: string;
   profileId: string;
 }
 
-export function OptimizeCvActions({ jobId, profileId }: OptimizeCvActionsProps) {
+export function OptimizeCvActions({
+  jobId,
+  profileId,
+}: OptimizeCvActionsProps) {
   const [loadingCv, setLoadingCv] = useState(false);
   const [loadingCl, setLoadingCl] = useState(false);
   const router = useRouter();
@@ -31,7 +34,8 @@ export function OptimizeCvActions({ jobId, profileId }: OptimizeCvActionsProps) 
       router.refresh();
     } catch (error: any) {
       toast.error("Error al optimizar CV", {
-        description: error.response?.data?.meta?.message || "Inténtalo de nuevo.",
+        description:
+          error.response?.data?.meta?.message || "Inténtalo de nuevo.",
       });
     } finally {
       setLoadingCv(false);
@@ -52,7 +56,8 @@ export function OptimizeCvActions({ jobId, profileId }: OptimizeCvActionsProps) 
       router.refresh();
     } catch (error: any) {
       toast.error("Error al generar carta", {
-        description: error.response?.data?.meta?.message || "Inténtalo de nuevo.",
+        description:
+          error.response?.data?.meta?.message || "Inténtalo de nuevo.",
       });
     } finally {
       setLoadingCl(false);
@@ -61,8 +66,8 @@ export function OptimizeCvActions({ jobId, profileId }: OptimizeCvActionsProps) 
 
   return (
     <div className="space-y-3">
-      <Button 
-        className="w-full rounded-xl h-12" 
+      <Button
+        className="w-full rounded-xl h-12"
         onClick={handleOptimizeCv}
         disabled={loadingCv || loadingCl}
       >

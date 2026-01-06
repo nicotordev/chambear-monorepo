@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react"; // Opcional, si quieres icono en el link
+import { Button } from "@/components/ui/button";
 
 export default function HeroSection() {
   return (
@@ -64,8 +64,14 @@ export default function HeroSection() {
                 results.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-x-6">
-                <Button size="lg" className="w-full sm:w-auto">Start for Free</Button>
-                <Button variant="ghost" size="lg" className="group w-full sm:w-auto justify-center sm:justify-start">
+                <Button size="lg" className="w-full sm:w-auto">
+                  Start for Free
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="group w-full sm:w-auto justify-center sm:justify-start"
+                >
                   View Plans{" "}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>

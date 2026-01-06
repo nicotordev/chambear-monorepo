@@ -1,8 +1,9 @@
 "use client";
-import useDocuments from "@/hooks/use-documents";
+import { Loader2, UploadCloud } from "lucide-react";
 import React from "react";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -10,9 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { UploadCloud } from "lucide-react";
+import useDocuments from "@/hooks/use-documents";
 import { DocumentType } from "@/types";
 
 export interface CreateDocumentFormProps {
@@ -31,19 +30,8 @@ export default function CreateDocumentForm({
     if (!file || !label) return;
 
     try {
-      // 1. Upload the file
-      const uploadResponse = await uploadFile(file);
-      // Assuming uploadFile returns { url: string } or the string directly.
-      // Adjust this according to what your api.uploadFile returns
-      const fileUrl = uploadResponse;
-
-      // 2. Create the record in the DB
-      await createDocument({
-        label,
-        type: type, // Adjust type according to your enum
-        url: fileUrl,
-        content: "Content pending processing", // Optional, depends on your backend
-      });
+      // Upload the file (handles creation)
+      await uploadFile({ file, label, type });
 
       onSuccess();
       setLabel("");

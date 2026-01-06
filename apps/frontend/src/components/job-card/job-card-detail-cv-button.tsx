@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import type { Job } from "@/types";
 import { Notebook } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import type { Job } from "@/types";
 
 export interface JobCardDetailCVButtonProps {
   job: Job;

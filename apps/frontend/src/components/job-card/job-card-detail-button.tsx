@@ -1,9 +1,9 @@
 "use client";
 
+import { Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useJobStore } from "@/stores/job/job.store";
 import type { Job } from "@/types";
-import { Briefcase } from "lucide-react";
 
 export interface JobCardDetailButtonProps {
   job: Job;
@@ -11,7 +11,7 @@ export interface JobCardDetailButtonProps {
 
 export default function JobCardDetailButton({ job }: JobCardDetailButtonProps) {
   const setSelectedJobDetail = useJobStore(
-    (state) => state.setSelectedJobDetail
+    (state) => state.setSelectedJobDetail,
   );
   return (
     <Button
