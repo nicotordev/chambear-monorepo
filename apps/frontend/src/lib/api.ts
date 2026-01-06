@@ -1,10 +1,11 @@
 "use client";
 
+import axios, { type AxiosInstance } from "axios";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
-import { CreateProfileInput } from "@/schemas/user";
+import type { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
   Document,
@@ -15,7 +16,6 @@ import type {
   Subscription,
   User,
 } from "@/types";
-import axios, { AxiosInstance } from "axios";
 import "client-only";
 
 class Api {
@@ -29,7 +29,7 @@ class Api {
 
     this.axiosInstance.interceptors.request.use((config) => {
       console.log(
-        `🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`
+        `🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`,
       );
       return config;
     });
@@ -37,7 +37,7 @@ class Api {
     this.axiosInstance.interceptors.response.use(
       (response) => {
         console.log(
-          `✅ [API Response] ${response.status} ${response.config.url}`
+          `✅ [API Response] ${response.status} ${response.config.url}`,
         );
         return response;
       },
@@ -46,10 +46,10 @@ class Api {
           `❌ [API Error] ${error.response?.status || "Network Error"} ${
             error.config?.url
           }`,
-          error.response?.data || error.message
+          error.response?.data || error.message,
         );
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -85,7 +85,7 @@ class Api {
               Authorization: `Bearer ${token}`,
             },
           }
-        : undefined
+        : undefined,
     );
     if (!("data" in res.data)) {
       throw new Error("Invalid response format");
@@ -95,7 +95,7 @@ class Api {
 
   public async upsertUser(
     data: CreateProfileInput,
-    profileId?: string
+    profileId?: string,
   ): Promise<User> {
     const res = await this.instance.post("/user/me", data, {
       params: { profileId },
@@ -133,7 +133,7 @@ class Api {
 
   public async getDocumentById(
     id: string,
-    profileId: string
+    profileId: string,
   ): Promise<Document> {
     const res = await this.instance.get(`/documents/${id}`, {
       params: { profileId },
@@ -143,7 +143,7 @@ class Api {
 
   public async createDocument(
     data: CreateDocumentInput,
-    profileId: string
+    profileId: string,
   ): Promise<Document> {
     const res = await this.instance.post("/documents", data, {
       params: { profileId },
@@ -154,7 +154,7 @@ class Api {
   public async updateDocument(
     id: string,
     data: UpdateDocumentInput,
-    profileId: string
+    profileId: string,
   ): Promise<Document> {
     const res = await this.instance.put(`/documents/${id}`, data, {
       params: { profileId },
@@ -164,7 +164,7 @@ class Api {
 
   public async deleteDocument(
     id: string,
-    profileId: string
+    profileId: string,
   ): Promise<Document> {
     const res = await this.instance.delete(`/documents/${id}`, {
       params: { profileId },
@@ -196,7 +196,7 @@ class Api {
   }
 
   public async getScanStatus(
-    profileId: string
+    profileId: string,
   ): Promise<{ status: string; jobId?: string }> {
     const res = await this.instance.get("/ai/scan/status", {
       params: { profileId },
@@ -212,14 +212,14 @@ class Api {
   public async upsertApplication(
     profileId: string,
     jobId: string,
-    data: any
+    data: any,
   ): Promise<Application> {
     const res = await this.instance.post(
       "/applications",
       { ...data, jobId },
       {
         params: { profileId },
-      }
+      },
     );
     return res.data.data;
   }
@@ -227,14 +227,14 @@ class Api {
   public async createInterviewSession(
     profileId: string,
     applicationId: string,
-    data: any
+    data: any,
   ): Promise<InterviewSession> {
     const res = await this.instance.post(
       `/applications/${applicationId}/interview`,
       data,
       {
         params: { profileId },
-      }
+      },
     );
     return res.data.data;
   }
@@ -280,19 +280,19 @@ class Api {
     const res = await this.instance.post(
       "/ai/optimize-cv",
       { jobId },
-      { params: { profileId } }
+      { params: { profileId } },
     );
     return res.data.data;
   }
 
   public async generateCoverLetter(
     jobId: string,
-    profileId: string
+    profileId: string,
   ): Promise<Document> {
     const res = await this.instance.post(
       "/ai/generate-cover-letter",
       { jobId },
-      { params: { profileId } }
+      { params: { profileId } },
     );
     return res.data.data;
   }
@@ -301,8 +301,33 @@ class Api {
     const res = await this.instance.post(
       "/ai/calculate-fit",
       { jobId },
-      { params: { profileId } }
+      { params: { profileId } },
     );
+    return res.data.data;
+  }
+
+  // --- Job Preferences ---
+
+  public async upsertJobPreference(
+    jobId: string,
+    profileId: string,
+    liked: boolean,
+  ): Promise<{ id: string; liked: boolean }> {
+    const res = await this.instance.post(
+      `/job-preferences/${jobId}`,
+      { liked },
+      { params: { profileId } },
+    );
+    return res.data.data;
+  }
+
+  public async getJobPreference(
+    jobId: string,
+    profileId: string,
+  ): Promise<{ seen: boolean; liked: boolean | null }> {
+    const res = await this.instance.get(`/job-preferences/${jobId}`, {
+      params: { profileId },
+    });
     return res.data.data;
   }
 }

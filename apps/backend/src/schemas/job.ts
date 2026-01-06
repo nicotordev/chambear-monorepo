@@ -1,6 +1,5 @@
 import {
   EmploymentType,
-  JobSearchJobStatus,
   JobSource,
   Seniority,
   UrlKind,
@@ -93,11 +92,10 @@ export const RankedJobSchema = z
 
 export type JobInput = z.infer<typeof JobSchema>;
 
-
-export const JobSearchJobSchema = z.object({
-  id: z.string(),
-  profileId: z.string(),
-  status: z.enum(JobSearchJobStatus),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
+export const Pagination = z.object({
+  cursor: z.string().optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
 });
+
+export type Pagination = z.infer<typeof Pagination>;

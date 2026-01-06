@@ -1,6 +1,6 @@
 import { JobSource, UrlKind } from "@/lib/generated";
 import pLimit from "p-limit";
-import { DocumentType, JobSearchJobStatus } from "../lib/generated";
+import { DocumentType } from "../lib/generated";
 import { prisma } from "../lib/prisma";
 import { sortByScoreDesc, uniqueBy, uniqueStrings } from "../lib/utils/common";
 import {
@@ -25,15 +25,6 @@ const RANK_LIMIT = 20;
 const LOG_PREFIX = "[RecommendationService]";
 
 const aiActionService = {
-  async getScanStatus(profileId: string) {
-    const jobSearchJob = await prisma.jobSearchJob.findFirst({
-      where: {
-        profileId,
-      },
-    });
-
-    return jobSearchJob;
-  },
   async scanJobs(profileId: string) {
     console.time(`${LOG_PREFIX} scanJobs total`);
     console.info(`${LOG_PREFIX} Starting scan for profileId: ${profileId}`);
@@ -328,26 +319,6 @@ ${job.description || "No description available."}
     await this.upsertScrapedJobs(flatResults);
 
     return flatResults;
-  },
-
-  async scanJobSearchJob(profileId: string) {
-    const jobSearchJob = await prisma.jobSearchJob.findFirst({
-      where: {
-        profileId,
-        status: JobSearchJobStatus.PENDING,
-      },
-    });
-
-    if (jobSearchJob) {
-      throw new Error("JobSearchJob already running");
-    }
-
-    return await prisma.jobSearchJob.create({
-      data: {
-        profileId,
-        status: JobSearchJobStatus.PENDING,
-      },
-    });
   },
 
   async upsertScrapedJobs(scrapedJobs: JobPosting[]) {

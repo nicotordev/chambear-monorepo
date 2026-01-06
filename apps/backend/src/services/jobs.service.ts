@@ -1,4 +1,8 @@
-import { JobUpsertSchema, type JobUpsertInput } from "@/schemas/job";
+import {
+  JobUpsertSchema,
+  Pagination,
+  type JobUpsertInput,
+} from "@/schemas/job";
 import { pineconeJobsClient } from "@/scraping/clients";
 import { JobPosting } from "@/types/ai";
 import { Job } from "../lib/generated";
@@ -128,8 +132,19 @@ const jobsService = {
     });
   },
 
-  async getPublicJobs(query?: string, clerkId?: string) {
+  async getPublicJobs(
+    query?: string,
+    clerkId?: string,
+    paginationParam?: Pagination
+  ) {
     let profileId: string | undefined;
+    const pagination = paginationParam ?? {
+      cursor: undefined,
+      take: 10,
+      skip: 0,
+    };
+
+    const { cursor, take, skip } = Pagination.parse(pagination);
 
     if (clerkId) {
       const user = await prisma.user.findUnique({
@@ -139,6 +154,14 @@ const jobsService = {
       profileId = user?.profiles[0]?.id;
     }
 
+    const jobAlreadyViewed = await prisma.jobPreference.findMany({
+      where: {
+        profileId,
+      },
+    });
+
+    const preferences = jobAlreadyViewed.map((p) => p.jobId);
+
     const jobs = await prisma.job.findMany({
       where: query
         ? {
@@ -147,7 +170,10 @@ const jobsService = {
               { companyName: { contains: query, mode: "insensitive" } },
               { description: { contains: query, mode: "insensitive" } },
             ],
+            ...(preferences.length > 0 ? { id: { notIn: preferences } } : {}),
           }
+        : preferences.length > 0
+        ? { id: { notIn: preferences } }
         : undefined,
       orderBy: {
         createdAt: "desc",

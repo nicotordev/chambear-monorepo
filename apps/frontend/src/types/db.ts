@@ -47,6 +47,7 @@ export interface Profile {
   educations?: Education[];
   skills?: ProfileSkill[];
   fitScores?: FitScore[];
+  jobPreferences?: JobPreference[];
 }
 
 export interface Experience {
@@ -263,5 +264,14 @@ export interface CreditWallet {
   id: string;
   userId: string;
   balance: number;
+  updatedAt: Date;
+}
+
+export interface JobPreference {
+  id: string;
+  profileId: string;
+  jobId: string;
+  liked: boolean;
+  createdAt: Date;
   updatedAt: Date;
 }

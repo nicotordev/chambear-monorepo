@@ -260,6 +260,25 @@ export const backend = {
         jobId,
       }),
   },
+
+  jobPreferences: {
+    upsert: (
+      jobId: string,
+      profileId: string,
+      liked: boolean
+    ): Promise<{ id: string; liked: boolean }> =>
+      fetcher.post<{ id: string; liked: boolean }>(
+        `/job-preferences/${jobId}?profileId=${profileId}`,
+        { liked }
+      ),
+    get: (
+      jobId: string,
+      profileId: string
+    ): Promise<{ seen: boolean; liked: boolean | null }> =>
+      fetcher.get<{ seen: boolean; liked: boolean | null }>(
+        `/job-preferences/${jobId}?profileId=${profileId}`
+      ),
+  },
 };
 
 export default backend;

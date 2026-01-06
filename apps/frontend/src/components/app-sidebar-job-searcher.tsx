@@ -91,7 +91,7 @@ export default function AppSidebarJobSearcher() {
       onSubmit={handleSubmit}
       className="relative group flex items-center w-full"
     >
-      <div className="relative flex-1">
+      <div className="relative flex-1 py-2">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
         <Input
           type="text"

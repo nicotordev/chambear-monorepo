@@ -132,12 +132,6 @@ enum CreditActionType {
   OTHER
 }
 
-enum JobSearchJobStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
 model User {
   id               String   @id @default(cuid())
   email            String   @unique
@@ -173,6 +167,7 @@ model Profile {
   documents         Document[]
   applications      Application[]
   fitScores         FitScore[]
+  jobPreferences    JobPreference[]
   interviewSessions InterviewSession[]
   reminders         Reminder[]
 }
@@ -251,14 +246,15 @@ model Job {
   updatedAt      DateTime       @updatedAt
   algoliaId      String?
 
-  applications  Application[]
-  fitScores     FitScore[]
-  jobSkills     JobSkill[]
-  documents     Document[]
-  interviews    InterviewSession[]
-  reminders     Reminder[]
-  company       Company?           @relation(fields: [companyId], references: [id])
-  companyId     String?
+  applications   Application[]
+  fitScores      FitScore[]
+  jobSkills      JobSkill[]
+  documents      Document[]
+  interviews     InterviewSession[]
+  reminders      Reminder[]
+  company        Company?           @relation(fields: [companyId], references: [id])
+  companyId      String?
+  jobPreferences JobPreference[]
 }
 
 model Company {
@@ -336,6 +332,20 @@ model FitScore {
 
   @@unique([profileId, jobId])
   @@index([score])
+}
+
+model JobPreference {
+  id        String   @id @default(cuid())
+  profileId String
+  jobId     String
+  liked     Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  job     Job     @relation(fields: [jobId], references: [id])
+
+  @@unique([profileId, jobId])
 }
 
 model InterviewSession {
