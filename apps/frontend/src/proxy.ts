@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type MiddlewareConfig } from "next/server";
 import { getCookie } from "cookies-next/server";
+import { type MiddlewareConfig, NextResponse } from "next/server";
 import backend from "./lib/backend";
 
 // 1. Define Route Groups
@@ -33,7 +33,7 @@ export default clerkMiddleware(async (auth, req) => {
   // 2. Handle Unauthenticated Users trying to access Protected Routes
   if (!userId && isProtectedRoute(req)) {
     console.info(
-      `[Middleware] Unauthorized access to ${path}. Redirecting to sign-in.`
+      `[Middleware] Unauthorized access to ${path}. Redirecting to sign-in.`,
     );
     await auth.protect();
   }
@@ -60,17 +60,17 @@ export default clerkMiddleware(async (auth, req) => {
   const profilesLength = Number(profiles?.length);
   const currentProfileId = await getCookie("chambear_current_profile_id", {
     req,
-  })
+  });
   const currentProfile =
     profilesLength > 0 && currentProfileId
       ? profiles?.find((profile) => profile.id === currentProfileId)
       : profilesLength > 0
-      ? profiles?.[0]
-      : null;
+        ? profiles?.[0]
+        : null;
   const isOnboarded = !!currentProfile?.onboardingCompleted;
 
   console.info(
-    `[Middleware] User: ${userId} | Onboarded: ${isOnboarded} | Path: ${path}`
+    `[Middleware] User: ${userId} | Onboarded: ${isOnboarded} | Path: ${path}`,
   );
 
   // 5. Redirect Logic Matrix
@@ -79,7 +79,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAuthRoute(req)) {
     const target = isOnboarded ? "/dashboard" : "/onboarding-v2";
     console.info(
-      `[Middleware] Auth route accessed by logged in user. Redirecting to ${target}`
+      `[Middleware] Auth route accessed by logged in user. Redirecting to ${target}`,
     );
     return NextResponse.redirect(new URL(target, req.url));
   }
@@ -100,7 +100,7 @@ export default clerkMiddleware(async (auth, req) => {
     // If they are NOT on the onboarding page, force them there
     if (!path.startsWith("/onboarding-v2")) {
       console.info(
-        `[Middleware] Onboarding incomplete. Redirecting to /onboarding-v2.`
+        `[Middleware] Onboarding incomplete. Redirecting to /onboarding-v2.`,
       );
       return NextResponse.redirect(new URL("/onboarding-v2", req.url));
     }

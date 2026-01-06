@@ -1,9 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import api from "@/lib/api";
 import { useJobStore } from "./job.store";
-import { useSearchParams } from "next/navigation";
 
 export default function LoadJobStore() {
   const { setJobs } = useJobStore((state) => state);

@@ -1,5 +1,5 @@
-import type { ReminderType } from "@/types";
 import { AlertTriangle, Bell, FileText, Mail } from "lucide-react";
+import type { ReminderType } from "@/types";
 
 export const getTypeConfig = (type: ReminderType) => {
   switch (type) {

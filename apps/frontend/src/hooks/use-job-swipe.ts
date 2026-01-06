@@ -1,13 +1,13 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useHits } from "react-instantsearch";
+import { toast } from "sonner";
 import { useUser } from "@/contexts/user-context";
 import api from "@/lib/api";
 import { useJobsPageStore } from "@/stores/jobs-page/jobs-page";
 import type { AlgoliaJob } from "@/types/algolia";
 import type { Job } from "@/types/db";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useHits } from "react-instantsearch";
-import { toast } from "sonner";
 
 export function useJobSwipe() {
   const { items, results } = useHits<AlgoliaJob>();
@@ -41,7 +41,7 @@ export function useJobSwipe() {
 
       setCurrentIndex((prev: number) => prev + 1);
     },
-    [items, currentIndex, currentProfile?.id]
+    [items, currentIndex, currentProfile?.id],
   );
 
   const handleReset = useCallback(() => {
@@ -50,11 +50,11 @@ export function useJobSwipe() {
 
   const upcomingJobs = useMemo(
     () => items.slice(currentIndex + 1),
-    [items, currentIndex]
+    [items, currentIndex],
   );
   const displayHits = useMemo(
     () => items.slice(currentIndex, currentIndex + 3).reverse(),
-    [items, currentIndex]
+    [items, currentIndex],
   );
   const currentJob = items[currentIndex];
 
@@ -78,6 +78,6 @@ export function useJobSwipe() {
       upcomingJobs,
       handleSwipe,
       handleReset,
-    ]
+    ],
   );
 }

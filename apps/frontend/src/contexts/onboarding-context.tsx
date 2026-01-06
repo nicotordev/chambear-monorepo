@@ -1,7 +1,7 @@
 "use client";
 
+import { createContext, type ReactNode, useContext } from "react";
 import { useOnboarding as useOnboardingHook } from "@/hooks/use-onboarding";
-import { createContext, ReactNode, useContext } from "react";
 
 type OnboardingContextType = ReturnType<typeof useOnboardingHook>;
 

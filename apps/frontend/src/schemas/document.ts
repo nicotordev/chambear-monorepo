@@ -1,8 +1,8 @@
-import { DocumentType } from "@/types";
 import { z } from "zod";
+import { DocumentType } from "@/types";
 
 export const CreateDocumentSchema = z.object({
-  type: z.enum(Object.values(DocumentType)),
+  type: z.nativeEnum(DocumentType),
   label: z.string().min(1),
   content: z.string().min(1),
   summary: z.string().nullable().optional(),
@@ -21,8 +21,8 @@ export type UpdateDocumentInput = z.infer<typeof UpdateDocumentSchema>;
 export const DocumentSchema = CreateDocumentSchema.extend({
   id: z.string(),
   profileId: z.string(),
-  createdAt: z.date().or(z.string()),
-  updatedAt: z.date().or(z.string()),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
   url: z.string().nullable().optional(),
   version: z.number().int().optional(),
 });

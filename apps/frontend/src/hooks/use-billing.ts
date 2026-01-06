@@ -1,8 +1,8 @@
 "use client";
 
-import api from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 export function useBilling() {
   const queryClient = useQueryClient();
@@ -16,7 +16,7 @@ export function useBilling() {
     {
       queryKey: ["billing", "me"],
       queryFn: () => api.getMySubscription(),
-    }
+    },
   );
 
   const checkoutMutation = useMutation({

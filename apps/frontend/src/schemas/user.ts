@@ -1,11 +1,5 @@
 import { z } from "zod";
-
-export const SkillLevel = {
-  BEGINNER: "BEGINNER",
-  INTERMEDIATE: "INTERMEDIATE",
-  ADVANCED: "ADVANCED",
-  EXPERT: "EXPERT",
-} as const;
+import { SkillLevel } from "@/types";
 
 export const ExperienceSchema = z.object({
   title: z.string().min(1),
@@ -39,7 +33,7 @@ export const CertificationSchema = z.object({
 
 export const ProfileSkillSchema = z.object({
   skillName: z.string().min(1, "Skill name is required"),
-  level: z.enum(Object.values(SkillLevel) as [string, ...string[]]),
+  level: z.nativeEnum(SkillLevel),
 });
 
 export const CreateProfileSchema = z.object({

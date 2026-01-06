@@ -1,8 +1,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import api from "@/lib/api";
 import { useAppUser } from "@/contexts/user-context";
+import api from "@/lib/api";
 export default function useJobActions() {
   const { currentProfile, profiles } = useAppUser();
   const [isLoading, setIsLoading] = useState(false);

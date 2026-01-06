@@ -13,6 +13,7 @@ interface UserContextType {
   profiles: Profile[];
   currentProfile: Profile | undefined;
   isLoading: boolean;
+  isFetching: boolean;
   switchProfile: (profileId: string) => void;
   refreshUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -27,6 +28,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const {
     data: user,
     isLoading,
+    isFetching,
     refetch,
   } = useQuery({
     queryKey: ["user", "me"],
@@ -65,7 +67,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [profiles, getCookie]);
 
   const currentProfile = profiles.find(
-    (p) => p.id === getCookie("chambear_current_profile_id")
+    (p) => p.id === getCookie("chambear_current_profile_id"),
   );
 
   const switchProfile = (profileId: string) => {
@@ -92,6 +94,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         profiles,
         currentProfile,
         isLoading,
+        isFetching,
         switchProfile,
         refreshUser,
         refreshProfile: refreshUser,

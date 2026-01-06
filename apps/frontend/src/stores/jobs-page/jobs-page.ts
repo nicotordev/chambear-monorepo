@@ -1,7 +1,7 @@
 "use client";
 
-import type { Job } from "@/types";
 import { create } from "zustand";
+import type { Job } from "@/types";
 
 export interface JobsPageStore {
   jobs: Job[];

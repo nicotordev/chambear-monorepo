@@ -38,7 +38,7 @@ export const response = {
           message,
         },
       } satisfies SuccessResponse<T>,
-      { status }
+      { status },
     );
   },
 
@@ -52,7 +52,7 @@ export const response = {
 
   error(input: ErrorInput) {
     const message = typeof input === "string" ? input : input.message;
-    const status = typeof input === "string" ? 500 : input.status ?? 500;
+    const status = typeof input === "string" ? 500 : (input.status ?? 500);
     const error = typeof input === "string" ? undefined : input.error;
 
     return NextResponse.json(
@@ -64,55 +64,55 @@ export const response = {
           message,
         },
       } satisfies ErrorResponse,
-      { status }
+      { status },
     );
   },
 
   badRequest(
     message = "Bad Request",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 400, error });
   },
 
   unauthorized(
     message = "Unauthorized",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 401, error });
   },
 
   forbidden(
     message = "Forbidden",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 403, error });
   },
 
   notFound(
     message = "Not Found",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 404, error });
   },
 
   conflict(
     message = "Conflict",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 409, error });
   },
 
   unprocessableEntity(
     message = "Unprocessable Entity",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 422, error });
   },
 
   internalError(
     message = "Internal Server Error",
-    error?: Array<{ message: string; code: string; path: string[] }>
+    error?: Array<{ message: string; code: string; path: string[] }>,
   ) {
     return this.error({ message, status: 500, error });
   },
@@ -121,7 +121,8 @@ export const response = {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status ?? 500;
       const data = error.response?.data as ErrorResponse | undefined;
-      const message = data?.meta?.message ?? error.message ?? "An unexpected error occurred";
+      const message =
+        data?.meta?.message ?? error.message ?? "An unexpected error occurred";
 
       return this.error({ message, status, error: data?.error });
     }
