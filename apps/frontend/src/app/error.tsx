@@ -1,14 +1,14 @@
 "use client";
 
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { AlertCircle, Home, RefreshCcw } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import Footer from "@/components/layout/footer";
 import Navbar from "@/components/layout/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { AlertCircle, Home, RefreshCcw } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
 export default function RootError({
   error,
@@ -31,11 +31,11 @@ export default function RootError({
   const springConfig = { damping: 25, stiffness: 150 };
   const rotateX = useSpring(
     useTransform(y, [-0.5, 0.5], [15, -15]),
-    springConfig
+    springConfig,
   );
   const rotateY = useSpring(
     useTransform(x, [-0.5, 0.5], [-15, 15]),
-    springConfig
+    springConfig,
   );
 
   const mouseX = useSpring(useMotionValue(0), springConfig);
@@ -103,7 +103,7 @@ export default function RootError({
                 background: useTransform(
                   [mouseX, mouseY],
                   ([mx, my]) =>
-                    `radial-gradient(600px circle at ${mx}px ${my}px, rgba(var(--destructive-rgb), 0.08), transparent 40%)`
+                    `radial-gradient(600px circle at ${mx}px ${my}px, rgba(var(--destructive-rgb), 0.08), transparent 40%)`,
                 ),
               }}
             />

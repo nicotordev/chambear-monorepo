@@ -1,3 +1,4 @@
+import { ThemeModeScript } from "flowbite-react";
 import type { Metadata } from "next";
 import {
   Fraunces,
@@ -7,11 +8,10 @@ import {
   Sora,
   Space_Grotesk,
 } from "next/font/google";
-import { ThemeModeScript } from "flowbite-react";
 
 import "./globals.css";
-import Providers from "./providers";
 import { Toaster } from "sonner";
+import Providers from "./providers";
 
 const geistSans = Geist({
   subsets: ["latin"],

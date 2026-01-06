@@ -1,6 +1,6 @@
-import OnboardingFlow from "@/components/pages/onboarding/onboarding-flow";
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Metadata } from "next";
+import OnboardingFlow from "@/components/pages/onboarding/onboarding-flow";
 
 export const metadata: Metadata = {
   title: "Chambear - Onboarding",

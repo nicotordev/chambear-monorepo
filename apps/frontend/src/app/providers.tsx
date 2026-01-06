@@ -1,10 +1,10 @@
 "use client";
 
 import { ClerkProvider } from "@clerk/nextjs";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { UserProvider } from "@/contexts/user-context";
@@ -25,7 +25,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             networkMode: "always",
           },
         },
-      })
+      }),
   );
 
   const [persister, setPersister] = useState<any>(undefined);

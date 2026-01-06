@@ -1,9 +1,9 @@
-import Logo from "@/components/logo";
-import { Button } from "@/components/ui/button";
 import { SignIn } from "@clerk/nextjs";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import Logo from "@/components/logo";
+import { Button } from "@/components/ui/button";
 
 export default function AuthPage() {
   return (

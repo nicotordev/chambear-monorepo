@@ -1,9 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function Error({
   error,
@@ -29,12 +35,13 @@ export default function Error({
         </CardHeader>
         <CardContent className="text-center text-muted-foreground">
           <p>
-            We encountered an error while loading your profile. This might be due to a temporary connection issue.
+            We encountered an error while loading your profile. This might be
+            due to a temporary connection issue.
           </p>
           {process.env.NODE_ENV === "development" && (
-             <div className="mt-4 p-2 bg-slate-950 text-slate-50 text-xs rounded text-left overflow-auto max-h-40 font-mono">
-               {error.message}
-             </div>
+            <div className="mt-4 p-2 bg-slate-950 text-slate-50 text-xs rounded text-left overflow-auto max-h-40 font-mono">
+              {error.message}
+            </div>
           )}
         </CardContent>
         <CardFooter className="justify-center pt-2">
