@@ -1,4 +1,6 @@
 "use client";
+import { Upload } from "lucide-react";
+import type { UseFormReturn } from "react-hook-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FormControl,
@@ -9,9 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateProfileInput } from "@/schemas/user";
-import { Upload } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import type { CreateProfileInput } from "@/schemas/user";
 
 export interface OnboardingFlowStep1Props {
   form: UseFormReturn<CreateProfileInput>;

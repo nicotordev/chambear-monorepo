@@ -1,12 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { CreateProfileInput } from "@/schemas/user";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Briefcase,
@@ -20,6 +13,13 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFormContext, useWatch } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import type { CreateProfileInput } from "@/schemas/user";
 
 interface ExperienceEntry {
   title: string;
@@ -59,7 +59,7 @@ export function ExperienceStep() {
 
   const updateExperience = (
     index: number,
-    updates: Partial<ExperienceEntry>
+    updates: Partial<ExperienceEntry>,
   ) => {
     const nextExps = [...experiences];
     nextExps[index] = { ...nextExps[index], ...updates };
@@ -74,7 +74,7 @@ export function ExperienceStep() {
     setValue(
       "experiences",
       currentExps.filter((_, i) => i !== index),
-      { shouldDirty: true, shouldValidate: true }
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
@@ -86,7 +86,14 @@ export function ExperienceStep() {
   };
 
   return (
-    <>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const data = getValues();
+        await onSubmit(data, 6);
+      }}
+      className="contents"
+    >
       <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -282,10 +289,7 @@ export function ExperienceStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              router.push("/onboarding-v2?step=6");
-            }}
+            type="submit"
             disabled={isSaving}
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -295,7 +299,7 @@ export function ExperienceStep() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] opacity-[0.03]" />
 
@@ -339,6 +343,6 @@ export function ExperienceStep() {
           </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

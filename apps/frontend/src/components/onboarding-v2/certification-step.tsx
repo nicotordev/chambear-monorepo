@@ -1,10 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { CreateProfileInput } from "@/schemas/user";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Award,
@@ -18,6 +13,11 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFormContext, useWatch } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import type { CreateProfileInput } from "@/schemas/user";
 
 interface CertificationEntry {
   name: string;
@@ -53,7 +53,7 @@ export function CertificationStep() {
 
   const updateCertification = (
     index: number,
-    updates: Partial<CertificationEntry>
+    updates: Partial<CertificationEntry>,
   ) => {
     const nextCerts = [...certifications];
     nextCerts[index] = { ...nextCerts[index], ...updates };
@@ -68,7 +68,7 @@ export function CertificationStep() {
     setValue(
       "certifications",
       currentCerts.filter((_, i) => i !== index),
-      { shouldDirty: true, shouldValidate: true }
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
@@ -80,7 +80,16 @@ export function CertificationStep() {
   };
 
   return (
-    <>
+    <form
+      className="contents"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const data = getValues();
+        await onSubmit(data); // Final update
+        await completeOnboarding();
+        router.push("/");
+      }}
+    >
       <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -270,11 +279,7 @@ export function CertificationStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              await completeOnboarding();
-              router.push("/");
-            }}
+            type="submit"
             disabled={isSaving}
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -284,7 +289,7 @@ export function CertificationStep() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--accent)_0%,transparent_70%)] opacity-[0.03]" />
 
@@ -329,6 +334,6 @@ export function CertificationStep() {
           </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

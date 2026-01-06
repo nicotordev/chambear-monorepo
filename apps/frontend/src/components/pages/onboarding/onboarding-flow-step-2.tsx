@@ -1,4 +1,7 @@
 "use client";
+import { Plus, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import type { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type CreateProfileInput } from "@/schemas/user";
+import type { CreateProfileInput } from "@/schemas/user";
 import { SkillLevel } from "@/types";
-import { Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
-import type { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 
 // 1. Defined a list of popular technical skills for the "Quick Add" feature
 const SUGGESTED_SKILLS = [
@@ -55,7 +55,7 @@ export default function OnboardingFlowStep2({
   // Helper to check if a skill is already added (case-insensitive)
   const isSkillAdded = (skillName: string) => {
     return skillFields.some(
-      (field) => field.skillName.toLowerCase() === skillName.toLowerCase()
+      (field) => field.skillName.toLowerCase() === skillName.toLowerCase(),
     );
   };
 
@@ -78,7 +78,7 @@ export default function OnboardingFlowStep2({
                       className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
                       onClick={() => {
                         const newRoles = field.value?.filter(
-                          (_, i) => i !== index
+                          (_, i) => i !== index,
                         );
                         field.onChange(newRoles);
                       }}

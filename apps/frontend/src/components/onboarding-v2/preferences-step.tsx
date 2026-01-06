@@ -1,7 +1,3 @@
-import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { cn } from "@/lib/utils";
-import { CreateProfileInput } from "@/schemas/user";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Briefcase,
@@ -16,6 +12,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { cn } from "@/lib/utils";
+import type { CreateProfileInput } from "@/schemas/user";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 
@@ -87,7 +87,14 @@ export function PreferencesStep() {
   };
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const data = getValues();
+        onSubmit(data, 3);
+      }}
+      className="contents"
+    >
       <div className="space-y-10 w-full lg:w-1/2 flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -120,7 +127,7 @@ export function PreferencesStep() {
                   "p-6 border-2 cursor-pointer transition-all bg-card/40 backdrop-blur-xl rounded-3xl group relative overflow-hidden",
                   selectedCategories.includes(cat.id)
                     ? "border-primary bg-primary/5 shadow-[0_0_20px_rgba(var(--primary),0.1)]"
-                    : "border-border/50 hover:border-primary/30"
+                    : "border-border/50 hover:border-primary/30",
                 )}
               >
                 <div
@@ -144,7 +151,7 @@ export function PreferencesStep() {
               onClick={() => setShowCustomInput(true)}
               className={cn(
                 "p-6 border-2 border-dashed border-border/50 hover:border-primary/50 cursor-pointer transition-all bg-card/20 backdrop-blur-xl rounded-3xl group flex flex-col items-center justify-center text-center",
-                showCustomInput && "border-primary/50"
+                showCustomInput && "border-primary/50",
               )}
             >
               <div className="w-12 h-12 bg-secondary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -169,7 +176,13 @@ export function PreferencesStep() {
                     placeholder="Enter custom role (e.g. Bio-Tech Engineer)"
                     value={customRole}
                     onChange={(e) => setCustomRole(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addCustomRole()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addCustomRole();
+                      }
+                    }}
                     className="h-14 rounded-2xl border-2 border-primary/20 focus-visible:ring-primary shadow-inner"
                     autoFocus
                   />
@@ -235,11 +248,7 @@ export function PreferencesStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              router.push("/onboarding-v2?step=3");
-            }}
-            disabled={isSaving}
+            type="submit"
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
             {isSaving ? "Initializing..." : "Proceed to Core Bio"}
@@ -248,7 +257,7 @@ export function PreferencesStep() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         {/* Decorative AI Visualization */}
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <motion.div
@@ -275,14 +284,8 @@ export function PreferencesStep() {
               </Card>
             </div>
           </div>
-
-          <div className="absolute bottom-10 left-10 pointer-events-none select-none">
-            <span className="text-[10rem] font-display font-black leading-none opacity-[0.03] text-foreground block rotate-[-4deg]">
-              WORK
-            </span>
-          </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

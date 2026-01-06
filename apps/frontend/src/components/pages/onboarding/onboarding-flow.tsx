@@ -1,5 +1,21 @@
 "use client";
 
+import {
+  Award,
+  Briefcase,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Cpu,
+  GraduationCap,
+  Loader2,
+  Plus,
+  Save,
+  User,
+} from "lucide-react";
+import { useRef, useState } from "react";
+import { useFieldArray } from "react-hook-form";
+import { toast } from "sonner";
 import Logo from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,22 +27,6 @@ import { useProfile } from "@/contexts/user-context";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
-import {
-  Briefcase,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Cpu,
-  GraduationCap,
-  Loader2,
-  Plus,
-  Save,
-  User,
-  Award,
-} from "lucide-react";
-import { useRef, useState } from "react";
-import { useFieldArray } from "react-hook-form";
-import { toast } from "sonner";
 import OnboardingFlowStep1 from "./onboarding-flow-step-1";
 import OnboardingFlowStep2 from "./onboarding-flow-step-2";
 import OnboardingFlowStep3 from "./onboarding-flow-step-3";
@@ -126,7 +126,7 @@ export default function OnboardingFlow() {
         "summary",
         "location",
         "yearsExperience",
-        "avatar"
+        "avatar",
       );
     else if (currentStep === 2) fieldsToValidate.push("targetRoles", "skills");
     else if (currentStep === 3) fieldsToValidate.push("experiences");
@@ -151,7 +151,7 @@ export default function OnboardingFlow() {
           handleStep(currentStep + 1);
           scrollToTop();
         } else {
-          await onSubmit();
+          await onSubmit(form.getValues());
         }
       } catch (error) {
         console.error(error);
@@ -272,7 +272,7 @@ export default function OnboardingFlow() {
                   key={step.id}
                   className={cn(
                     "flex items-center gap-4 transition-all duration-300",
-                    isActive ? "opacity-100 translate-x-2" : "opacity-50"
+                    isActive ? "opacity-100 translate-x-2" : "opacity-50",
                   )}
                 >
                   <div
@@ -281,8 +281,8 @@ export default function OnboardingFlow() {
                       isActive
                         ? "border-primary bg-primary text-primary-foreground"
                         : isCompleted
-                        ? "border-primary text-primary"
-                        : "border-muted-foreground"
+                          ? "border-primary text-primary"
+                          : "border-muted-foreground",
                     )}
                   >
                     {isCompleted ? (
@@ -295,7 +295,7 @@ export default function OnboardingFlow() {
                     <p
                       className={cn(
                         "font-semibold",
-                        isActive && "text-primary"
+                        isActive && "text-primary",
                       )}
                     >
                       {step.label}

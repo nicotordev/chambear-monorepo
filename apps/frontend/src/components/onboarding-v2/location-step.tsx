@@ -1,134 +1,254 @@
-"use client";
-
-import type React from "react";
-
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { cn } from "@/lib/utils";
-import { CreateProfileInput } from "@/schemas/user";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   Check,
   ChevronLeft,
   ChevronRight,
+  FileUp,
+  Loader2,
   MapPin,
   Navigation,
   Search,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type React from "react";
 import { useCallback, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { useProfile } from "@/contexts/user-context";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import type { CreateProfileInput } from "@/schemas/user";
+import { useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 export function LocationStep() {
   const router = useRouter();
-  const { register, setValue, watch } = useFormContext<CreateProfileInput>();
+  const { register, setValue, watch, getValues } =
+    useFormContext<CreateProfileInput>();
   const { onSubmit, isPending: isSaving } = useOnboarding();
+  const { currentProfile } = useProfile();
+  const profileId = currentProfile?.id;
 
-  const address = watch("location") || "";
-  const name = watch("name") || "";
+  const [isUploadingCv, setIsUploadingCv] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springConfig = { damping: 25, stiffness: 150 };
-  const rotateX = useSpring(
-    useTransform(mouseY, [-300, 300], [5, -5]),
-    springConfig
-  );
-  const rotateY = useSpring(
-    useTransform(mouseX, [-300, 300], [-5, 5]),
-    springConfig
+  const address = watch("location");
+  const name = watch("name");
+
+  // Motion stuff
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateX = useSpring(useTransform(y, [0, 400], [10, -10]), {
+    stiffness: 100,
+    damping: 30,
+  });
+  const rotateY = useSpring(useTransform(x, [0, 600], [-10, 10]), {
+    stiffness: 100,
+    damping: 30,
+  });
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      x.set(e.clientX - rect.left);
+      y.set(e.clientY - rect.top);
+    },
+    [x, y]
   );
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    mouseX.set(x);
-    mouseY.set(y);
+  const handleLocate = async () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setValue("location", `${latitude}, ${longitude}`, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          setIsValidated(true);
+          setIsLocating(false);
+          toast.success("Location detected!");
+        },
+        (error) => {
+          console.error(error);
+          setIsLocating(false);
+          toast.error("Could not detect location.");
+        }
+      );
+    } else {
+      setIsLocating(false);
+      toast.error("Geolocation is not supported by your browser.");
+    }
   };
 
-  const fetchAddress = useCallback(async (lat: number, lon: number) => {
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profileId) return;
+
     try {
-      const response = await fetch(
-        `/api/v1/location/reverse?lat=${lat}&lon=${lon}`
-      );
+      setIsUploadingCv(true);
+      const loadingToast = toast.loading("Processing your CV...");
 
-      if (!response.ok) throw new Error("Failed to fetch address");
+      // 1. Upload file
+      const doc = await api.uploadFile(file, profileId);
 
-      const data = await response.json();
-      const displayName = data.display_name;
-
-      setValue(
-        "location",
-        displayName || `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
-        { shouldDirty: true }
-      );
-      setIsValidated(true);
-      toast.success("Location detected successfully");
-    } catch (error) {
-      console.error("Reverse geocoding error:", error);
-      setValue("location", `${lat.toFixed(4)}, ${lon.toFixed(4)}`, {
-        shouldDirty: true,
+      // 2. Parse resume
+      const parsedData = await api.parseResume(profileId, {
+        documentId: doc.id,
       });
-      setIsValidated(true);
-      toast.warning("Detected coordinates, but couldn't resolve address");
-    } finally {
-      setIsLocating(false);
-    }
-  }, []);
 
-  const handleLocateByIP = useCallback(async () => {
-    try {
-      const response = await fetch("http://ip-api.com/json/");
-      if (!response.ok) throw new Error("IP location failed");
-      const data = await response.json();
-      if (data.status === "success") {
-        await fetchAddress(data.lat, data.lon);
+      // 3. Populate form
+      if (parsedData) {
+        if (parsedData.name)
+          setValue("name", parsedData.name, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.headline)
+          setValue("headline", parsedData.headline, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.summary)
+          setValue("summary", parsedData.summary, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.location)
+          setValue("location", parsedData.location, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.yearsExperience !== undefined)
+          setValue("yearsExperience", parsedData.yearsExperience, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.targetRoles)
+          setValue("targetRoles", parsedData.targetRoles, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        if (parsedData.skills)
+          setValue("skills", parsedData.skills, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+
+        if (parsedData.experiences) {
+          setValue(
+            "experiences",
+            parsedData.experiences.map((exp) => ({
+              ...exp,
+              startDate: new Date(exp.startDate),
+              endDate: exp.endDate ? new Date(exp.endDate) : null,
+              highlights: [], // ParsedProfile experiences don't have highlights currently
+            })),
+            { shouldDirty: true, shouldValidate: true }
+          );
+        }
+
+        if (parsedData.educations) {
+          setValue(
+            "educations",
+            parsedData.educations.map((edu) => ({
+              ...edu,
+              startDate: edu.startDate ? new Date(edu.startDate) : undefined,
+              endDate: edu.endDate ? new Date(edu.endDate) : null,
+            })),
+            { shouldDirty: true, shouldValidate: true }
+          );
+        }
+
+        if (parsedData.certifications) {
+          setValue(
+            "certifications",
+            parsedData.certifications.map((cert) => ({
+              ...cert,
+              issueDate: new Date(cert.issueDate),
+              credentialUrl: cert.credentialUrl || "",
+            })),
+            { shouldDirty: true, shouldValidate: true }
+          );
+        }
+
+        toast.success("Profile populated from CV!", { id: loadingToast });
       } else {
-        throw new Error(data.message || "IP location failed");
+        toast.error("Could not parse CV. Please try manual entry.", {
+          id: loadingToast,
+        });
       }
     } catch (error) {
-      console.error("IP Location error:", error);
-      setIsLocating(false);
-      toast.error(
-        "Could not determine location by GPS or IP. Please enter it manually."
-      );
+      console.error("CV Upload error:", error);
+      toast.error("Failed to process CV. Please try manual entry.");
+    } finally {
+      setIsUploadingCv(false);
     }
-  }, [fetchAddress]);
+  };
 
-  const handleLocate = useCallback(() => {
-    setIsLocating(true);
-    setIsValidated(false);
-
-    if (!navigator.geolocation) {
-      handleLocateByIP();
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        fetchAddress(position.coords.latitude, position.coords.longitude);
-      },
-      (error) => {
-        console.warn("Geolocation failed, falling back to IP:", error.message);
-        handleLocateByIP();
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 5000, // Faster fallback
-        maximumAge: 300000,
-      }
-    );
-  }, [fetchAddress, handleLocateByIP]);
+  if (isUploadingCv) {
+  }
 
   return (
-    <>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const data = getValues();
+        await onSubmit(data, 2);
+      }}
+      className="contents"
+    >
       <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="relative group mb-4"
+        >
+          <div className="absolute -inset-1 bg-linear-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+          <Card className="relative p-6 border-border/50 bg-card/60 backdrop-blur-xl border-2 rounded-3xl flex flex-col md:flex-row items-center gap-6">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              {isUploadingCv ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                <FileUp className="h-8 w-8" />
+              )}
+            </div>
+            <div className="flex-1 text-center md:text-left space-y-1">
+              <h3 className="text-xl font-bold tracking-tight">
+                Express Onboarding
+              </h3>
+              <p className="text-muted-foreground font-medium">
+                Upload your CV and let JobPilot build your profile instantly.
+              </p>
+            </div>
+            <div className="shrink-0 w-full md:w-auto">
+              <input
+                type="file"
+                id="cv-upload"
+                className="hidden"
+                accept=".pdf,.doc,.docx"
+                onChange={handleCvUpload}
+                disabled={isUploadingCv}
+              />
+              <Button
+                type="button"
+                variant="default"
+                className="w-full md:w-auto h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-bold hover:scale-105 transition-transform"
+                onClick={() => document.getElementById("cv-upload")?.click()}
+                disabled={isUploadingCv}
+              >
+                {isUploadingCv ? "Processing..." : "Upload CV"}
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -190,7 +310,7 @@ export function LocationStep() {
                 <Input
                   placeholder="Enter your street address, city, or zip..."
                   className="pl-12 h-14 bg-background/50 border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 text-lg rounded-2xl transition-all"
-                  value={address}
+                  value={address ?? ""}
                   onChange={(e) => {
                     setValue("location", e.target.value);
                     setIsValidated(false);
@@ -265,16 +385,9 @@ export function LocationStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              router.push("/onboarding-v2?step=2");
-            }}
+            type="submit"
             disabled={
-              !address ||
-              !name ||
-              name.trim().split(/\s+/).length < 2 ||
-              isLocating ||
-              isSaving
+              !address || !name || name.length < 2 || isLocating || isSaving
             }
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -369,37 +482,8 @@ export function LocationStep() {
               </p>
             </motion.div>
           </motion.div>
-
-          {/* Decorative Side UI */}
-          <div className="absolute top-8 right-8 flex flex-col gap-4">
-            {[1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                whileHover={{ x: -5 }}
-                className="w-14 h-14 bg-background/60 backdrop-blur-md rounded-2xl border border-border/50 flex items-center justify-center shadow-lg cursor-pointer group hover:bg-background transition-colors"
-              >
-                <div
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all group-hover:scale-150",
-                    i === 1
-                      ? "bg-primary"
-                      : i === 2
-                      ? "bg-accent"
-                      : "bg-muted-foreground"
-                  )}
-                />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Background Text Element */}
-          <div className="absolute bottom-10 left-10 pointer-events-none select-none">
-            <span className="text-[10rem] font-display font-black leading-none opacity-[0.03] text-foreground block rotate-[-4deg]">
-              Location
-            </span>
-          </div>
         </div>
       </motion.div>
-    </>
+    </form>
   );
 }

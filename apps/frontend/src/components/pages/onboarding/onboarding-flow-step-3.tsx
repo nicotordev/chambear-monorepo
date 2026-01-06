@@ -1,4 +1,6 @@
 "use client";
+import { Briefcase, Plus, Trash2 } from "lucide-react";
+import type { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,9 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateForInput } from "@/lib/utils";
-import { CreateProfileInput } from "@/schemas/user";
-import { Briefcase, Plus, Trash2 } from "lucide-react";
-import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
+import type { CreateProfileInput } from "@/schemas/user";
 
 export interface OnboardingFlowStep3Props {
   form: UseFormReturn<CreateProfileInput>;
@@ -116,7 +116,7 @@ export default function OnboardingFlowStep3({
                       <Input
                         type="date"
                         value={formatDateForInput(
-                          field.value as Date | undefined
+                          field.value as Date | undefined,
                         )}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                       />
@@ -136,7 +136,7 @@ export default function OnboardingFlowStep3({
                         type="date"
                         disabled={!!experiences?.[index]?.current}
                         value={formatDateForInput(
-                          field.value as Date | undefined
+                          field.value as Date | undefined,
                         )}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                       />

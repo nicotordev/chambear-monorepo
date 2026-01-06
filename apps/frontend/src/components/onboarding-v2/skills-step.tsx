@@ -1,11 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { CreateProfileInput } from "@/schemas/user";
-import { SkillLevel } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Brain,
@@ -20,16 +14,80 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import type { CreateProfileInput } from "@/schemas/user";
+import { SkillLevel } from "@/types";
 
-const SUGGESTED_TECHNICAL = [
-  "TypeScript",
-  "React",
-  "Next.js",
-  "Node.js",
-  "Python",
-  "Vector Databases",
-  "Cloud Architecture",
-];
+const SUGGESTED_TECHNICAL: Record<string, string[]> = {
+  tech: [
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Node.js",
+    "Python",
+    "Vector Databases",
+    "Cloud Architecture",
+  ],
+  design: [
+    "Figma",
+    "Adobe Creative Cloud",
+    "UI/UX Design",
+    "Motion Graphics",
+    "Design Systems",
+    "Photography",
+  ],
+  marketing: [
+    "SEO/SEM",
+    "Growth Hacking",
+    "Content Strategy",
+    "Google Analytics",
+    "Social Media Ads",
+    "Public Relations",
+  ],
+  sales: [
+    "CRM Mastery",
+    "Lead Generation",
+    "Contract Negotiation",
+    "B2B Sales",
+    "Revenue Operations",
+    "Strategic Partnerships",
+  ],
+  legal: [
+    "Contract Law",
+    "Intellectual Property",
+    "Compliance",
+    "Corporate Governance",
+    "Risk Management",
+    "Legal Writing",
+  ],
+  finance: [
+    "Financial Modeling",
+    "Accounting Standards",
+    "Investments",
+    "Portfolio Management",
+    "Taxation",
+    "Equities",
+  ],
+  healthcare: [
+    "Patient Care",
+    "Medical Coding",
+    "HIPAA Compliance",
+    "Clinical Research",
+    "Diagnostic Support",
+    "Healthcare Admin",
+  ],
+  operations: [
+    "Supply Chain",
+    "Logistics",
+    "Project Management",
+    "Lean Six Sigma",
+    "Inventory Control",
+    "Vendor Management",
+  ],
+};
 
 const SUGGESTED_SOFT = [
   "Strategic Thinking",
@@ -38,6 +96,9 @@ const SUGGESTED_SOFT = [
   "Problem Solving",
   "Adaptability",
   "Collaboration",
+  "Emotional Intelligence",
+  "Critical Thinking",
+  "Time Management",
 ];
 
 export function SkillsStep() {
@@ -66,7 +127,7 @@ export function SkillsStep() {
       setValue(
         "skills",
         [...skills, { skillName: trimmed, level: SkillLevel.INTERMEDIATE }],
-        { shouldDirty: true, shouldValidate: true }
+        { shouldDirty: true, shouldValidate: true },
       );
       if (isSoft) {
         setSoftSkillInput("");
@@ -81,7 +142,7 @@ export function SkillsStep() {
     setValue(
       "targetRoles",
       currentRoles.filter((r) => r !== role),
-      { shouldDirty: true, shouldValidate: true }
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
@@ -90,12 +151,18 @@ export function SkillsStep() {
     setValue(
       "skills",
       currentSkills.filter((s) => s.skillName !== skillName),
-      { shouldDirty: true, shouldValidate: true }
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
   return (
-    <>
+    <form
+      onSubmit={async () => {
+        const data = getValues();
+        await onSubmit(data, 5);
+      }}
+      className="contents"
+    >
       <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -129,7 +196,13 @@ export function SkillsStep() {
                 placeholder="Type a role (e.g. Frontend Engineer) and press enter"
                 value={roleInput}
                 onChange={(e) => setRoleInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addRole(roleInput)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addRole(roleInput);
+                  }
+                }}
                 className="h-14 bg-card/40 backdrop-blur-xl border-2 border-border/50 focus-visible:border-primary rounded-2xl text-lg pr-12"
               />
               <Button
@@ -200,9 +273,13 @@ export function SkillsStep() {
                   placeholder="What's in your stack?"
                   value={techSkillInput}
                   onChange={(e) => setTechSkillInput(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && addSkill(techSkillInput)
-                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addSkill(techSkillInput);
+                    }
+                  }}
                   className="h-14 bg-card/40 backdrop-blur-xl border-2 border-border/50 focus-visible:border-accent rounded-2xl text-lg pr-12"
                 />
                 <Button
@@ -216,22 +293,31 @@ export function SkillsStep() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {SUGGESTED_TECHNICAL.filter(
-                  (s) => !skills.some((sk) => sk.skillName === s)
-                ).map((skill) => (
-                  <Button
-                    key={skill}
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl border-dashed border-2 hover:border-accent hover:bg-accent/90 transition-all text-xs font-bold"
-                    onClick={() => addSkill(skill)}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> {skill}
-                  </Button>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {(() => {
+                const userField =
+                  getValues("targetRoles")?.[0]?.toLowerCase() || "tech";
+                const fieldKey =
+                  Object.keys(SUGGESTED_TECHNICAL).find((k) =>
+                    userField.includes(k),
+                  ) || "tech";
+
+                return SUGGESTED_TECHNICAL[
+                  fieldKey as keyof typeof SUGGESTED_TECHNICAL
+                ]
+                  .filter((s) => !skills.some((sk) => sk.skillName === s))
+                  .map((skill) => (
+                    <Button
+                      key={skill}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl border-dashed border-2 hover:border-accent hover:bg-accent/90 transition-all text-xs font-bold"
+                      onClick={() => addSkill(skill)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> {skill}
+                    </Button>
+                  ));
+              })()}
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
@@ -239,8 +325,9 @@ export function SkillsStep() {
                 {skills
                   .filter(
                     (s) =>
-                      SUGGESTED_TECHNICAL.includes(s.skillName) ||
-                      !SUGGESTED_SOFT.includes(s.skillName)
+                      Object.values(SUGGESTED_TECHNICAL).some((techList) =>
+                        techList.includes(s.skillName),
+                      ) || !SUGGESTED_SOFT.includes(s.skillName),
                   )
                   .map((skill) => (
                     <motion.div
@@ -273,7 +360,7 @@ export function SkillsStep() {
                   !skills.some(
                     (s) =>
                       s.skillName.toLowerCase() ===
-                      techSkillInput.trim().toLowerCase()
+                      techSkillInput.trim().toLowerCase(),
                   ) && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -304,9 +391,13 @@ export function SkillsStep() {
                   placeholder="e.g. Leadership, Communication..."
                   value={softSkillInput}
                   onChange={(e) => setSoftSkillInput(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && addSkill(softSkillInput, true)
-                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addSkill(softSkillInput, true);
+                    }
+                  }}
                   className="h-14 bg-card/40 backdrop-blur-xl border-2 border-border/50 focus-visible:border-primary rounded-2xl text-lg pr-12"
                 />
                 <Button
@@ -323,7 +414,7 @@ export function SkillsStep() {
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
                 {SUGGESTED_SOFT.filter(
-                  (s) => !skills.some((sk) => sk.skillName === s)
+                  (s) => !skills.some((sk) => sk.skillName === s),
                 ).map((skill) => (
                   <Button
                     key={skill}
@@ -373,7 +464,7 @@ export function SkillsStep() {
                   !skills.some(
                     (s) =>
                       s.skillName.toLowerCase() ===
-                      softSkillInput.trim().toLowerCase()
+                      softSkillInput.trim().toLowerCase(),
                   ) && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -410,10 +501,7 @@ export function SkillsStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              router.push("/onboarding-v2?step=5");
-            }}
+            type="submit"
             disabled={isSaving}
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -423,7 +511,7 @@ export function SkillsStep() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--accent)_0%,transparent_70%)] opacity-[0.03]" />
 
@@ -433,7 +521,7 @@ export function SkillsStep() {
                 y: [0, -10, 0],
                 rotateZ: [0, 0.5, 0],
               }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="relative w-full h-full max-h-125"
             >
               <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-[40px] -z-10 animate-pulse" />
@@ -445,29 +533,11 @@ export function SkillsStep() {
                   className="object-cover grayscale-[0.5] hover:grayscale-0 transition-all duration-1000"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-background via-transparent to-transparent opacity-60" />
-
-                {/* Overlaying some floating chips to keep the energy */}
-                <div className="absolute inset-0 flex flex-wrap gap-3 p-6 content-end">
-                  {["Teamwork", "Innovation", "Modern Stack"].map((pill) => (
-                    <div
-                      key={pill}
-                      className="px-3 py-1.5 bg-accent/20 backdrop-blur-md border border-accent/30 rounded-lg text-[10px] font-bold text-accent uppercase tracking-widest leading-none"
-                    >
-                      {pill}
-                    </div>
-                  ))}
-                </div>
               </div>
             </motion.div>
           </div>
-
-          <div className="absolute bottom-10 left-10 pointer-events-none select-none">
-            <span className="text-[10rem] font-display font-black leading-none opacity-[0.03] text-foreground block rotate-[-4deg]">
-              STACK
-            </span>
-          </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

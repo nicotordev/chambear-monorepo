@@ -1,7 +1,10 @@
 "use client";
 
-import { EducationStep } from "@/components/onboarding-v2/education-step";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { FormProvider } from "react-hook-form";
 import { CertificationStep } from "@/components/onboarding-v2/certification-step";
+import { EducationStep } from "@/components/onboarding-v2/education-step";
 import { ExperienceStep } from "@/components/onboarding-v2/experience-step";
 import { LocationStep } from "@/components/onboarding-v2/location-step";
 import { PreferencesStep } from "@/components/onboarding-v2/preferences-step";
@@ -11,9 +14,6 @@ import {
   OnboardingProvider,
   useOnboarding,
 } from "@/contexts/onboarding-context";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { FormProvider } from "react-hook-form";
 
 export default function OnboardingWrapper() {
   return (
@@ -33,17 +33,23 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const stepParam = searchParams.get("step");
   const step = stepParam || "1";
-  const { form, isLoading } = useOnboarding();
+  const {
+    form,
+    isLoading: isUserLoading,
+    isPending: isSaving,
+    isReady,
+  } = useOnboarding();
 
   useEffect(() => {
-    if (isLoading) return;
+    // Only run this logic if we're fully ready and stable
+    if (!isReady) return;
 
     const values = form.getValues();
 
     // Check missing fields for each step
     const missingLocation =
       !values.name ||
-      values.name.trim().split(/\s+/).length < 2 ||
+      values.name.length < 2 ||
       !values.location ||
       values.location.length < 2;
 
@@ -82,13 +88,8 @@ function OnboardingContent() {
       // If no history at all, we start at step 5 (Experience)
       targetStep = "5";
     } else {
-      // If they have some history, we don't force them back to 5 or 6 if they are on 7.
-      // But if they just finished skills and have no history, they go to 5.
-      // The current logic is simpler:
-      targetStep = stepParam || "5"; // Default to current or 5
-      
-      // If we are coming from step 4 and have no history, target is 5.
-      // This is handled by !hasHistory above.
+      // Default to current or 5
+      targetStep = stepParam || "5";
     }
 
     const currentStepInt = parseInt(step, 10);
@@ -100,12 +101,14 @@ function OnboardingContent() {
       }
     } else {
       // User has a step param. Enforce prerequisites.
+      // If we are "saving", we might have temporary stale data.
+      // The guard above (if isSaving return) already handles this.
       if (currentStepInt > targetStepInt && targetStepInt < 5) {
         // Only enforce strictly for the first 4 steps
         router.replace(`/onboarding-v2?step=${targetStep}`);
       }
     }
-  }, [isLoading, form, step, stepParam, router]);
+  }, [isReady, form, step, stepParam, router]);
 
   return (
     <FormProvider {...form}>

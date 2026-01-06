@@ -1,12 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import { CreateProfileInput } from "@/schemas/user";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
@@ -21,6 +14,13 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFormContext, useWatch } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import type { CreateProfileInput } from "@/schemas/user";
 
 interface EducationEntry {
   school: string;
@@ -35,7 +35,7 @@ interface EducationEntry {
 export function EducationStep() {
   const router = useRouter();
   const { setValue, control, getValues } = useFormContext<CreateProfileInput>();
-  const { onSubmit, completeOnboarding, isPending: isSaving } = useOnboarding();
+  const { onSubmit, isPending: isSaving } = useOnboarding();
 
   const educations = (useWatch({ control, name: "educations" }) ||
     []) as EducationEntry[];
@@ -70,7 +70,7 @@ export function EducationStep() {
     setValue(
       "educations",
       currentEdus.filter((_, i) => i !== index),
-      { shouldDirty: true, shouldValidate: true }
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
@@ -82,7 +82,14 @@ export function EducationStep() {
   };
 
   return (
-    <>
+    <form
+      className="contents"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const data = getValues();
+        await onSubmit(data, 7);
+      }}
+    >
       <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -293,10 +300,7 @@ export function EducationStep() {
             Back
           </Button>
           <Button
-            onClick={async () => {
-              await onSubmit();
-              router.push("/onboarding-v2?step=7");
-            }}
+            type="submit"
             disabled={isSaving}
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -306,7 +310,7 @@ export function EducationStep() {
         </motion.div>
       </div>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--accent)_0%,transparent_70%)] opacity-[0.03]" />
 
@@ -351,6 +355,6 @@ export function EducationStep() {
           </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

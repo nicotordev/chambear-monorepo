@@ -1,8 +1,12 @@
 "use client";
+import { AnimatePresence, motion } from "framer-motion";
 import type React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
-export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
+export default function OnboardingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="fixed inset-0 pointer-events-none opacity-30 select-none overflow-hidden">
@@ -40,7 +44,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              
             >
               {children}
             </motion.div>

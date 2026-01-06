@@ -1,5 +1,7 @@
 "use client";
 
+import { Award, Plus, Trash2 } from "lucide-react";
+import type { FieldArrayWithId, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,9 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { formatDateForInput } from "@/lib/utils";
-import { CreateProfileInput } from "@/schemas/user";
-import { Award, Plus, Trash2 } from "lucide-react";
-import { FieldArrayWithId, UseFormReturn } from "react-hook-form";
+import type { CreateProfileInput } from "@/schemas/user";
 
 export interface OnboardingFlowStep5Props {
   form: UseFormReturn<CreateProfileInput>;
@@ -64,8 +64,8 @@ export default function OnboardingFlowStep5({
           </Button>
           <CardHeader className="bg-muted/40 py-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Award className="w-4 h-4 text-muted-foreground" />{" "}
-              Certification #{index + 1}
+              <Award className="w-4 h-4 text-muted-foreground" /> Certification
+              #{index + 1}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4">
@@ -108,7 +108,7 @@ export default function OnboardingFlowStep5({
                       <Input
                         type="date"
                         value={formatDateForInput(
-                          field.value as Date | undefined
+                          field.value as Date | undefined,
                         )}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                       />
@@ -127,7 +127,7 @@ export default function OnboardingFlowStep5({
                       <Input
                         type="date"
                         value={formatDateForInput(
-                          field.value as Date | undefined
+                          field.value as Date | undefined,
                         )}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                       />

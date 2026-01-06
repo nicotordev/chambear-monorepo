@@ -1,14 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useOnboarding } from "@/contexts/onboarding-context";
-import api from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { CreateProfileInput } from "@/schemas/user";
 import { motion } from "framer-motion";
 import {
   Camera,
@@ -22,6 +13,15 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import type { CreateProfileInput } from "@/schemas/user";
 
 export function ProfileStep() {
   const router = useRouter();
@@ -33,6 +33,7 @@ export function ProfileStep() {
     formState: { errors },
   } = useFormContext<CreateProfileInput>();
   const { onSubmit, isPending: isSaving } = useOnboarding();
+  const { getValues } = useFormContext<CreateProfileInput>();
 
   const avatar = useWatch({ control, name: "avatar" }) || "";
   const [isUploading, setIsUploading] = useState(false);
@@ -55,7 +56,13 @@ export function ProfileStep() {
 
   return (
     <>
-      <div className="space-y-10 w-full lg:w-[60%] flex flex-col">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit(getValues(), 4);
+        }}
+        className="space-y-10 w-full lg:w-[60%] flex flex-col"
+      >
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -131,7 +138,7 @@ export function ProfileStep() {
                   "h-14 bg-card/40 backdrop-blur-xl border-2 transition-all rounded-2xl text-lg",
                   errors.headline
                     ? "border-destructive/50 focus-visible:border-destructive"
-                    : "border-border/50 focus-visible:border-primary"
+                    : "border-border/50 focus-visible:border-primary",
                 )}
               />
               {errors.headline && (
@@ -166,7 +173,7 @@ export function ProfileStep() {
                   "min-h-37.5 bg-card/40 backdrop-blur-xl border-2 transition-all rounded-3xl text-lg p-6 resize-none",
                   errors.summary
                     ? "border-destructive/50 focus-visible:border-destructive"
-                    : "border-border/50 focus-visible:border-primary"
+                    : "border-border/50 focus-visible:border-primary",
                 )}
               />
               {errors.summary && (
@@ -194,11 +201,7 @@ export function ProfileStep() {
             Back
           </Button>
           <Button
-            onClick={async (e) => {
-              e.preventDefault();
-              await onSubmit();
-              router.push("/onboarding-v2?step=4");
-            }}
+            type="submit"
             disabled={isSaving}
             className="w-full sm:w-auto h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 group order-1 sm:order-2"
           >
@@ -206,9 +209,9 @@ export function ProfileStep() {
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
-      </div>
+      </form>
 
-      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] flex items-center justify-center">
+      <div className="hidden lg:flex relative h-125 lg:h-175 w-[35%] items-center justify-center">
         <div className="absolute inset-0 bg-secondary/10 rounded-[40px] border border-border/50 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)] opacity-[0.03]" />
 
@@ -221,7 +224,7 @@ export function ProfileStep() {
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               className="relative z-10"
             >
-              <Card className="w-85 overflow-hidden rounded-[32px] bg-background/40 backdrop-blur-3xl border-2 border-primary/20 shadow-2xl">
+              <Card className="pt-0 w-85 overflow-hidden rounded-[32px] bg-background/40 backdrop-blur-3xl border-2 border-primary/20 shadow-2xl">
                 <div className="relative h-64 w-full">
                   <Image
                     src="/assets/img/ai/onboarding-profile.webp"
@@ -231,30 +234,28 @@ export function ProfileStep() {
                     priority
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-background/90 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-6">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-widest bg-black/20 backdrop-blur-md px-2 py-1 rounded-md">
-                        VERIFIED IDENTITY
-                      </span>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="p-8 space-y-6">
                   <div className="space-y-1">
-                    <div className="h-5 w-32 bg-foreground/10 rounded-full" />
-                    <div className="h-3 w-48 bg-foreground/5 rounded-full" />
+                    <p className="text-lg font-bold">Sarah Chen</p>
+                    <p className="text-sm text-muted-foreground">
+                      Lead Security Engineer
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 p-3 bg-primary/5 rounded-2xl border border-primary/10">
-                      <div className="h-2 w-12 bg-primary/20 rounded-full" />
-                      <div className="h-4 w-16 bg-foreground/10 rounded-full" />
+                    <div className="space-y-1 p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-wider">
+                        Status
+                      </p>
+                      <p className="text-sm font-semibold">Verified</p>
                     </div>
-                    <div className="space-y-2 p-3 bg-secondary/20 rounded-2xl border border-border/50">
-                      <div className="h-2 w-12 bg-foreground/20 rounded-full" />
-                      <div className="h-4 w-16 bg-foreground/10 rounded-full" />
+                    <div className="space-y-1 p-3 bg-secondary/20 rounded-2xl border border-border/50">
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                        Access
+                      </p>
+                      <p className="text-sm font-semibold">Tier 1</p>
                     </div>
                   </div>
 
@@ -265,12 +266,6 @@ export function ProfileStep() {
                 </div>
               </Card>
             </motion.div>
-          </div>
-
-          <div className="absolute bottom-10 left-10 pointer-events-none select-none">
-            <span className="text-[10rem] font-display font-black leading-none opacity-[0.03] text-foreground block rotate-[-4deg]">
-              EXPERT
-            </span>
           </div>
         </div>
       </div>
