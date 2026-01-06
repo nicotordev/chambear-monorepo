@@ -1,10 +1,10 @@
+import type { NextRequest } from "next/server";
 import backend from "@/lib/backend";
 import { response } from "@/lib/response";
-import type { NextRequest } from "next/server";
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) => {
   try {
     const { id } = await params;
@@ -17,7 +17,7 @@ export const GET = async (
 
 export const PATCH = async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) => {
   try {
     const { id } = await params;
@@ -31,7 +31,7 @@ export const PATCH = async (
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) => {
   try {
     const { id } = await params;

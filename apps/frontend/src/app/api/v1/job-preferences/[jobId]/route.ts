@@ -1,10 +1,10 @@
+import type { NextRequest } from "next/server";
 import { backend } from "@/lib/backend";
 import { response } from "@/lib/response";
-import { type NextRequest } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
+  { params }: { params: Promise<{ jobId: string }> },
 ) {
   try {
     const { jobId } = await params;
@@ -19,7 +19,7 @@ export async function POST(
     const result = await backend.jobPreferences.upsert(
       jobId,
       profileId,
-      body.liked
+      body.liked,
     );
     return response.success(result);
   } catch (error) {
@@ -30,7 +30,7 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
+  { params }: { params: Promise<{ jobId: string }> },
 ) {
   try {
     const { jobId } = await params;

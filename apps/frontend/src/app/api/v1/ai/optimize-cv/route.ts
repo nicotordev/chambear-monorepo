@@ -1,6 +1,6 @@
+import type { NextRequest } from "next/server";
 import backend from "@/lib/backend";
 import { response } from "@/lib/response";
-import { type NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {
   try {

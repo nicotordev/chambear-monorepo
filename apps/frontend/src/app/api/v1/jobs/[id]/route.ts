@@ -3,7 +3,7 @@ import { response } from "@/lib/response";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const _params = await params;

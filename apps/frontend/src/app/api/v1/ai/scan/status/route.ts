@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
-import { response } from "@/lib/response";
+import type { NextRequest } from "next/server";
 import backend from "@/lib/backend";
+import { response } from "@/lib/response";
 
 export const GET = async (req: NextRequest) => {
   try {

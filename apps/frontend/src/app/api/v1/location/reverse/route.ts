@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (!lat || !lon) {
     return NextResponse.json(
       { error: "Latitude and longitude are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
 
   if (!token) {
     console.error(
-      "LOCATIONIQ_ACCESS_TOKEN is not defined in environment variables"
+      "LOCATIONIQ_ACCESS_TOKEN is not defined in environment variables",
     );
     return NextResponse.json(
       { error: "Server configuration error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
           "Accept-Language": "es,en",
           "User-Agent": "Chambear-App/1.0 (Contact: admin@chambear.com)",
         },
-      }
+      },
     );
 
     if (nominatimResponse.ok) {
@@ -65,13 +65,13 @@ export async function GET(req: NextRequest) {
         error: "All geocoding services failed",
         locationiq_status: response.status,
       },
-      { status: 502 }
+      { status: 502 },
     );
   } catch (error: any) {
     console.error("Reverse geocoding API route error:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
-import { response } from "@/lib/response";
+import type { NextRequest } from "next/server";
 import { backend } from "@/lib/backend";
-import { type NextRequest } from "next/server";
+import { response } from "@/lib/response";
 
 export async function GET(req: NextRequest) {
   try {
