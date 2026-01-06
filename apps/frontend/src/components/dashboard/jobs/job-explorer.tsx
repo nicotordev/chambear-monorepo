@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
-import { SearchX, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 import { useJobSwipe } from "@/hooks/use-job-swipe";
+import { useScanJobs } from "@/hooks/use-scan-jobs";
+import JobEmptyState from "./job-empty-state";
 import JobTinderCard from "./job-tinder-card";
 import { UpcomingJobsList } from "./upcoming-jobs-list";
 
@@ -15,20 +16,17 @@ export function JobExplorer() {
     handleSwipe,
     handleReset,
     hasMore,
+    isLoading,
   } = useJobSwipe();
 
+  const { isScanning } = useScanJobs();
+
+  if (isScanning || (totalHits === 0 && isLoading)) {
+    return <JobEmptyState isLoading={true} />;
+  }
+
   if (totalHits === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <div className="bg-muted p-4 rounded-full mb-4">
-          <SearchX className="size-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold">No jobs found</h3>
-        <p className="text-muted-foreground">
-          Try adjusting your search or filters.
-        </p>
-      </div>
-    );
+    return <JobEmptyState />;
   }
 
   if (!hasMore) {

@@ -1,14 +1,30 @@
 "use client";
 
 import { FolderSearch, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { useUser as useAppUser } from "@/contexts/user-context";
-import api from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useScanJobs } from "@/hooks/use-scan-jobs";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ScanningAnimation } from "./scanning-animation";
 
 interface DashboardScanJobsProps {
   variant?: "default" | "icon";
@@ -19,125 +35,109 @@ export default function DashboardScanJobs({
   variant = "default",
   className,
 }: DashboardScanJobsProps) {
-  const { currentProfile, profiles } = useAppUser();
-  const [status, setStatus] = useState<
-    "idle" | "active" | "completed" | "failed" | "delayed" | "waiting"
-  >("idle");
-  const router = useRouter();
+  const {
+    isScanning,
+    handleScan,
+    shouldSkipConfirmation,
+    setSkipConfirmation,
+  } = useScanJobs();
 
-  // Polling logic
-  useEffect(() => {
-    if (!currentProfile?.id) return;
+  const scanTrigger = (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Wrapper for click handling
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Wrapper for click handling
+    <div
+      className="contents"
+      onClick={shouldSkipConfirmation ? handleScan : undefined}
+    >
+      {variant === "icon" ? (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={isScanning}
+              className={cn(className, isScanning && "animate-pulse")}
+            >
+              {isScanning ? (
+                <Loader2 className="size-4 text-primary animate-spin" />
+              ) : (
+                <FolderSearch className="size-4 text-primary" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p className="text-xs">
+              {isScanning
+                ? "Scanning in progress..."
+                : "Scan for new jobs (1 credit)"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <Button
+          size="sm"
+          className={cn("gap-2", className)}
+          disabled={isScanning}
+        >
+          {isScanning ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <FolderSearch className="size-4" />
+          )}
+          {isScanning ? "Scanning..." : "Scan now"}
+        </Button>
+      )}
+    </div>
+  );
 
-    const SCAN_KEY = "CHAMBEAR_SCAN_IN_PROGRESS";
-    const isStoredScanning = localStorage.getItem(SCAN_KEY) === "true";
-    const isStateScanning = ["active", "delayed", "waiting"].includes(status);
+  const content = shouldSkipConfirmation ? (
+    scanTrigger
+  ) : (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{scanTrigger}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Iniciar escaneo de empleos?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acción buscará nuevas ofertas que coincidan con tu perfil y
+            tiene un costo de **1 crédito**.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-    if (!isStoredScanning && !isStateScanning) {
-      return;
-    }
-
-    let intervalId: NodeJS.Timeout;
-
-    const checkStatus = async () => {
-      try {
-        const res = await api.getScanStatus(currentProfile.id);
-        setStatus(res.status as any);
-
-        if (["active", "delayed", "waiting"].includes(res.status)) {
-          localStorage.setItem(SCAN_KEY, "true");
-        } else {
-          localStorage.removeItem(SCAN_KEY);
-        }
-      } catch (err) {
-        console.error("Status check failed", err);
-      }
-    };
-
-    checkStatus();
-    intervalId = setInterval(checkStatus, 3000);
-
-    return () => clearInterval(intervalId);
-  }, [currentProfile?.id, status]);
-
-  const handleScan = async () => {
-    if (!currentProfile?.id) {
-      if (profiles.length === 0) {
-        toast.error("You must create a profile first");
-        router.push("/onboarding");
-        return;
-      }
-      toast.error("Select a profile to start scanning");
-      return;
-    }
-
-    try {
-      localStorage.setItem("CHAMBEAR_SCAN_IN_PROGRESS", "true");
-      setStatus("active"); // Optimistic update
-      await api.scanJobs(currentProfile?.id);
-      toast.success("Scan started successfully");
-    } catch (error: any) {
-      console.error("Scan error:", error);
-      setStatus("idle");
-      localStorage.removeItem("CHAMBEAR_SCAN_IN_PROGRESS");
-
-      if (error.response?.status === 402) {
-        toast.error("Insufficient credits", {
-          description: "You need more credits to scan for jobs.",
-          action: {
-            label: "Go to Billing",
-            onClick: () => router.push("/dashboard/billing"),
-          },
-        });
-        return;
-      }
-
-      toast.error("Error starting scan");
-    }
-  };
-
-  const isScanning = ["active", "delayed", "waiting"].includes(status);
-
-  if (variant === "icon") {
-    return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleScan}
-            disabled={isScanning}
-            className={cn(className, isScanning && "animate-pulse")}
+        <div className="flex items-center space-x-2 py-4">
+          <Checkbox
+            id="skip-confirm-dashboard"
+            onCheckedChange={(checked) => setSkipConfirmation(!!checked)}
+          />
+          <Label
+            htmlFor="skip-confirm-dashboard"
+            className="text-sm cursor-pointer"
           >
-            {isScanning ? (
-              <Loader2 className="size-4 text-primary animate-spin" />
-            ) : (
-              <FolderSearch className="size-4 text-primary" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left">
-          <p className="text-xs">
-            {isScanning ? "Scanning in progress..." : "Scan for new jobs"}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
+            No volver a mostrar este mensaje por esta sesión
+          </Label>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleScan}>
+            Confirmar y Gastar 1 Crédito
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 
   return (
-    <Button
-      onClick={handleScan}
-      size="sm"
-      className={cn("gap-2", className)}
-      disabled={isScanning}
-    >
-      {isScanning ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
-        <FolderSearch className="size-4" />
-      )}
-      {isScanning ? "Scanning..." : "Scan now"}
-    </Button>
+    <>
+      {content}
+      <Dialog open={isScanning} onOpenChange={() => {}}>
+        <DialogContent showCloseButton={false} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Escanenando ofertas</DialogTitle>
+          </DialogHeader>
+          <ScanningAnimation />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

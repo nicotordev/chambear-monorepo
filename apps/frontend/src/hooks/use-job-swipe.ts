@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useHits } from "react-instantsearch";
+import { useHits, useInstantSearch } from "react-instantsearch";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/user-context";
 import api from "@/lib/api";
@@ -11,6 +11,7 @@ import type { Job } from "@/types/db";
 
 export function useJobSwipe() {
   const { items, results } = useHits<AlgoliaJob>();
+  const { status } = useInstantSearch();
   const setJobs = useJobsPageStore((state) => state.setJobs);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { currentProfile } = useUser();
@@ -58,6 +59,8 @@ export function useJobSwipe() {
   );
   const currentJob = items[currentIndex];
 
+  const isLoading = status === "loading" || status === "stalled";
+
   return useMemo(
     () => ({
       items,
@@ -69,6 +72,7 @@ export function useJobSwipe() {
       handleReset,
       hasMore: !!currentJob,
       totalHits: items.length,
+      isLoading,
     }),
     [
       items,
@@ -78,6 +82,7 @@ export function useJobSwipe() {
       upcomingJobs,
       handleSwipe,
       handleReset,
+      isLoading,
     ],
   );
 }
