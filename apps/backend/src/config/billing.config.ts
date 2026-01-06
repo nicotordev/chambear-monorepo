@@ -6,6 +6,7 @@ export const CREDIT_COSTS = {
   COVER_LETTER: 3,
   INTERVIEW_SIMULATION: 10,
   SKILL_GAP_ANALYSIS: 5,
+  CV_EXTRACTION: 0,
 } as const;
 
 export type CreditAction = keyof typeof CREDIT_COSTS;

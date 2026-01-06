@@ -232,10 +232,57 @@ const getRequestedScanStatus = createRoute({
   },
 });
 
+const parseResume = createRoute({
+  method: "post",
+  path: "/ai/parse-resume",
+  request: {
+    query: z.object({
+      profileId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            documentId: z.string().optional(),
+            content: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Parse Resume",
+      content: {
+        "application/json": {
+          schema: createSuccessResponseSchema(z.any()),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    400: {
+      description: "Bad Request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    402: {
+      description: "Payment Required",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
+});
+
 app.openapi(optimizeCv, aiActionController.optimizeCv);
 app.openapi(generateCoverLetter, aiActionController.generateCoverLetter);
 app.openapi(calculateFit, aiActionController.calculateFit);
 app.openapi(requestScanJobs, aiActionController.requestScanJobs);
 app.openapi(getRequestedScanStatus, aiActionController.getRequestedScanStatus);
+app.openapi(parseResume, aiActionController.parseResume);
 
 export default app;

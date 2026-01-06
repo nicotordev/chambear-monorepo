@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import type { ResponsesModel } from "openai/resources/shared.mjs";
 import { z } from "zod";
+import { brightdataClient } from ".";
 import {
   EMPLOYMENT_TYPE_MAP,
   SENIORITY_MAP,
@@ -24,18 +25,15 @@ import {
   EmbedFn,
   ExtractJobsInput,
   ExtractJobsOutput,
-  FetchMarkdown,
   JobLlmClientOptions,
   JobPosting,
   RankJobsInput,
   RankJobsOutput,
   RetryOptions,
-  ScoreUrlsInput,
   ScoreUrlsOutput,
   ScoredUrl,
 } from "../../types/ai";
 import { PineconeJobsClient } from "./ai";
-import { brightdataClient } from ".";
 import type { OganicResult } from "./brightdata";
 
 /* =========================
@@ -49,7 +47,7 @@ export class JobLlmClient {
   private readonly retry: RetryOptions;
 
   public constructor(opts: JobLlmClientOptions = {}) {
-    this.model = opts.model ?? "gpt-4.1-mini";
+    this.model = opts.model ?? "gpt-5.2";
     this.temperature = opts.temperature ?? 0.2;
     this.retry = {
       maxRetries: 3,
@@ -153,6 +151,42 @@ export class JobLlmClient {
     };
 
     return withRetry(run, this.retry);
+  }
+
+  private buildParseProfileSystemPrompt(): string {
+    return `
+    You are a high-precision Resume Parser. Your task is to extract structured information from a candidate's resume text and return it in a strictly defined JSON format.
+
+    Rules:
+    - Return ONLY valid JSON.
+    - If a field is missing, omit it or use an empty array/string as appropriate for the schema.
+    - Dates must be in YYYY-MM-DD format (approximate if only month/year is given).
+    - Summary should be a compelling professional overview (at least 20 words).
+    - Map skill levels to: BEGINNER, INTERMEDIATE, ADVANCED, EXPERT. Default to INTERMEDIATE.
+    - Target roles should be a list of job titles the candidate is qualified for.
+
+    Desired JSON Schema:
+    {
+      "name": "Full Name",
+      "headline": "Professional title/headline",
+      "summary": "Professional summary",
+      "location": "City, Country",
+      "yearsExperience": number,
+      "targetRoles": ["string"],
+      "skills": [{ "skillName": "string", "level": "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" }],
+      "experiences": [{ "title": "string", "company": "string", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "current": boolean, "summary": "string" }],
+      "educations": [{ "school": "string", "degree": "string", "field": "string", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "current": boolean, "description": "string" }],
+      "certifications": [{ "name": "string", "issuingOrganization": "string", "issueDate": "YYYY-MM-DD", "credentialId": "string", "credentialUrl": "string" }]
+    }
+    `.trim();
+  }
+
+  public async parseProfileFromText(text: string): Promise<any> {
+    const system = this.buildParseProfileSystemPrompt();
+    const user = { resumeText: text };
+
+    // We can use a simpler schema for the model to follow, but we want the full input
+    return this.callJson(system, user, z.any(), "gpt-5.2");
   }
 
   private buildUrlScoringSystemPrompt(userContext: string): string {

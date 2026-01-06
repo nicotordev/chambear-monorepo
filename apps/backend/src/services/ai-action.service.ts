@@ -4,7 +4,6 @@ import { DocumentType } from "../lib/generated";
 import { prisma } from "../lib/prisma";
 import { sortByScoreDesc, uniqueBy, uniqueStrings } from "../lib/utils/common";
 import {
-  dedupeJobPostings,
   mapEmploymentType,
   mapSeniority,
   mapWorkMode,
@@ -115,6 +114,21 @@ const aiActionService = {
     console.timeEnd(`${LOG_PREFIX} scanJobs total`);
 
     return ranked.items;
+  },
+  async parseResume(profileId: string, documentId?: string, text?: string) {
+    let content = text;
+
+    if (!content && documentId) {
+      const doc = await documentService.getDocumentById(profileId, documentId);
+      content = doc.content;
+    }
+
+    if (!content) {
+      throw new Error("No content to parse");
+    }
+
+    const parsedProfile = await jobLlmClient.parseProfileFromText(content);
+    return parsedProfile;
   },
   async optimizeCv(userId: string, profileId: string, jobId: string) {
     // 1. Get Job

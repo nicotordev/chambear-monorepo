@@ -1,4 +1,4 @@
-import { scrapeQueue } from "@/lib/queue";
+import redisClient from "@/lib/redis";
 import response from "@/lib/utils/response";
 import {
   CalculateFitSchema,
@@ -9,7 +9,6 @@ import aiActionService from "@/services/ai-action.service";
 import billingService from "@/services/billing.service";
 import { getAuth } from "@hono/clerk-auth";
 import type { Context } from "hono";
-import redisClient from "@/lib/redis";
 
 const aiActionController = {
   async optimizeCv(c: Context) {
@@ -180,6 +179,49 @@ const aiActionController = {
     const state = await redisClient.get(jobId);
 
     return c.json(response.success({ status: state, jobId }), 200);
+  },
+  async parseResume(c: Context) {
+    const auth = getAuth(c);
+    const userId = auth?.userId;
+    const profileId = c.req.query("profileId");
+
+    if (!userId || !profileId) {
+      return c.json(response.unauthorized(), 401);
+    }
+
+    try {
+      const body = await c.req.json();
+      const { documentId, content } = body;
+
+      // Check credits
+      const canAction = await billingService.canUserAction(
+        userId,
+        "CV_EXTRACTION"
+      );
+      if (!canAction) {
+        return c.json(
+          response.error({ message: "Insufficient credits", status: 402 }),
+          402
+        );
+      }
+
+      const parsedProfile = await aiActionService.parseResume(
+        profileId,
+        documentId,
+        content
+      );
+
+      // Consume credits
+      await billingService.consumeCredits(userId, "CV_EXTRACTION");
+
+      return c.json(response.success(parsedProfile), 200);
+    } catch (error: any) {
+      console.error(error);
+      return c.json(
+        response.error(error.message || "Failed to parse resume"),
+        500
+      );
+    }
   },
 };
 
