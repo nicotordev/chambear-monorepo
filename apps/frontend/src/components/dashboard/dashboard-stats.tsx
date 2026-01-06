@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import {
   Bell,
   Briefcase,
@@ -7,8 +6,9 @@ import {
   User,
   Users,
 } from "lucide-react";
-import DashboardStatCard from "./dashboard-stat-card";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import DashboardStatCard from "./dashboard-stat-card";
 
 interface DashboardStatsProps {
   applicationsCount: number;
@@ -86,7 +86,7 @@ export function DashboardStats({
               <path
                 className={cn(
                   "transition-all duration-1000 ease-out",
-                  profileCompletion === 100 ? "text-green-500" : "text-primary"
+                  profileCompletion === 100 ? "text-green-500" : "text-primary",
                 )}
                 strokeDasharray={`${profileCompletion}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"

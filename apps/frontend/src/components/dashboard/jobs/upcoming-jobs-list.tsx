@@ -1,11 +1,11 @@
 "use client";
 
+import { Briefcase, Building2 } from "lucide-react";
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatEmploymentType } from "@/lib/utils";
 import type { AlgoliaJob } from "@/types/algolia";
-import { Briefcase, Building2 } from "lucide-react";
-import { memo } from "react";
 
 interface UpcomingJobsListProps {
   jobs: AlgoliaJob[];

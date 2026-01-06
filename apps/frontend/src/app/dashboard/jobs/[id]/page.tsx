@@ -1,7 +1,6 @@
+import { ArrowLeft, ExternalLink, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-import backend from "@/lib/backend";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,9 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-
-import { Job } from "@/types";
-import { ArrowLeft, ExternalLink, Sparkles } from "lucide-react";
+import backend from "@/lib/backend";
+import type { Job } from "@/types";
 
 type PageProps = {
   params: Promise<{ id: string }>;

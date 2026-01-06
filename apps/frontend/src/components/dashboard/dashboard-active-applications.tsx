@@ -1,3 +1,11 @@
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  Clock,
+  PlusCircle,
+} from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,14 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { Application, Job } from "@/types";
 import { ApplicationStatus } from "@/types/enums";
-import {
-  ArrowRight,
-  Briefcase,
-  Building2,
-  CalendarDays,
-  Clock,
-  PlusCircle,
-} from "lucide-react";
 import DashboardApplicationDialogAction from "../dashboard-application-dialog-action";
 import NewApplicationDialog from "./applications/new-application-dialog";
 
@@ -74,7 +74,7 @@ export const getRelativeTime = (date: Date | string): string => {
     if (Math.abs(diffInSeconds) >= seconds) {
       return rtf.format(
         Math.round(diffInSeconds / seconds),
-        unit as Intl.RelativeTimeFormatUnit
+        unit as Intl.RelativeTimeFormatUnit,
       );
     }
   }
@@ -134,7 +134,7 @@ export function DashboardActiveApplications({
                           variant="outline"
                           className={cn(
                             "px-2 py-0.5 text-[10px] font-medium border",
-                            statusConfig.className
+                            statusConfig.className,
                           )}
                         >
                           {statusConfig.label}

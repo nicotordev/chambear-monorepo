@@ -1,8 +1,8 @@
+import { Sparkles } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import DashboardCarousel from "@/components/dashboard-carousel";
 import JobCard from "@/components/job-card/job-card";
 import type { Job } from "@/types";
-import { Sparkles } from "lucide-react";
 import DashboardScanJobs from "./dashboard-scan-jobs";
 
 interface DashboardRecommendedJobsProps {

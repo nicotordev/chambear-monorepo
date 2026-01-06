@@ -1,11 +1,11 @@
 "use client";
-import NewApplicationDialog from "./dashboard/applications/new-application-dialog";
+import { PlusCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PlusCircle } from "lucide-react";
+import NewApplicationDialog from "./dashboard/applications/new-application-dialog";
 
 export default function DashboardApplicationDialogAction() {
   return (

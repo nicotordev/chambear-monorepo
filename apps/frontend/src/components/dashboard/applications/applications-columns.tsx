@@ -104,7 +104,7 @@ export const applicationColumns: ColumnDef<Row>[] = [
           variant="outline"
           className={cn(
             "rounded-md px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide border shadow-sm",
-            getStatusStyles(status)
+            getStatusStyles(status),
           )}
         >
           {status}

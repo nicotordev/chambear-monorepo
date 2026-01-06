@@ -1,11 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { formatEmploymentType, getFlagEmoji } from "@/lib/utils";
-import type { Job } from "@/types";
 import {
   AnimatePresence,
   motion,
@@ -23,6 +17,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { formatEmploymentType, getFlagEmoji } from "@/lib/utils";
+import type { Job } from "@/types";
 
 interface JobTinderCardProps {
   job: Job;
@@ -32,7 +32,6 @@ interface JobTinderCardProps {
 }
 
 const EXIT_MS = 280;
-
 
 const JobTinderCard = memo(function JobTinderCard({
   job,
@@ -83,7 +82,7 @@ const JobTinderCard = memo(function JobTinderCard({
         onSwipe(direction);
       }, EXIT_MS);
     },
-    [isTop, isExiting, mvX, onSwipe]
+    [isTop, isExiting, mvX, onSwipe],
   );
 
   const handleDragEnd = useCallback(
@@ -103,7 +102,7 @@ const JobTinderCard = memo(function JobTinderCard({
       // Snap back
       mvX.set(0);
     },
-    [isTop, isExiting, mvX, triggerSwipe]
+    [isTop, isExiting, mvX, triggerSwipe],
   );
 
   const exitX = isExiting === "right" ? 1200 : isExiting === "left" ? -1200 : 0;
@@ -196,7 +195,7 @@ const JobTinderCard = memo(function JobTinderCard({
             </div>
 
             {/* Fit Score */}
-            <div className="bg-primary/[0.03] p-4 rounded-2xl border border-primary/10 space-y-3">
+            <div className="bg-primary/3 p-4 rounded-2xl border border-primary/10 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary animate-pulse" />
@@ -275,7 +274,7 @@ const JobTinderCard = memo(function JobTinderCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: "10%" }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="absolute inset-0 bg-background z-[100] p-8 overflow-y-auto"
+              className="absolute inset-0 bg-background z-100 p-8 overflow-y-auto"
             >
               <div className="flex justify-between items-start mb-8">
                 <div>

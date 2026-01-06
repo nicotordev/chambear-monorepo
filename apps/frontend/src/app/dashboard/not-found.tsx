@@ -1,12 +1,12 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { LayoutDashboard, MoveLeft, Search, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function DashboardNotFound() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,11 +18,11 @@ export default function DashboardNotFound() {
   const springConfig = { damping: 25, stiffness: 150 };
   const rotateX = useSpring(
     useTransform(y, [-0.5, 0.5], [10, -10]),
-    springConfig
+    springConfig,
   );
   const rotateY = useSpring(
     useTransform(x, [-0.5, 0.5], [-10, 10]),
-    springConfig
+    springConfig,
   );
 
   const mouseX = useSpring(useMotionValue(0), springConfig);
@@ -68,7 +68,7 @@ export default function DashboardNotFound() {
               background: useTransform(
                 [mouseX, mouseY],
                 ([mx, my]) =>
-                  `radial-gradient(400px circle at ${mx}px ${my}px, rgba(var(--primary-rgb), 0.05), transparent 40%)`
+                  `radial-gradient(400px circle at ${mx}px ${my}px, rgba(var(--primary-rgb), 0.05), transparent 40%)`,
               ),
             }}
           />

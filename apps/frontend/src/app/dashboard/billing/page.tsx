@@ -1,5 +1,5 @@
-import DashboardBilling from "@/components/dashboard/billing/dashboard-billing";
 import type { Metadata } from "next";
+import DashboardBilling from "@/components/dashboard/billing/dashboard-billing";
 
 export const metadata: Metadata = {
   title: "Billing | CareerCare.ai",

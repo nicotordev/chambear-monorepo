@@ -1,14 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import {
-  ArrowRight,
   Download,
   File as FileIcon,
   FileImage,
@@ -18,8 +10,9 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import useDocuments from "@/hooks/use-documents";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -38,18 +31,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DocumentType } from "@/types";
-import { toast } from "sonner";
-import { Document } from "@/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import useDocuments from "@/hooks/use-documents";
+import { cn } from "@/lib/utils";
+import { type Document, DocumentType } from "@/types";
 
 export function DashboardDocuments() {
-  const {
-    documents,
-    isLoading,
-    uploadFile,
-    createDocument,
-    deleteDocument,
-  } = useDocuments();
+  const { documents, isLoading, uploadFile, deleteDocument } = useDocuments();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [label, setLabel] = useState("");
@@ -76,18 +68,8 @@ export function DashboardDocuments() {
 
     setIsUploading(true);
     try {
-      // 1. Upload file
-      const url = await uploadFile(file);
-
-      // 2. Create document record
-      await createDocument({
-        label,
-        type,
-        content: "File uploaded via dashboard", // Placeholder content or extracted text if available
-        url,
-        jobId: null,
-        summary: null,
-      });
+      // Upload file (which creates the document)
+      await uploadFile({ file, label, type });
 
       setFile(null);
       setLabel("");
@@ -112,9 +94,9 @@ export function DashboardDocuments() {
   const handleDelete = async (e: React.MouseEvent, docId: string) => {
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this document?")) {
-        await deleteDocument(docId);
+      await deleteDocument(docId);
     }
-  }
+  };
 
   // Helper to assign colors and icons based on file type
   const getFileIconProps = (docType: string) => {
@@ -216,13 +198,22 @@ export function DashboardDocuments() {
               </div>
             </div>
             <DialogFooter>
-                <Button variant="outline" onClick={() => setIsUploadOpen(false)} disabled={isUploading}>
-                    Cancel
-                </Button>
-                <Button onClick={handleUpload} disabled={!file || !label || isUploading}>
-                    {isUploading && <Loader2 className="mr-2 size-4 animate-spin" />}
-                    Upload
-                </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsUploadOpen(false)}
+                disabled={isUploading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpload}
+                disabled={!file || !label || isUploading}
+              >
+                {isUploading && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
+                Upload
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -231,9 +222,9 @@ export function DashboardDocuments() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
         {isLoading ? (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
         ) : hasDocs ? (
           <div className="grid gap-3">
             {documents.map((file) => {
@@ -250,7 +241,7 @@ export function DashboardDocuments() {
                     <div
                       className={cn(
                         "flex shrink-0 items-center justify-center rounded-lg border p-2",
-                        style.color
+                        style.color,
                       )}
                     >
                       <Icon className="size-4" />
@@ -260,7 +251,8 @@ export function DashboardDocuments() {
                         {file.label}
                       </p>
                       <p className="text-[10px] font-medium text-muted-foreground">
-                         {file.type} • {new Date(file.createdAt).toLocaleDateString()}
+                        {file.type} •{" "}
+                        {new Date(file.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -269,14 +261,14 @@ export function DashboardDocuments() {
                   <div className="flex shrink-0 items-center text-muted-foreground gap-2">
                     {/* Download icon visible only on hover */}
                     <Download className="size-4 opacity-0 transition-opacity group-hover:opacity-100" />
-                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                        onClick={(e) => handleDelete(e, file.id)}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => handleDelete(e, file.id)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
                   </div>
                 </div>
               );
@@ -295,7 +287,7 @@ export function DashboardDocuments() {
               Your portfolio is empty
             </p>
             <p className="mt-1 max-w-45 text-xs text-muted-foreground">
-              Upload your CV or Portfolio to apply faster. 
+              Upload your CV or Portfolio to apply faster.
             </p>
             <Button
               variant="ghost"

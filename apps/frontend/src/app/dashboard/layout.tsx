@@ -1,7 +1,7 @@
+import { type ReactNode, Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import AppSidebarJobSearcher from "@/components/app-sidebar-job-searcher";
 import JobCardProvider from "@/components/job-card/job-card-provider";
-import { type ReactNode, Suspense } from "react";
 
 import {
   SidebarInset,

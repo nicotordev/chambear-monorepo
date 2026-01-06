@@ -1,17 +1,15 @@
+import { Briefcase, Calendar, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
-import { CheckCircle2 } from "lucide-react";
-import type { Reminder } from "@/types";
 import { getTypeConfig, getUrgencyState } from "@/lib/reminders";
+import { cn } from "@/lib/utils";
+import type { Reminder } from "@/types";
 
 export interface ReminderCardProps {
   reminder: Reminder;
@@ -32,7 +30,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
         reminder.completedAt ? "bg-muted/30 border-muted" : "border-border",
         !reminder.completedAt &&
           urgency.isOverdue &&
-          "border-red-200 bg-red-50/10 dark:bg-red-900/10"
+          "border-red-200 bg-red-50/10 dark:bg-red-900/10",
       )}
     >
       <CardHeader className="pb-3">
@@ -59,7 +57,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
           <h3
             className={cn(
               "font-medium leading-snug",
-              reminder.completedAt && "line-through text-muted-foreground"
+              reminder.completedAt && "line-through text-muted-foreground",
             )}
           >
             {reminder.message || "No description"}
@@ -91,9 +89,7 @@ export default function ReminderCard({ reminder }: ReminderCardProps) {
               month: "short",
               hour: "2-digit",
               minute: "2-digit",
-            }).format(
-              new Date(reminder.completedAt || reminder.dueAt)
-            )}
+            }).format(new Date(reminder.completedAt || reminder.dueAt))}
           </span>
         </div>
       </CardContent>

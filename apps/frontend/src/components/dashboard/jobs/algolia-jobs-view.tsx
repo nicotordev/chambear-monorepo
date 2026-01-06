@@ -1,12 +1,12 @@
 "use client";
 
+import { Filter } from "lucide-react";
+import { Configure } from "react-instantsearch";
+import { InstantSearchNext } from "react-instantsearch-nextjs";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { ALGOLIA_INDEX_NAME, algoliaClient } from "@/lib/algolia";
 import type { AlgoliaUiState, RouteState } from "@/types/algolia";
-import { Filter } from "lucide-react";
-import { Configure } from "react-instantsearch";
-import { InstantSearchNext } from "react-instantsearch-nextjs";
 import { JobExplorer } from "./job-explorer";
 import { JobFilters } from "./job-filters";
 import { VirtualWidgets } from "./virtual-widgets";

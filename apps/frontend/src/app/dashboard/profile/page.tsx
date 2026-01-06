@@ -1,4 +1,19 @@
-import backend from "@/lib/backend";
+import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
+import {
+  Award,
+  Briefcase,
+  Building2,
+  Calendar,
+  GraduationCap,
+  Mail,
+  MapPin,
+  Pencil,
+  Plus,
+  Target,
+  User as UserIcon,
+} from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,28 +25,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Briefcase,
-  Building2,
-  Calendar,
-  GraduationCap,
-  MapPin,
-  Mail,
-  Pencil,
-  Plus,
-  User as UserIcon,
-  Target,
-  Award,
-} from "lucide-react";
-import Link from "next/link";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import backend from "@/lib/backend";
 
 // Helper to format experience/education dates
 const formatDateRange = (
   start: Date | null,
   end: Date | null,
-  current?: boolean
+  current?: boolean,
 ) => {
   if (!start) return "";
   const startDate = format(new Date(start), "MMM yyyy", { locale: enUS });
@@ -72,7 +72,8 @@ export default async function ProfilePage() {
             Create your Professional Profile
           </h1>
           <p className="text-muted-foreground max-w-125">
-            So that our AI can find you the best jobs and prepare you for interviews, we need to know your experience and skills.
+            So that our AI can find you the best jobs and prepare you for
+            interviews, we need to know your experience and skills.
           </p>
         </div>
         <Button size="lg">
@@ -184,7 +185,7 @@ export default async function ProfilePage() {
                           {formatDateRange(
                             exp.startDate,
                             exp.endDate,
-                            exp.current
+                            exp.current,
                           )}
                         </Badge>
                       </div>

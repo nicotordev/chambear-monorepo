@@ -1,7 +1,7 @@
-import type { Profile, User } from "@/types";
 import { Sparkles } from "lucide-react";
-import { Button } from "../ui/button";
 import Link from "next/link";
+import type { Profile, User } from "@/types";
+import { Button } from "../ui/button";
 
 interface DashboardHeaderProps {
   currentUser: User;

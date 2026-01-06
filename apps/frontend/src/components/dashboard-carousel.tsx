@@ -1,10 +1,9 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DashboardScanJobs from "./dashboard/dashboard-scan-jobs";
 
@@ -26,15 +25,15 @@ export default function DashboardCarousel({ slides }: DashboardCarouselProps) {
 
   const scrollPrev = useCallback(
     () => emblaApi && emblaApi.scrollPrev(),
-    [emblaApi]
+    [emblaApi],
   );
   const scrollNext = useCallback(
     () => emblaApi && emblaApi.scrollNext(),
-    [emblaApi]
+    [emblaApi],
   );
   const scrollTo = useCallback(
     (index: number) => emblaApi && emblaApi.scrollTo(index),
-    [emblaApi]
+    [emblaApi],
   );
 
   const onSelect = useCallback((api: NonNullable<typeof emblaApi>) => {
@@ -110,7 +109,7 @@ export default function DashboardCarousel({ slides }: DashboardCarouselProps) {
           "bg-background/80 backdrop-blur-md border border-border/50 shadow-lg text-foreground",
           "hover:bg-background hover:scale-110 transition-all duration-300",
           "opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-2",
-          "disabled:opacity-0 disabled:cursor-not-allowed"
+          "disabled:opacity-0 disabled:cursor-not-allowed",
         )}
         aria-label="Previous slide"
       >
@@ -126,7 +125,7 @@ export default function DashboardCarousel({ slides }: DashboardCarouselProps) {
           "bg-background/80 backdrop-blur-md border border-border/50 shadow-lg text-foreground",
           "hover:bg-background hover:scale-110 transition-all duration-300",
           "opacity-0 group-hover:opacity-100 translate-x-4 group-hover:-translate-x-2",
-          "disabled:opacity-0 disabled:cursor-not-allowed"
+          "disabled:opacity-0 disabled:cursor-not-allowed",
         )}
         aria-label="Next slide"
       >
@@ -145,7 +144,7 @@ export default function DashboardCarousel({ slides }: DashboardCarouselProps) {
               "h-2 rounded-full transition-all duration-300",
               index === selectedIndex
                 ? "w-8 bg-primary"
-                : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50",
             )}
             aria-label={`Go to slide ${index + 1}`}
           />

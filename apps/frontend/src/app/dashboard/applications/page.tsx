@@ -1,8 +1,8 @@
-import backend from "@/lib/backend";
-import { ApplicationsDataTable } from "@/components/dashboard/applications/applications-data-table";
-import { applicationColumns } from "@/components/dashboard/applications/applications-columns";
-import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { applicationColumns } from "@/components/dashboard/applications/applications-columns";
+import { ApplicationsDataTable } from "@/components/dashboard/applications/applications-data-table";
+import { Button } from "@/components/ui/button";
+import backend from "@/lib/backend";
 
 export const dynamic = "force-dynamic";
 

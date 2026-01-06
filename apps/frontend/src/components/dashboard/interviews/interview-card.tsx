@@ -1,3 +1,11 @@
+import {
+  Building2,
+  Clock,
+  ExternalLink,
+  MapPin,
+  MoreVertical,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,14 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InterviewMode, type InterviewSession } from "@/types";
-import {
-  Building2,
-  Clock,
-  ExternalLink,
-  MapPin,
-  MoreVertical,
-  Video,
-} from "lucide-react";
 import InterviewStatusBadge from "./interviews-status-badge";
 
 // --- Componente de Tarjeta Individual ---

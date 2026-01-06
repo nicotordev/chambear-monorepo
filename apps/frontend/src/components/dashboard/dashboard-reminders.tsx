@@ -1,8 +1,8 @@
+import { Bell, BellOff, BellPlus, Check, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Reminder } from "@/types";
-import { Bell, BellOff, BellPlus, Check, Clock } from "lucide-react";
 import DashboardReminderCreation from "./dashboard-reminder-creation";
 
 interface DashboardRemindersProps {
@@ -67,7 +67,7 @@ export function DashboardReminders({
                   <div
                     className={cn(
                       "mt-1.5 size-2 rounded-full ring-4 shrink-0 transition-colors",
-                      urgencyClass
+                      urgencyClass,
                     )}
                   />
 

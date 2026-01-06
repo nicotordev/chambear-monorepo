@@ -1,7 +1,7 @@
 "use client";
 
-import { SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { RefinementList } from "react-instantsearch";
+import { SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export function JobFilters() {
   return (

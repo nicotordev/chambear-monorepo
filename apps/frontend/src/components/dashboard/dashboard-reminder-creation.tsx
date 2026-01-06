@@ -1,14 +1,12 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { ReminderType } from "@/types/enums";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -41,8 +39,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { ReminderType } from "@/types/enums";
 
 // We can refine this validation to match backend strictly
 const formSchema = z.object({
@@ -152,7 +151,7 @@ export default function DashboardReminderCreation({
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value ? (

@@ -1,9 +1,5 @@
 "use client";
 
-import api from "@/lib/api";
-import { cn } from "@/lib/utils";
-import type { Job } from "@/types";
-import { InterviewMode, InterviewStatus } from "@/types/enums";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
@@ -11,7 +7,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -45,6 +40,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import type { Job } from "@/types";
+import { InterviewMode, InterviewStatus } from "@/types/enums";
 
 const formSchema = z.object({
   jobId: z.string().min(1, "Please select a job."),
@@ -86,7 +85,7 @@ export default function DashboardInterviewCreation({
 
   // Filter jobs that have an application associated
   const relevantJobs = jobs.filter(
-    (job) => job.applications && job.applications.length > 0
+    (job) => job.applications && job.applications.length > 0,
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -104,6 +103,8 @@ export default function DashboardInterviewCreation({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      if (!profileId) throw new Error("Profile ID is required");
+
       const selectedJob = jobs.find((j) => j.id === values.jobId);
       if (!selectedJob) throw new Error("Job not found");
 
@@ -124,8 +125,6 @@ export default function DashboardInterviewCreation({
         durationMinutes: values.durationMinutes,
         notes: values.notes,
       };
-
-      if (!profileId) throw new Error("Profile ID is required");
 
       await api.createInterviewSession(profileId, application.id, payload);
 
@@ -245,7 +244,7 @@ export default function DashboardInterviewCreation({
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (

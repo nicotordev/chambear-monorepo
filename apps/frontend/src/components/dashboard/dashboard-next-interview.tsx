@@ -1,8 +1,8 @@
+import { Calendar, Clock, Plus, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { InterviewSession, Job } from "@/types";
-import { Calendar, Clock, Plus, Video } from "lucide-react";
 import DashboardInterviewCreation from "./interviews/dashboard-interview-creation";
 
 interface DashboardNextInterviewProps {
@@ -40,7 +40,7 @@ export function DashboardNextInterview({
     ? jobs.find((j) => j.id === nextInterview.jobId)
     : null;
   const { day, month, time, isToday } = getInterviewDateDetails(
-    nextInterview?.scheduledFor ?? undefined
+    nextInterview?.scheduledFor ?? undefined,
   );
 
   return (
@@ -50,7 +50,7 @@ export function DashboardNextInterview({
         // If there is an interview, use a highlighted background (soft Primary), otherwise a neutral background
         nextInterview
           ? "bg-primary/5 border-primary/20"
-          : "bg-card border-border"
+          : "bg-card border-border",
       )}
     >
       {/* Header */}
@@ -58,7 +58,7 @@ export function DashboardNextInterview({
         <h3
           className={cn(
             "flex items-center gap-2 text-xs font-bold uppercase tracking-widest",
-            nextInterview ? "text-primary" : "text-muted-foreground"
+            nextInterview ? "text-primary" : "text-muted-foreground",
           )}
         >
           <Clock className="size-4" />

@@ -1,11 +1,4 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
@@ -16,10 +9,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
 import { JobAiActions } from "@/components/dashboard/jobs/job-ai-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -104,7 +103,7 @@ function pickDecision(score: number): {
 function buildQuickWins(
   match: string[],
   missing: string[],
-  jobTags: string[]
+  jobTags: string[],
 ): string[] {
   const wins: string[] = [];
 
@@ -130,22 +129,22 @@ function buildAtsRisks(score: number, missing: string[]): string[] {
 
   if (missing.length > 3) {
     risks.push(
-      `Critical gaps: Missing ${missing.length} key keywords detected by ATS`
+      `Critical gaps: Missing ${missing.length} key keywords detected by ATS`,
     );
   } else if (missing.length > 0) {
     risks.push(
-      "Missing keywords: The ATS might filter your profile due to lack of technical terms"
+      "Missing keywords: The ATS might filter your profile due to lack of technical terms",
     );
   }
 
   if (score < 70) {
     risks.push(
-      "Low Fit Score: Your current profile doesn't stand out enough for this role"
+      "Low Fit Score: Your current profile doesn't stand out enough for this role",
     );
   }
 
   risks.push(
-    "Format: Verify there are no tables or charts that confuse the ATS reader"
+    "Format: Verify there are no tables or charts that confuse the ATS reader",
   );
 
   return risks;
@@ -280,8 +279,8 @@ export default async function OptimizeCVforJob({ params }: PageProps) {
                     fit.score >= 80
                       ? "default"
                       : fit.score >= 60
-                      ? "secondary"
-                      : "destructive"
+                        ? "secondary"
+                        : "destructive"
                   }
                   className="px-3 py-1 text-base"
                 >

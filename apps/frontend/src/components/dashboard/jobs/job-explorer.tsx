@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useJobSwipe } from "@/hooks/use-job-swipe";
 import { AnimatePresence } from "framer-motion";
 import { SearchX, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useJobSwipe } from "@/hooks/use-job-swipe";
 import JobTinderCard from "./job-tinder-card";
 import { UpcomingJobsList } from "./upcoming-jobs-list";
 

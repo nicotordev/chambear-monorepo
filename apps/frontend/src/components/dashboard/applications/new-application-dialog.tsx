@@ -1,5 +1,26 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
+import {
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Link as LinkIcon,
+  Loader2,
+  MapPin,
+  PlusCircle,
+  Search,
+  Video,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -45,28 +66,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAppUser } from "@/contexts/user-context";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Job } from "@/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
-import {
-  Briefcase,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Link as LinkIcon,
-  Loader2,
-  MapPin,
-  PlusCircle,
-  Search,
-  Video,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import * as z from "zod";
+import { type Job, Seniority, UrlKind } from "@/types";
 
 // Schemas
 // Schemas
@@ -262,6 +262,9 @@ export default function NewApplicationDialog({
           employmentType: values.employmentType || "FULL_TIME",
           workMode: values.workMode || "ONSITE",
           source: "MANUAL",
+          seniority: Seniority.UNKNOWN,
+          urlKind: UrlKind.IRRELEVANT,
+          tags: [],
         });
         jobId = newJob.id;
       }
@@ -276,12 +279,14 @@ export default function NewApplicationDialog({
           status: values.status,
           appliedAt: values.appliedAt,
           notes: values.notes,
-        }
+        },
       );
 
       // 3. Create Interview if requested
       if (values.scheduleInterview) {
         await api.createInterviewSession(currentProfile.id, application.id, {
+          profileId: currentProfile.id,
+          jobId,
           mode: values.mode,
           status: values.interviewStatus,
           scheduledFor: values.scheduledFor,
@@ -357,8 +362,8 @@ export default function NewApplicationDialog({
                       isActive
                         ? "bg-primary text-primary-foreground scale-110"
                         : isCompleted
-                        ? "bg-primary/80 text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                          ? "bg-primary/80 text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -366,7 +371,7 @@ export default function NewApplicationDialog({
                   <span
                     className={cn(
                       "text-xs font-medium transition-colors",
-                      isActive ? "text-primary" : "text-muted-foreground"
+                      isActive ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     {s.title}
@@ -421,16 +426,16 @@ export default function NewApplicationDialog({
                                     role="combobox"
                                     className={cn(
                                       "w-full justify-between pl-3 font-normal",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value
                                       ? jobs.find(
-                                          (job) => job.id === field.value
+                                          (job) => job.id === field.value,
                                         )?.title +
                                         " @ " +
                                         jobs.find(
-                                          (job) => job.id === field.value
+                                          (job) => job.id === field.value,
                                         )?.companyName
                                       : "Select job..."}
                                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -461,7 +466,7 @@ export default function NewApplicationDialog({
                                               "mr-2 h-4 w-4",
                                               job.id === field.value
                                                 ? "opacity-100"
-                                                : "opacity-0"
+                                                : "opacity-0",
                                             )}
                                           />
                                           <div className="flex flex-col">
@@ -702,7 +707,7 @@ export default function NewApplicationDialog({
                                     variant={"outline"}
                                     className={cn(
                                       "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value ? (
@@ -827,7 +832,7 @@ export default function NewApplicationDialog({
                                 onChange={(e) =>
                                   form.setValue(
                                     "scheduledFor",
-                                    new Date(e.target.value)
+                                    new Date(e.target.value),
                                   )
                                 }
                               />

@@ -1,10 +1,10 @@
-import backend from "@/lib/backend";
+import { CheckCircle2, Clock, PlusCircle } from "lucide-react";
+import type { Metadata } from "next";
+import ReminderCard from "@/components/dashboard/reviews/reminder-card";
+import ReminderEmptyState from "@/components/dashboard/reviews/reminder-empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Clock, PlusCircle } from "lucide-react";
-import ReminderEmptyState from "@/components/dashboard/reviews/reminder-empty-state";
-import ReminderCard from "@/components/dashboard/reviews/reminder-card";
-import type { Metadata } from "next";
+import backend from "@/lib/backend";
 
 export const metadata: Metadata = {
   title: "Reminders | Chambear.ai",
@@ -33,7 +33,7 @@ export default async function RemindersPage() {
     .filter((r) => r.completedAt)
     .sort(
       (a, b) =>
-        new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()
+        new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime(),
     ); // Most recent first
 
   return (

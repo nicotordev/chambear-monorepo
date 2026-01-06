@@ -3,13 +3,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useJobsPageStore } from "@/stores/jobs-page/jobs-page";
-import type { Job } from "@/types";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useJobsPageStore } from "@/stores/jobs-page/jobs-page";
+import type { Job } from "@/types";
 
 interface JobCardMinimalWithFitProps {
   job: Job;

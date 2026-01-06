@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { DashboardActiveApplications } from "@/components/dashboard/dashboard-active-applications";
 import { DashboardDocuments } from "@/components/dashboard/dashboard-documents";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -6,7 +7,6 @@ import { DashboardRecommendedJobs } from "@/components/dashboard/dashboard-recom
 import { DashboardReminders } from "@/components/dashboard/dashboard-reminders";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import backend from "@/lib/backend";
-import { auth } from "@clerk/nextjs/server";
 
 // Next.js Optimizations
 export const runtime = "nodejs";

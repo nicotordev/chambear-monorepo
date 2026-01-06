@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  Check,
+  CreditCard,
+  ExternalLink,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Zap,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,15 +22,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBilling } from "@/hooks/use-billing";
 import { cn } from "@/lib/utils";
-import {
-  Check,
-  CreditCard,
-  ExternalLink,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Zap,
-} from "lucide-react";
 
 export default function DashboardBilling() {
   const {
@@ -102,7 +102,7 @@ export default function DashboardBilling() {
                     Your plan renews on{" "}
                     <span className="font-medium text-foreground">
                       {new Date(
-                        subscription.currentPeriodEnd
+                        subscription.currentPeriodEnd,
                       ).toLocaleDateString()}
                     </span>
                   </p>
@@ -151,7 +151,7 @@ export default function DashboardBilling() {
               className={cn(
                 "flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden",
                 subscription?.planId === plan.id &&
-                  "border-primary ring-2 ring-primary ring-opacity-50"
+                  "border-primary ring-2 ring-primary ring-opacity-50",
               )}
             >
               {plan.tier === "PRO" && (
@@ -226,8 +226,8 @@ export default function DashboardBilling() {
                     subscription?.planId === plan.id
                       ? "secondary"
                       : plan.tier === "PRO"
-                      ? "default"
-                      : "outline"
+                        ? "default"
+                        : "outline"
                   }
                   disabled={
                     subscription?.planId === plan.id || isCreatingCheckout

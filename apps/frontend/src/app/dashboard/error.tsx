@@ -1,8 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   AlertTriangle,
@@ -12,6 +9,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function DashboardError({
   error,
@@ -33,11 +33,11 @@ export default function DashboardError({
   const springConfig = { damping: 25, stiffness: 150 };
   const rotateX = useSpring(
     useTransform(y, [-0.5, 0.5], [8, -8]),
-    springConfig
+    springConfig,
   );
   const rotateY = useSpring(
     useTransform(x, [-0.5, 0.5], [-8, 8]),
-    springConfig
+    springConfig,
   );
 
   const mouseX = useSpring(useMotionValue(0), springConfig);
@@ -83,7 +83,7 @@ export default function DashboardError({
               background: useTransform(
                 [mouseX, mouseY],
                 ([mx, my]) =>
-                  `radial-gradient(400px circle at ${mx}px ${my}px, rgba(var(--destructive-rgb), 0.05), transparent 40%)`
+                  `radial-gradient(400px circle at ${mx}px ${my}px, rgba(var(--destructive-rgb), 0.05), transparent 40%)`,
               ),
             }}
           />

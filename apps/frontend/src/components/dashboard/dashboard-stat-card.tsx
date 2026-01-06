@@ -1,7 +1,7 @@
-import { ForwardRefExoticComponent, RefAttributes } from "react";
-import { LucideProps } from "lucide-react";
-import { cn } from "@/lib/utils";
+import type { LucideProps } from "lucide-react";
 import Link from "next/link";
+import type { ForwardRefExoticComponent, RefAttributes } from "react";
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
@@ -48,7 +48,7 @@ export default function DashboardStatCard({
         <div
           className={cn(
             "rounded-lg p-2 transition-all group-hover:scale-110",
-            highlight ? colorStyles[color] : "bg-muted text-muted-foreground"
+            highlight ? colorStyles[color] : "bg-muted text-muted-foreground",
           )}
         >
           <Icon className="size-5" />

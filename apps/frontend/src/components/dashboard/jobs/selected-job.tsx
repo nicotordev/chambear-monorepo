@@ -1,14 +1,14 @@
 "use client";
 
+import { ExternalLink, MousePointerClick } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useJobsPageStore } from "@/stores/jobs-page/jobs-page";
 import type { Job } from "@/types";
-import { ExternalLink, MousePointerClick } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useMemo } from "react";
 
 export interface SelectedJobProps {
   ssrJobs: Job[];
@@ -34,7 +34,7 @@ export default function SelectedJob({ ssrJobs }: SelectedJobProps) {
 
   const selectedJob = useMemo(
     () => jobs.find((j) => j.id === selectedJobId) ?? null,
-    [jobs, selectedJobId]
+    [jobs, selectedJobId],
   );
 
   // RIGHT PANEL EMPTY STATE (If no selection)

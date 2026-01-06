@@ -1,10 +1,7 @@
-import backend from "@/lib/backend";
-import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-} from "lucide-react";
-import { PlusCircle } from "lucide-react";
+import { Calendar, PlusCircle } from "lucide-react";
 import InterviewCard from "@/components/dashboard/interviews/interview-card";
+import { Button } from "@/components/ui/button";
+import backend from "@/lib/backend";
 
 export default async function InterviewsPage() {
   const user = await backend.user.getMe();
@@ -50,9 +47,7 @@ export default async function InterviewsPage() {
             <Calendar className="h-8 w-8 text-muted-foreground" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">
-              No interviews scheduled
-            </h3>
+            <h3 className="text-lg font-semibold">No interviews scheduled</h3>
             <p className="text-sm text-muted-foreground">
               You have no interviews in your calendar yet.
             </p>
