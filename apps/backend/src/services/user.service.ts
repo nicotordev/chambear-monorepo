@@ -10,6 +10,7 @@ type CreateProfileInputWithOptionalId = CreateProfileInput & {
   /** If true, missing items will be removed (replace-all behavior). Defaults to false (merge). */
   replaceExperiences?: boolean;
   replaceEducations?: boolean;
+  replaceCertifications?: boolean;
   replaceSkills?: boolean;
 };
 
@@ -22,6 +23,7 @@ type ProfileOnboardingSnapshot = {
   targetRolesCount: number;
   experiencesCount: number;
   educationsCount: number;
+  certificationsCount: number;
   skillsCount: number;
 };
 
@@ -36,6 +38,7 @@ const userService = {
         include: {
           experiences: { orderBy: { startDate: "desc" } as const },
           educations: { orderBy: { startDate: "desc" } as const },
+          certifications: { orderBy: { issueDate: "desc" } as const },
           skills: { include: { skill: true } },
         },
       },
@@ -105,6 +108,7 @@ const userService = {
 
     const replaceExperiences = true;
     const replaceEducations = true;
+    const replaceCertifications = true;
     const replaceSkills = true;
 
     const result = await prisma.$transaction(async (tx) => {
@@ -231,6 +235,53 @@ const userService = {
         });
       }
 
+      // ---------- Certifications (MERGE by default) ----------
+      const keptCertificationIds: string[] = [];
+      for (const cert of validated.certifications) {
+        if (cert.id) {
+          const updated = await tx.certification.update({
+            where: { id: cert.id },
+            data: {
+              profileId: profile.id,
+              name: cert.name,
+              issuingOrganization: cert.issuingOrganization,
+              issueDate: cert.issueDate,
+              expirationDate: cert.expirationDate,
+              credentialId: cert.credentialId,
+              credentialUrl: cert.credentialUrl,
+            },
+          });
+          keptCertificationIds.push(updated.id);
+        } else {
+          const created = await tx.certification.create({
+            data: {
+              profileId: profile.id,
+              name: cert.name,
+              issuingOrganization: cert.issuingOrganization,
+              issueDate: cert.issueDate,
+              expirationDate: cert.expirationDate,
+              credentialId: cert.credentialId,
+              credentialUrl: cert.credentialUrl,
+            },
+          });
+          keptCertificationIds.push(created.id);
+        }
+      }
+
+      if (replaceCertifications) {
+        await tx.certification.deleteMany({
+          where: {
+            profileId: profile.id,
+            id: {
+              notIn:
+                keptCertificationIds.length > 0
+                  ? keptCertificationIds
+                  : ["__none__"],
+            },
+          },
+        });
+      }
+
       // ---------- Skills (MERGE by default) ----------
       // Assumes you have:
       // - Skill { id, name unique }
@@ -347,6 +398,7 @@ const userService = {
           include: {
             experiences: true,
             educations: true,
+            certifications: true,
             skills: { include: { skill: true } },
           },
         },
@@ -368,6 +420,7 @@ const userService = {
         : 0,
       experiencesCount: profile.experiences.length,
       educationsCount: profile.educations.length,
+      certificationsCount: profile.certifications.length,
       skillsCount: profile.skills.length,
     };
 
@@ -431,8 +484,11 @@ function getMissingRequirements(snapshot: ProfileOnboardingSnapshot): string[] {
   if (snapshot.yearsExperience === null || snapshot.yearsExperience < 0)
     missing.push("Years of Experience");
   if (snapshot.targetRolesCount < 1) missing.push("Target Roles");
-  if (snapshot.experiencesCount < 1) missing.push("Experiences");
-  if (snapshot.educationsCount < 1) missing.push("Education");
+  
+  // Allow passing if user has experience OR education OR certifications
+  const hasHistory = snapshot.experiencesCount > 0 || snapshot.educationsCount > 0 || snapshot.certificationsCount > 0;
+  if (!hasHistory) missing.push("At least one Experience, Education, or Certification");
+
   if (snapshot.skillsCount < 1) missing.push("Skills");
 
   return missing;

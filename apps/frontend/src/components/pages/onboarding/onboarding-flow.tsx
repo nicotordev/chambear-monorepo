@@ -22,6 +22,7 @@ import {
   Plus,
   Save,
   User,
+  Award,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
@@ -30,12 +31,14 @@ import OnboardingFlowStep1 from "./onboarding-flow-step-1";
 import OnboardingFlowStep2 from "./onboarding-flow-step-2";
 import OnboardingFlowStep3 from "./onboarding-flow-step-3";
 import OnboardingFlowStep4 from "./onboarding-flow-step-4";
+import OnboardingFlowStep5 from "./onboarding-flow-step-5";
 
 const STEPS = [
   { id: 1, label: "Profile", icon: User, description: "Basic Info" },
   { id: 2, label: "Skills", icon: Cpu, description: "Roles & Tech" },
   { id: 3, label: "Experience", icon: Briefcase, description: "History" },
   { id: 4, label: "Education", icon: GraduationCap, description: "Studies" },
+  { id: 5, label: "Certifications", icon: Award, description: "Credentials" },
 ];
 
 export default function OnboardingFlow() {

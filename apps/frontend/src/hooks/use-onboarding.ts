@@ -36,6 +36,7 @@ export const useOnboarding = () => {
       skills: [],
       educations: [],
       experiences: [],
+      certifications: [],
     },
     shouldUnregister: false,
   });
@@ -77,6 +78,7 @@ export const useOnboarding = () => {
         skills: [],
         educations: [],
         experiences: [],
+        certifications: [],
       });
       return;
     }
@@ -126,6 +128,17 @@ export const useOnboarding = () => {
             summary: experience.summary ?? "",
             highlights: experience.highlights ?? [],
             location: experience.location ?? "",
+          })) ?? [],
+        certifications:
+          currentProfileData.certifications?.map((cert: any) => ({
+            name: cert.name ?? "",
+            issuingOrganization: cert.issuingOrganization ?? "",
+            issueDate: cert.issueDate ? new Date(cert.issueDate) : undefined,
+            expirationDate: cert.expirationDate
+              ? new Date(cert.expirationDate)
+              : undefined,
+            credentialId: cert.credentialId ?? "",
+            credentialUrl: cert.credentialUrl ?? "",
           })) ?? [],
       });
     }

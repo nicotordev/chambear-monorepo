@@ -28,6 +28,15 @@ export const EducationSchema = z.object({
   description: z.string().optional(),
 });
 
+export const CertificationSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  issuingOrganization: z.string().min(1, "Issuing Organization is required"),
+  issueDate: z.coerce.date(),
+  expirationDate: z.coerce.date().nullable().optional(),
+  credentialId: z.string().optional(),
+  credentialUrl: z.string().url().optional().or(z.literal("")),
+});
+
 export const ProfileSkillSchema = z.object({
   skillName: z.string().min(1, "Skill name is required"),
   level: z.enum(Object.values(SkillLevel) as [string, ...string[]]),
@@ -74,6 +83,7 @@ export const CreateProfileSchema = z.object({
   targetRoles: z.array(z.string().min(2)).optional().default([]),
   experiences: z.array(ExperienceSchema).optional().default([]),
   educations: z.array(EducationSchema).optional().default([]),
+  certifications: z.array(CertificationSchema).optional().default([]),
   skills: z.array(ProfileSkillSchema).optional().default([]),
 });
 

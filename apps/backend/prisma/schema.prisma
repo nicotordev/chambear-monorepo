@@ -170,6 +170,7 @@ model Profile {
   jobPreferences    JobPreference[]
   interviewSessions InterviewSession[]
   reminders         Reminder[]
+  certifications    Certification[]
 }
 
 model Experience {
@@ -201,6 +202,21 @@ model Education {
   description  String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+model Certification {
+  id                  String    @id @default(cuid())
+  profileId           String
+  name                String
+  issuingOrganization String
+  issueDate           DateTime
+  expirationDate      DateTime?
+  credentialId        String?
+  credentialUrl       String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id])
 }

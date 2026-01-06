@@ -1,6 +1,7 @@
 "use client";
 
 import { EducationStep } from "@/components/onboarding-v2/education-step";
+import { CertificationStep } from "@/components/onboarding-v2/certification-step";
 import { ExperienceStep } from "@/components/onboarding-v2/experience-step";
 import { LocationStep } from "@/components/onboarding-v2/location-step";
 import { PreferencesStep } from "@/components/onboarding-v2/preferences-step";
@@ -61,8 +62,11 @@ function OnboardingContent() {
 
     const missingSkills = !values.skills || values.skills.length === 0;
 
-    const missingExperience =
-      !values.experiences || values.experiences.length === 0;
+    // We only require AT LEAST ONE of (Experience, Education, Certification)
+    const hasHistory =
+      (values.experiences && values.experiences.length > 0) ||
+      (values.educations && values.educations.length > 0) ||
+      (values.certifications && values.certifications.length > 0);
 
     let targetStep = "1";
 
@@ -74,29 +78,18 @@ function OnboardingContent() {
       targetStep = "3";
     } else if (missingSkills) {
       targetStep = "4";
-    } else if (missingExperience) {
+    } else if (!hasHistory) {
+      // If no history at all, we start at step 5 (Experience)
       targetStep = "5";
     } else {
-      // If everything else is done, Education is step 6.
-      // We don't strictly enforce education present as it might be empty for some?
-      // But typically we want at least one or explicit skip?
-      // The backend check says educationsCount < 1 is missing.
-      const missingEducation =
-        !values.educations || values.educations.length === 0;
-      if (missingEducation) {
-        targetStep = "6";
-      } else {
-        // All done? Stay on 6 or maybe user is reviewing.
-        // If user explicitly navigated, let them be?
-        // But if just arrived, maybe 6.
-        targetStep = "6";
-      }
+      // If they have some history, we don't force them back to 5 or 6 if they are on 7.
+      // But if they just finished skills and have no history, they go to 5.
+      // The current logic is simpler:
+      targetStep = stepParam || "5"; // Default to current or 5
+      
+      // If we are coming from step 4 and have no history, target is 5.
+      // This is handled by !hasHistory above.
     }
-
-    // Logic:
-    // 1. If user just arrived (!stepParam), go to targetStep.
-    // 2. If user is at a step > targetStep, it means they skipped a prerequisite. Force back to targetStep.
-    // 3. If user is at a step <= targetStep, let them be (they might be editing previous info).
 
     const currentStepInt = parseInt(step, 10);
     const targetStepInt = parseInt(targetStep, 10);
@@ -107,8 +100,8 @@ function OnboardingContent() {
       }
     } else {
       // User has a step param. Enforce prerequisites.
-      // If I am at Step 4, but Step 1 is missing (targetStep=1), I must go to 1.
-      if (currentStepInt > targetStepInt) {
+      if (currentStepInt > targetStepInt && targetStepInt < 5) {
+        // Only enforce strictly for the first 4 steps
         router.replace(`/onboarding-v2?step=${targetStep}`);
       }
     }
@@ -124,6 +117,7 @@ function OnboardingContent() {
           {step === "4" && <SkillsStep />}
           {step === "5" && <ExperienceStep />}
           {step === "6" && <EducationStep />}
+          {step === "7" && <CertificationStep />}
         </div>
       </div>
     </FormProvider>

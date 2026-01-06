@@ -45,6 +45,7 @@ export interface Profile {
   user?: User;
   experiences?: Experience[];
   educations?: Education[];
+  certifications?: Certification[];
   skills?: ProfileSkill[];
   fitScores?: FitScore[];
   jobPreferences?: JobPreference[];
@@ -75,6 +76,20 @@ export interface Education {
   startDate: Date | null;
   endDate: Date | null;
   description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  profile?: Profile;
+}
+
+export interface Certification {
+  id: string;
+  profileId: string;
+  name: string;
+  issuingOrganization: string;
+  issueDate: Date;
+  expirationDate: Date | null;
+  credentialId: string | null;
+  credentialUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   profile?: Profile;
