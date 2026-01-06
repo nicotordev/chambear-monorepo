@@ -157,7 +157,8 @@ export function SkillsStep() {
 
   return (
     <form
-      onSubmit={async () => {
+      onSubmit={async (e) => {
+        e.preventDefault();
         const data = getValues();
         await onSubmit(data, 5);
       }}
