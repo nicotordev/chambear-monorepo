@@ -2,12 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useUser } from "@/contexts/user-context";
 import api from "@/lib/api";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
-import { useUser } from "@/contexts/user-context";
+import type { DocumentType } from "@/types";
 
 export default function useDocuments() {
   const queryClient = useQueryClient();
@@ -25,9 +26,21 @@ export default function useDocuments() {
 
   const { mutateAsync: uploadFile, isPending: isPendingUploadFile } =
     useMutation({
-      mutationFn: (file: File) => {
+      mutationFn: ({
+        file,
+        label,
+        type,
+      }: {
+        file: File;
+        label?: string;
+        type?: DocumentType;
+      }) => {
         if (!profileId) throw new Error("No profile selected");
-        return api.uploadFile(file, profileId);
+        return api.uploadFile(file, profileId, label, type);
+      },
+      onSuccess: () => {
+        toast.success("File uploaded successfully");
+        queryClient.invalidateQueries({ queryKey: ["documents"] });
       },
       onError: (error) => {
         toast.error("Failed to upload file");

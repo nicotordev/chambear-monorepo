@@ -1,18 +1,27 @@
 "use client";
 
 import axios, { type AxiosInstance } from "axios";
+import type { CalculateFitInput, ParseResumeInput } from "@/schemas/ai-action";
+import type { ApplicationUpsertInput } from "@/schemas/application";
 import type {
   CreateDocumentInput,
   UpdateDocumentInput,
 } from "@/schemas/document";
+import type { CreateInterviewSessionInput } from "@/schemas/interview";
+import type { JobUpsertInput } from "@/schemas/job";
+import type { CreateReminderInput } from "@/schemas/reminder";
 import type { CreateProfileInput } from "@/schemas/user";
 import type {
   Application,
   Document,
+  DocumentType,
+  FitScore,
   InterviewSession,
   Job,
+  ParsedProfile,
   Plan,
   Reminder,
+  ScanStatus,
   Subscription,
   User,
 } from "@/types";
@@ -172,9 +181,17 @@ class Api {
     return res.data.data;
   }
 
-  public async uploadFile(file: File, profileId: string): Promise<string> {
+  public async uploadFile(
+    file: File,
+    profileId: string,
+    label?: string,
+    type?: DocumentType,
+  ): Promise<Document> {
     const formData = new FormData();
     formData.append("file", file);
+    if (label) formData.append("label", label);
+    if (type) formData.append("type", type as string);
+
     const res = await this.instance.post("/documents/upload", formData, {
       params: { profileId },
       headers: {
@@ -195,16 +212,14 @@ class Api {
     }
   }
 
-  public async getScanStatus(
-    profileId: string,
-  ): Promise<{ status: string; jobId?: string }> {
+  public async getScanStatus(profileId: string): Promise<ScanStatus> {
     const res = await this.instance.get("/ai/scan/status", {
       params: { profileId },
     });
     return res.data.data;
   }
 
-  public async createJob(data: any): Promise<Job> {
+  public async createJob(data: JobUpsertInput): Promise<Job> {
     const res = await this.instance.post("/jobs", data);
     return res.data.data;
   }
@@ -212,7 +227,7 @@ class Api {
   public async upsertApplication(
     profileId: string,
     jobId: string,
-    data: any,
+    data: ApplicationUpsertInput,
   ): Promise<Application> {
     const res = await this.instance.post(
       "/applications",
@@ -227,7 +242,7 @@ class Api {
   public async createInterviewSession(
     profileId: string,
     applicationId: string,
-    data: any,
+    data: CreateInterviewSessionInput,
   ): Promise<InterviewSession> {
     const res = await this.instance.post(
       `/applications/${applicationId}/interview`,
@@ -239,7 +254,7 @@ class Api {
     return res.data.data;
   }
 
-  public async createReminder(data: any): Promise<Reminder> {
+  public async createReminder(data: CreateReminderInput): Promise<Reminder> {
     const res = await this.instance.post("/reminders", data);
     return res.data.data;
   }
@@ -297,7 +312,10 @@ class Api {
     return res.data.data;
   }
 
-  public async calculateFit(jobId: string, profileId: string): Promise<any> {
+  public async calculateFit(
+    jobId: string,
+    profileId: string,
+  ): Promise<FitScore> {
     const res = await this.instance.post(
       "/ai/calculate-fit",
       { jobId },
@@ -306,8 +324,17 @@ class Api {
     return res.data.data;
   }
 
-  // --- Job Preferences ---
+  public async parseResume(
+    profileId: string,
+    data: ParseResumeInput,
+  ): Promise<ParsedProfile> {
+    const res = await this.instance.post("/ai/parse-resume", data, {
+      params: { profileId },
+    });
+    return res.data.data;
+  }
 
+  // --- Job Preferences ---
   public async upsertJobPreference(
     jobId: string,
     profileId: string,

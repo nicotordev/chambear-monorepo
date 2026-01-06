@@ -1,12 +1,12 @@
+import type { NextRequest, NextResponse } from "next/server";
 import backend from "@/lib/backend";
 import { response } from "@/lib/response";
-import type { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest): Promise<NextResponse> => {
   try {
     const searchParamsEntries = req.nextUrl.searchParams.entries();
     const profileId = searchParamsEntries.find(
-      (entry) => entry?.[0] === "profileId"
+      (entry) => entry?.[0] === "profileId",
     )?.[1];
 
     if (!profileId) {
