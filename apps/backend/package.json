@@ -37,7 +37,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "fast-csv": "^5.0.5",
-    "hono": "^4.11.4",
+    "hono": "^4.11.7",
     "ioredis": "^5.8.2",
     "ocr-space-api-wrapper": "^2.4.2",
     "openai": "^6.15.0",
